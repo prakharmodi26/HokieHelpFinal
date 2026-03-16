@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hokiehelp-crawler
+  labels:
+    app: hokiehelp-crawler
+spec:
+  schedule: "0 3 * * 0"  # Weekly on Sunday at 3am
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600  # 1 hour timeout
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: crawler
+              image: hokiehelp-crawler:latest
+              env:
+                - name: MINIO_ENDPOINT
+                  value: "minio:9000"
+                - name: MINIO_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: minio-credentials
+                      key: access-key
+                - name: MINIO_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: minio-credentials
+                      key: secret-key
+                - name: MINIO_BUCKET
+                  value: "crawled-pages"
+                - name: CRAWL_SEED_URL
+                  value: "https://cs.vt.edu"
+                - name: CRAWL_MAX_DEPTH
+                  value: "2"
+                - name: CRAWL_MAX_PAGES
+                  value: "500"
+              resources:
+                requests:
+                  memory: "512Mi"
+                  cpu: "250m"
+                limits:
+                  memory: "2Gi"
+                  cpu: "1000m"
