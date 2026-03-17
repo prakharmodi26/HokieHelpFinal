@@ -13,13 +13,15 @@ def crawler_config():
         minio_access_key="minioadmin",
         minio_secret_key="minioadmin",
         minio_bucket="test-bucket",
+        minio_cleaned_bucket="test-bucket-cleaned",
         minio_secure=False,
         seed_url="https://website.cs.vt.edu",
         max_depth=2,
         max_pages=100,
-        allowed_domains=("website.cs.vt.edu", "students.cs.vt.edu"),
-        blocked_domains=("git.cs.vt.edu", "login.cs.vt.edu"),
+        allowed_domains=("website.cs.vt.edu",),
+        blocked_domains=("git.cs.vt.edu", "login.cs.vt.edu", "students.cs.vt.edu"),
         prune_threshold=0.45,
+        request_delay=0.0,
     )
 
 

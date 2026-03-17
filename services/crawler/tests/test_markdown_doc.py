@@ -11,6 +11,8 @@ def test_build_markdown_document():
         markdown_content="# Courses\n\nHere are our courses.",
         crawl_depth=1,
         crawl_timestamp=datetime(2026, 3, 16, 12, 0, 0, tzinfo=timezone.utc),
+        doc_id="abcd1234abcd1234",
+        content_hash="deadbeef" * 8,
     )
 
     assert doc.startswith("---\n")
@@ -18,6 +20,7 @@ def test_build_markdown_document():
     assert "title: 'CS Courses'" in doc
     assert "crawl_depth: 1" in doc
     assert "crawl_timestamp: '2026-03-16T12:00:00+00:00'" in doc
+    assert "doc_id: 'abcd1234abcd1234'" in doc
     assert "---\n\n# Courses\n\nHere are our courses." in doc
 
 
@@ -29,6 +32,8 @@ def test_build_markdown_document_no_title():
         markdown_content="About page content.",
         crawl_depth=0,
         crawl_timestamp=datetime(2026, 3, 16, 12, 0, 0, tzinfo=timezone.utc),
+        doc_id="abcd1234abcd1234",
+        content_hash="deadbeef" * 8,
     )
 
     assert "title: 'https://cs.vt.edu/about'" in doc
@@ -42,9 +47,52 @@ def test_build_markdown_document_special_chars():
         markdown_content="Course content.",
         crawl_depth=1,
         crawl_timestamp=datetime(2026, 3, 16, 12, 0, 0, tzinfo=timezone.utc),
+        doc_id="abcd1234abcd1234",
+        content_hash="deadbeef" * 8,
     )
 
     assert "title: 'CS 101: Intro to CS'" in doc
+
+
+def test_build_markdown_document_includes_doc_id():
+    doc = build_markdown_document(
+        url="https://website.cs.vt.edu/about",
+        title="About",
+        markdown_content="# About",
+        crawl_depth=1,
+        crawl_timestamp=datetime(2026, 3, 16, 12, 0, 0, tzinfo=timezone.utc),
+        doc_id="abcd1234abcd1234",
+        content_hash="cafebabe" * 8,
+    )
+    assert "doc_id: 'abcd1234abcd1234'" in doc
+
+
+def test_build_markdown_document_includes_content_hash():
+    doc = build_markdown_document(
+        url="https://website.cs.vt.edu/about",
+        title="About",
+        markdown_content="# About",
+        crawl_depth=1,
+        crawl_timestamp=datetime(2026, 3, 16, 12, 0, 0, tzinfo=timezone.utc),
+        doc_id="abcd1234abcd1234",
+        content_hash="cafebabe" * 8,
+    )
+    assert f"content_hash: '{'cafebabe' * 8}'" in doc
+
+
+def test_build_markdown_document_doc_id_comes_before_url():
+    doc = build_markdown_document(
+        url="https://website.cs.vt.edu/about",
+        title="About",
+        markdown_content="# About",
+        crawl_depth=0,
+        crawl_timestamp=datetime(2026, 3, 16, 12, 0, 0, tzinfo=timezone.utc),
+        doc_id="abcd1234abcd1234",
+        content_hash="cafebabe" * 8,
+    )
+    end = doc.index("---", 3)
+    fm = doc[:end]
+    assert fm.index("doc_id:") < fm.index("url:")
 
 
 def test_url_to_object_key_basic():

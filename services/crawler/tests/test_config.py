@@ -15,12 +15,14 @@ def test_config_from_env_defaults(monkeypatch):
     assert config.minio_access_key == "minioadmin"
     assert config.minio_secret_key == "minioadmin"
     assert config.minio_bucket == "crawled-pages"
+    assert config.minio_cleaned_bucket == "crawled-pages-cleaned"
     assert config.minio_secure is False
     assert config.seed_url == "https://website.cs.vt.edu"
     assert config.max_depth == 2
     assert config.max_pages == 500
-    assert "website.cs.vt.edu" in config.allowed_domains
+    assert config.allowed_domains == ("website.cs.vt.edu",)
     assert "git.cs.vt.edu" in config.blocked_domains
+    assert "students.cs.vt.edu" in config.blocked_domains
     assert config.prune_threshold == 0.45
 
 
@@ -30,11 +32,12 @@ def test_config_from_env_custom(monkeypatch):
     monkeypatch.setenv("MINIO_ACCESS_KEY", "prodkey")
     monkeypatch.setenv("MINIO_SECRET_KEY", "prodsecret")
     monkeypatch.setenv("MINIO_BUCKET", "my-bucket")
+    monkeypatch.setenv("MINIO_CLEANED_BUCKET", "my-cleaned-bucket")
     monkeypatch.setenv("MINIO_SECURE", "true")
     monkeypatch.setenv("CRAWL_SEED_URL", "https://website.cs.vt.edu/About")
     monkeypatch.setenv("CRAWL_MAX_DEPTH", "5")
     monkeypatch.setenv("CRAWL_MAX_PAGES", "1000")
-    monkeypatch.setenv("CRAWL_ALLOWED_DOMAINS", "website.cs.vt.edu,wiki.cs.vt.edu")
+    monkeypatch.setenv("CRAWL_ALLOWED_DOMAINS", "website.cs.vt.edu")
     monkeypatch.setenv("CRAWL_BLOCKED_DOMAINS", "git.cs.vt.edu")
     monkeypatch.setenv("CRAWL_PRUNE_THRESHOLD", "0.6")
 
@@ -42,11 +45,12 @@ def test_config_from_env_custom(monkeypatch):
 
     assert config.minio_endpoint == "minio.prod:9000"
     assert config.minio_bucket == "my-bucket"
+    assert config.minio_cleaned_bucket == "my-cleaned-bucket"
     assert config.minio_secure is True
     assert config.seed_url == "https://website.cs.vt.edu/About"
     assert config.max_depth == 5
     assert config.max_pages == 1000
-    assert config.allowed_domains == ("website.cs.vt.edu", "wiki.cs.vt.edu")
+    assert config.allowed_domains == ("website.cs.vt.edu",)
     assert config.blocked_domains == ("git.cs.vt.edu",)
     assert config.prune_threshold == 0.6
 

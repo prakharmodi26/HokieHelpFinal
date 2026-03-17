@@ -13,6 +13,8 @@ def build_markdown_document(
     markdown_content: str,
     crawl_depth: int,
     crawl_timestamp: datetime,
+    doc_id: str,
+    content_hash: str,
 ) -> str:
     """Return a Markdown string with YAML frontmatter metadata."""
     effective_title = title if title else url
@@ -20,10 +22,12 @@ def build_markdown_document(
 
     frontmatter = (
         f"---\n"
+        f"doc_id: '{doc_id}'\n"
         f"url: '{url}'\n"
         f"title: '{effective_title}'\n"
         f"crawl_depth: {crawl_depth}\n"
         f"crawl_timestamp: '{ts}'\n"
+        f"content_hash: '{content_hash}'\n"
         f"---"
     )
     return f"{frontmatter}\n\n{markdown_content}"

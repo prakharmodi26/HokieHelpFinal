@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import logging
 import sys
 
+from crawler.cleaner import build_department_info_doc, clean_markdown
 from crawler.config import CrawlerConfig
 from crawler.crawl import run_crawl
 from crawler.storage import MinioStorage
@@ -41,6 +43,41 @@ def cli() -> None:
         "Crawl complete: %d pages stored, %d failed",
         stats["pages_crawled"],
         stats["pages_failed"],
+    )
+
+    # Post-crawl: clean all raw pages and upload to cleaned bucket
+    logger.info("Starting post-crawl cleaning → %s", config.minio_cleaned_bucket)
+    storage.ensure_bucket(config.minio_cleaned_bucket)
+
+    raw_keys = storage.list_objects()
+    cleaned_count = 0
+    for key in raw_keys:
+        raw_content = storage.download_document(key)
+        cleaned_content = clean_markdown(raw_content)
+        storage.upload_document(key, cleaned_content, bucket=config.minio_cleaned_bucket)
+
+        # Mirror metadata sidecar with updated markdown_size_bytes
+        try:
+            raw_meta = storage.download_metadata(key)
+            cleaned_meta = dataclasses.replace(
+                raw_meta,
+                markdown_size_bytes=len(cleaned_content.encode("utf-8")),
+            )
+            storage.upload_metadata(key, cleaned_meta, bucket=config.minio_cleaned_bucket)
+        except Exception as exc:
+            logger.debug("No metadata sidecar for %s, skipping mirror: %s", key, exc)
+
+        cleaned_count += 1
+
+    # Store department info doc so RAG has campus addresses, phones, social links
+    dept_info = build_department_info_doc()
+    storage.upload_document(
+        "_department-info.md", dept_info, bucket=config.minio_cleaned_bucket
+    )
+    logger.info(
+        "Cleaning complete: %d pages cleaned + department info stored in %s",
+        cleaned_count,
+        config.minio_cleaned_bucket,
     )
 
 

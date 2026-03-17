@@ -14,6 +14,7 @@ class CrawlerConfig:
     minio_access_key: str
     minio_secret_key: str
     minio_bucket: str
+    minio_cleaned_bucket: str
     minio_secure: bool
     seed_url: str
     max_depth: int
@@ -21,6 +22,7 @@ class CrawlerConfig:
     allowed_domains: tuple[str, ...]
     blocked_domains: tuple[str, ...]
     prune_threshold: float
+    request_delay: float  # seconds between requests to avoid rate limiting
 
     @classmethod
     def from_env(cls) -> CrawlerConfig:
@@ -47,18 +49,21 @@ class CrawlerConfig:
             minio_access_key=_require("MINIO_ACCESS_KEY"),
             minio_secret_key=_require("MINIO_SECRET_KEY"),
             minio_bucket=os.environ.get("MINIO_BUCKET", "crawled-pages"),
+            minio_cleaned_bucket=os.environ.get("MINIO_CLEANED_BUCKET", "crawled-pages-cleaned"),
             minio_secure=os.environ.get("MINIO_SECURE", "false").lower() == "true",
             seed_url=os.environ.get("CRAWL_SEED_URL", "https://website.cs.vt.edu"),
             max_depth=int(os.environ.get("CRAWL_MAX_DEPTH", "2")),
             max_pages=int(os.environ.get("CRAWL_MAX_PAGES", "500")),
             allowed_domains=_domains(
                 "CRAWL_ALLOWED_DOMAINS",
-                "website.cs.vt.edu,students.cs.vt.edu,wordpress.cs.vt.edu,wiki.cs.vt.edu",
+                "website.cs.vt.edu",
             ),
             blocked_domains=_domains(
                 "CRAWL_BLOCKED_DOMAINS",
                 "git.cs.vt.edu,gitlab.cs.vt.edu,mail.cs.vt.edu,webmail.cs.vt.edu,"
-                "portal.cs.vt.edu,api.cs.vt.edu,forum.cs.vt.edu,login.cs.vt.edu",
+                "portal.cs.vt.edu,api.cs.vt.edu,forum.cs.vt.edu,login.cs.vt.edu,"
+                "students.cs.vt.edu,wordpress.cs.vt.edu,wiki.cs.vt.edu",
             ),
             prune_threshold=float(os.environ.get("CRAWL_PRUNE_THRESHOLD", "0.45")),
+            request_delay=float(os.environ.get("CRAWL_REQUEST_DELAY", "0.5")),
         )

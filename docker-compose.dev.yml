@@ -1,0 +1,18 @@
+services:
+  crawler:
+    build:
+      context: ./services/crawler
+      dockerfile: Dockerfile
+    network_mode: host
+    environment:
+      MINIO_ENDPOINT: localhost:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: crawled-pages
+      MINIO_CLEANED_BUCKET: crawled-pages-cleaned
+      MINIO_SECURE: "false"
+      CRAWL_SEED_URL: https://website.cs.vt.edu
+      CRAWL_MAX_DEPTH: 2
+      CRAWL_MAX_PAGES: 50
+      CRAWL_ALLOWED_DOMAINS: website.cs.vt.edu
+      CRAWL_PRUNE_THRESHOLD: "0.45"
