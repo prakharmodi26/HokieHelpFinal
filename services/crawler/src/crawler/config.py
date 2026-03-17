@@ -18,7 +18,9 @@ class CrawlerConfig:
     seed_url: str
     max_depth: int
     max_pages: int
-    allowed_domain: str
+    allowed_domains: tuple[str, ...]
+    blocked_domains: tuple[str, ...]
+    prune_threshold: float
 
     @classmethod
     def from_env(cls) -> CrawlerConfig:
@@ -26,7 +28,8 @@ class CrawlerConfig:
 
         Required: MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY
         Optional: MINIO_BUCKET, MINIO_SECURE, CRAWL_SEED_URL,
-                  CRAWL_MAX_DEPTH, CRAWL_MAX_PAGES
+                  CRAWL_MAX_DEPTH, CRAWL_MAX_PAGES, CRAWL_ALLOWED_DOMAINS,
+                  CRAWL_BLOCKED_DOMAINS, CRAWL_PRUNE_THRESHOLD
         """
 
         def _require(name: str) -> str:
@@ -35,14 +38,27 @@ class CrawlerConfig:
                 raise ValueError(f"Required environment variable {name} is not set")
             return val
 
+        def _domains(name: str, default: str) -> tuple[str, ...]:
+            raw = os.environ.get(name, default)
+            return tuple(d.strip() for d in raw.split(",") if d.strip())
+
         return cls(
             minio_endpoint=_require("MINIO_ENDPOINT"),
             minio_access_key=_require("MINIO_ACCESS_KEY"),
             minio_secret_key=_require("MINIO_SECRET_KEY"),
             minio_bucket=os.environ.get("MINIO_BUCKET", "crawled-pages"),
             minio_secure=os.environ.get("MINIO_SECURE", "false").lower() == "true",
-            seed_url=os.environ.get("CRAWL_SEED_URL", "https://cs.vt.edu"),
+            seed_url=os.environ.get("CRAWL_SEED_URL", "https://website.cs.vt.edu"),
             max_depth=int(os.environ.get("CRAWL_MAX_DEPTH", "2")),
             max_pages=int(os.environ.get("CRAWL_MAX_PAGES", "500")),
-            allowed_domain=os.environ.get("CRAWL_ALLOWED_DOMAIN", "cs.vt.edu"),
+            allowed_domains=_domains(
+                "CRAWL_ALLOWED_DOMAINS",
+                "website.cs.vt.edu,students.cs.vt.edu,wordpress.cs.vt.edu,wiki.cs.vt.edu",
+            ),
+            blocked_domains=_domains(
+                "CRAWL_BLOCKED_DOMAINS",
+                "git.cs.vt.edu,gitlab.cs.vt.edu,mail.cs.vt.edu,webmail.cs.vt.edu,"
+                "portal.cs.vt.edu,api.cs.vt.edu,forum.cs.vt.edu,login.cs.vt.edu",
+            ),
+            prune_threshold=float(os.environ.get("CRAWL_PRUNE_THRESHOLD", "0.45")),
         )

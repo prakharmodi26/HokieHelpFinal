@@ -13,6 +13,7 @@ def _make_crawl_result(url: str, title: str, markdown: str, depth: int = 0):
     result.url = url
     result.metadata = {"title": title, "depth": depth}
     result.markdown = MagicMock()
+    result.markdown.fit_markdown = markdown   # crawl.py prefers fit_markdown
     result.markdown.raw_markdown = markdown
     return result
 

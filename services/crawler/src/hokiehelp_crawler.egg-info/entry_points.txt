@@ -1,0 +1,2 @@
+[console_scripts]
+hokiehelp-crawl = crawler.main:cli

@@ -7,8 +7,10 @@ import logging
 from datetime import datetime, timezone
 
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig
+from crawl4ai.content_filter_strategy import PruningContentFilter
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
-from crawl4ai.deep_crawling.filters import FilterChain, DomainFilter, ContentTypeFilter
+from crawl4ai.deep_crawling.filters import ContentTypeFilter, DomainFilter, FilterChain
+from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 
 from crawler.config import CrawlerConfig
 from crawler.markdown_doc import build_markdown_document, url_to_object_key
@@ -20,11 +22,12 @@ logger = logging.getLogger(__name__)
 async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
     """Execute a deep crawl and upload each page to storage.
 
-    Returns a stats dict with pages_crawled and pages_failed counts.
+    Returns a stats dict with pages_crawled, pages_failed, pages_skipped_duplicate counts.
     """
     filter_chain = FilterChain([
         DomainFilter(
-            allowed_domains=[config.allowed_domain],
+            allowed_domains=list(config.allowed_domains),
+            blocked_domains=list(config.blocked_domains),
         ),
         ContentTypeFilter(allowed_types=["text/html"]),
     ])
@@ -40,6 +43,12 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
         deep_crawl_strategy=strategy,
         stream=True,
         verbose=True,
+        markdown_generator=DefaultMarkdownGenerator(
+            content_filter=PruningContentFilter(
+                threshold=config.prune_threshold,
+                threshold_type="fixed",
+            ),
+        ),
     )
 
     stats = {"pages_crawled": 0, "pages_failed": 0, "pages_skipped_duplicate": 0}
@@ -62,7 +71,11 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
             title = result.metadata.get("title")
             now = datetime.now(timezone.utc)
 
-            markdown_content = result.markdown.raw_markdown
+            # Prefer pruned fit_markdown; fall back to raw_markdown
+            markdown_content = (
+                result.markdown.fit_markdown
+                or result.markdown.raw_markdown
+            )
             if not markdown_content:
                 logger.warning("Empty markdown for %s, skipping", result.url)
                 stats["pages_failed"] += 1
