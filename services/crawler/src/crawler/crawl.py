@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from datetime import datetime, timezone
 
@@ -41,7 +42,8 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
         verbose=True,
     )
 
-    stats = {"pages_crawled": 0, "pages_failed": 0}
+    stats = {"pages_crawled": 0, "pages_failed": 0, "pages_skipped_duplicate": 0}
+    seen_content_hashes: set[str] = set()
 
     async with AsyncWebCrawler() as crawler:
         async for result in await crawler.arun(
@@ -66,6 +68,13 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
                 stats["pages_failed"] += 1
                 continue
 
+            content_hash = hashlib.sha256(markdown_content.encode()).hexdigest()
+            if content_hash in seen_content_hashes:
+                logger.info("Duplicate content for %s, skipping", result.url)
+                stats["pages_skipped_duplicate"] += 1
+                continue
+            seen_content_hashes.add(content_hash)
+
             document = build_markdown_document(
                 url=result.url,
                 title=title,
@@ -84,4 +93,8 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
                 depth,
             )
 
+    logger.info(
+        "Deduplication: %d duplicate pages skipped",
+        stats["pages_skipped_duplicate"],
+    )
     return stats

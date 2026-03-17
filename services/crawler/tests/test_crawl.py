@@ -45,6 +45,7 @@ async def test_run_crawl_processes_results(crawler_config):
     assert mock_storage.upload_document.call_count == 2
     assert stats["pages_crawled"] == 2
     assert stats["pages_failed"] == 0
+    assert stats["pages_skipped_duplicate"] == 0
 
 
 @pytest.mark.asyncio
@@ -103,3 +104,34 @@ async def test_run_crawl_skips_empty_markdown(crawler_config):
     assert mock_storage.upload_document.call_count == 0
     assert stats["pages_crawled"] == 0
     assert stats["pages_failed"] == 1
+
+
+@pytest.mark.asyncio
+async def test_run_crawl_deduplicates_identical_content(crawler_config):
+    """run_crawl skips pages with identical markdown content (e.g. redirect mirrors)."""
+    mock_storage = MagicMock()
+
+    same_content = "# Same Page\n\nIdentical body content."
+    results = [
+        _make_crawl_result("https://cs.vt.edu", "Home", same_content, depth=0),
+        _make_crawl_result("https://website.cs.vt.edu/index.html", "Home", same_content, depth=1),
+    ]
+
+    mock_crawler_instance = AsyncMock()
+
+    async def fake_arun(*args, **kwargs):
+        async def _gen():
+            for r in results:
+                yield r
+        return _gen()
+
+    mock_crawler_instance.arun = fake_arun
+    mock_crawler_instance.__aenter__ = AsyncMock(return_value=mock_crawler_instance)
+    mock_crawler_instance.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("crawler.crawl.AsyncWebCrawler", return_value=mock_crawler_instance):
+        stats = await run_crawl(crawler_config, mock_storage)
+
+    assert mock_storage.upload_document.call_count == 1
+    assert stats["pages_crawled"] == 1
+    assert stats["pages_skipped_duplicate"] == 1
