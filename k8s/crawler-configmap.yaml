@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crawler-config
+  namespace: test
+  labels:
+    app: hokiehelp-crawler
+data:
+  MINIO_ENDPOINT: "minio:9000"
+  MINIO_BUCKET: "crawled-pages"
+  MINIO_CLEANED_BUCKET: "crawled-pages-cleaned"
+  MINIO_SECURE: "false"
+  CRAWL_SEED_URL: "https://website.cs.vt.edu"
+  CRAWL_MAX_DEPTH: "2"
+  CRAWL_MAX_PAGES: "500"
+  CRAWL_ALLOWED_DOMAINS: "website.cs.vt.edu"
+  CRAWL_REQUEST_DELAY: "0.5"
+  CRAWL_PRUNE_THRESHOLD: "0.45"

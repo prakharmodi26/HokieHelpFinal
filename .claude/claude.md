@@ -1,13 +1,13 @@
 # Kubernetes deployment rules
 
 - Always show the current kubectl context before applying changes.
-- Default namespace: dev
+- Default namespace: test
 - Never deploy to production unless I explicitly say "deploy to prod".
 - Prefer `kubectl apply -f` over imperative one-off commands.
 - After deploy, always run:
-  - kubectl get pods -n dev
-  - kubectl get svc -n dev
-  - kubectl rollout status deployment/<name> -n dev
+  - kubectl get pods -n test
+  - kubectl get svc -n test
+  - kubectl rollout status deployment/<name> -n test
 - If an image pull error or CrashLoopBackOff happens, inspect:
   - kubectl describe pod
   - kubectl logs --previous if needed

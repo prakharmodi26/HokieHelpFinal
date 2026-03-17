@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hokiehelp-crawler
+  namespace: test
+  labels:
+    app: hokiehelp-crawler
+spec:
+  schedule: "0 3 * * 0"  # Weekly on Sunday at 3am
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 7200  # 2 hour timeout
+      template:
+        metadata:
+          labels:
+            app: hokiehelp-crawler
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: crawler
+              image: ghcr.io/prakharmodi26/hokiehelp-crawler:latest
+              imagePullPolicy: Always
+              envFrom:
+                - configMapRef:
+                    name: crawler-config
+              env:
+                - name: MINIO_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: minio-credentials
+                      key: access-key
+                - name: MINIO_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: minio-credentials
+                      key: secret-key
+              resources:
+                requests:
+                  memory: "512Mi"
+                  cpu: "250m"
+                limits:
+                  memory: "2Gi"
+                  cpu: "1000m"
