@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hokiehelp-chunker
+  namespace: test
+  labels:
+    app: hokiehelp-chunker
+spec:
+  schedule: "0 4 * * 0"  # Weekly on Sunday at 4am (1h after crawler at 3am)
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600  # 1 hour timeout
+      template:
+        metadata:
+          labels:
+            app: hokiehelp-chunker
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: chunker
+              image: ghcr.io/prakharmodi26/hokiehelp-chunker:latest
+              imagePullPolicy: Always
+              envFrom:
+                - configMapRef:
+                    name: chunker-config
+              env:
+                - name: MINIO_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: minio-credentials
+                      key: access-key
+                - name: MINIO_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: minio-credentials
+                      key: secret-key
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "250m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "500m"
