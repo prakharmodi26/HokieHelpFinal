@@ -5,7 +5,7 @@ import logging
 import sys
 
 from chunker.config import ChunkerConfig
-from chunker.parser import parse_frontmatter, split_sections
+from chunker.parser import parse_frontmatter, split_sections, is_cms_error_page
 from chunker.splitter import build_chunks
 from chunker.storage import ChunkerStorage
 
@@ -33,6 +33,11 @@ def run_chunking(storage: ChunkerStorage, config: ChunkerConfig) -> dict:
 
             if not body.strip():
                 logger.debug("Skipping %s — empty body", key)
+                stats["skipped"] += 1
+                continue
+
+            if is_cms_error_page(body):
+                logger.debug("Skipping %s — CMS error page", key)
                 stats["skipped"] += 1
                 continue
 

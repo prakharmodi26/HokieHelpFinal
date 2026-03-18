@@ -7,6 +7,14 @@ from dataclasses import dataclass, field
 from typing import List, Tuple
 
 
+_CMS_ERROR_RE = re.compile(r"^#\s+Resource at '.*?' not found", re.MULTILINE)
+
+
+def is_cms_error_page(body: str) -> bool:
+    """Return True if the body is a CMS 'Resource not found' page (safety-net filter)."""
+    return bool(_CMS_ERROR_RE.search(body[:500]))
+
+
 @dataclass
 class FrontmatterData:
     """Fields extracted from a markdown YAML frontmatter block."""

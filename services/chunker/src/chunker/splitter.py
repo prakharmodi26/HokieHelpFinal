@@ -124,5 +124,6 @@ def build_chunks(
             headings_path=headings_path,
             content_hash=_chunk_hash(text),
             crawl_timestamp=frontmatter.crawl_timestamp,
+            token_count=estimate_tokens(text),
         ))
     return records

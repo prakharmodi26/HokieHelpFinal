@@ -74,6 +74,26 @@ _DEPT_FOOTER_MARKER = "### Follow Computer Science"
 _EXPLORE_MARKER_RE = re.compile(r"^Explore\s*$")
 
 
+_CMS_ERROR_RE = re.compile(
+    r"^#\s+Resource at '.*?' not found",
+    re.MULTILINE,
+)
+
+
+def is_error_page(markdown: str) -> bool:
+    """Return True if the markdown is a CMS 'Resource not found' error page.
+
+    The VT CMS returns HTTP 200 with a body containing a specific error heading
+    when a page has been deleted or moved. These pages have no useful content.
+    """
+    body = markdown
+    if markdown.startswith("---"):
+        end = markdown.find("---", 3)
+        if end != -1:
+            body = markdown[end + 3:]
+    return bool(_CMS_ERROR_RE.search(body[:500]))
+
+
 def clean_markdown(document: str) -> str:
     """Remove VT website boilerplate from a markdown document.
 

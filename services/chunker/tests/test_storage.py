@@ -48,7 +48,7 @@ def test_upload_chunks_serialises_to_json(storage, mock_minio):
             chunk_id="abc_0000", document_id="abc", chunk_index=0,
             text="Hello", url="https://example.com", title="Test",
             page_type="general", headings_path=[], content_hash="deadbeef01234567",
-            crawl_timestamp="2026-03-16T00:00:00",
+            crawl_timestamp="2026-03-16T00:00:00", token_count=1,
         )
     ]
     storage.upload_chunks("abc", chunks)

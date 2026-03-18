@@ -18,6 +18,7 @@ class ChunkRecord:
     headings_path: List[str]  # e.g. ["People", "Faculty", "Professor Jane Doe"]
     content_hash: str      # SHA-256[:16] of this chunk's text
     crawl_timestamp: str   # ISO timestamp from frontmatter
+    token_count: int       # Approximate token count (len(text) // 4); used for embedding batching
 
     def to_dict(self) -> dict:
         return {
@@ -31,6 +32,7 @@ class ChunkRecord:
             "headings_path": self.headings_path,
             "content_hash": self.content_hash,
             "crawl_timestamp": self.crawl_timestamp,
+            "token_count": self.token_count,
         }
 
     @classmethod
@@ -46,4 +48,5 @@ class ChunkRecord:
             headings_path=data["headings_path"],
             content_hash=data["content_hash"],
             crawl_timestamp=data["crawl_timestamp"],
+            token_count=data.get("token_count", len(data["text"]) // 4),
         )

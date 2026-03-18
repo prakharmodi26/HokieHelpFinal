@@ -7,7 +7,7 @@ import dataclasses
 import logging
 import sys
 
-from crawler.cleaner import build_department_info_doc, clean_markdown
+from crawler.cleaner import build_department_info_doc, clean_markdown, is_error_page
 from crawler.config import CrawlerConfig
 from crawler.crawl import run_crawl
 from crawler.storage import MinioStorage
@@ -51,9 +51,14 @@ def cli() -> None:
 
     raw_keys = storage.list_objects()
     cleaned_count = 0
+    error_count = 0
     for key in raw_keys:
         raw_content = storage.download_document(key)
         cleaned_content = clean_markdown(raw_content)
+        if is_error_page(cleaned_content):
+            logger.debug("Skipping CMS error page: %s", key)
+            error_count += 1
+            continue
         storage.upload_document(key, cleaned_content, bucket=config.minio_cleaned_bucket)
 
         # Mirror metadata sidecar with updated markdown_size_bytes
@@ -75,8 +80,9 @@ def cli() -> None:
         "_department-info.md", dept_info, bucket=config.minio_cleaned_bucket
     )
     logger.info(
-        "Cleaning complete: %d pages cleaned + department info stored in %s",
+        "Cleaning complete: %d pages cleaned, %d error pages skipped + department info stored in %s",
         cleaned_count,
+        error_count,
         config.minio_cleaned_bucket,
     )
 

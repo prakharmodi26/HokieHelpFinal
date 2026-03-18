@@ -1,5 +1,5 @@
 import pytest
-from crawler.cleaner import clean_markdown, build_department_info_doc
+from crawler.cleaner import clean_markdown, build_department_info_doc, is_error_page
 
 FRONTMATTER = """\
 ---
@@ -301,3 +301,47 @@ def test_build_department_info_doc():
     assert "Alexandria" in doc
     assert "Arlington" in doc
     assert "facebook.com/VT.ComputerScience" in doc
+
+
+# --- is_error_page ---
+
+_CMS_ERROR_DOC = """\
+---
+doc_id: 'abc123'
+url: 'https://website.cs.vt.edu/Alumni.html'
+title: "404 Resource at '/content/website_cs_vt_edu/en/Alumni.html' not found: No resource found"
+---
+
+# Resource at '/content/website_cs_vt_edu/en/Alumni.html' not found: No resource found
+Cannot serve request to /content/website_cs_vt_edu/en/Alumni.html on this server
+"""
+
+_NORMAL_DOC = """\
+---
+doc_id: 'def456'
+url: 'https://website.cs.vt.edu/people/faculty'
+title: 'Faculty'
+---
+
+# Faculty
+
+Professor Smith researches distributed systems.
+"""
+
+
+def test_is_error_page_detects_cms_404():
+    assert is_error_page(_CMS_ERROR_DOC) is True
+
+
+def test_is_error_page_passes_normal_page():
+    assert is_error_page(_NORMAL_DOC) is False
+
+
+def test_is_error_page_no_frontmatter():
+    doc = "# Resource at '/content/foo' not found: No resource found\nCannot serve..."
+    assert is_error_page(doc) is True
+
+
+def test_is_error_page_partial_match_does_not_trigger():
+    doc = "# Faculty Resources\n\nSome useful resources for faculty members."
+    assert is_error_page(doc) is False

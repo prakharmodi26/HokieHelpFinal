@@ -15,6 +15,7 @@ def _sample_chunk(**overrides) -> ChunkRecord:
         headings_path=["People", "Faculty"],
         content_hash="deadbeef01234567",
         crawl_timestamp="2026-03-16T03:00:00+00:00",
+        token_count=13,
     )
     defaults.update(overrides)
     return ChunkRecord(**defaults)
@@ -31,7 +32,7 @@ def test_to_dict_has_all_keys():
     d = _sample_chunk().to_dict()
     for key in (
         "chunk_id", "document_id", "chunk_index", "text", "url", "title",
-        "page_type", "headings_path", "content_hash", "crawl_timestamp",
+        "page_type", "headings_path", "content_hash", "crawl_timestamp", "token_count",
     ):
         assert key in d
 
