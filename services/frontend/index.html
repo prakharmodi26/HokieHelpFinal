@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HokieHelp</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>HokieHelp</h1>
+            <p>Virginia Tech CS Department Assistant</p>
+        </header>
+        <main id="chat-container">
+            <div id="messages"></div>
+            <div id="typing-indicator" class="hidden">
+                <span></span><span></span><span></span>
+            </div>
+        </main>
+        <form id="chat-form">
+            <input
+                type="text"
+                id="question-input"
+                placeholder="Ask about VT Computer Science..."
+                autocomplete="off"
+                maxlength="2000"
+                required
+            >
+            <button type="submit" id="send-btn">Send</button>
+        </form>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
