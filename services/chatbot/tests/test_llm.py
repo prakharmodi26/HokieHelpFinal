@@ -1,7 +1,7 @@
 """Tests for the LLM client — API calls are mocked."""
 from unittest.mock import MagicMock, patch
 
-from chatbot.llm import LLMClient, build_rag_prompt
+from chatbot.llm import LLMClient, build_rag_prompt, build_chat_messages, SYSTEM_PROMPT
 
 
 def test_build_rag_prompt_with_chunks():
@@ -35,3 +35,28 @@ def test_llm_client_ask():
     assert answer == "Sally Hamouda is a professor of CS."
     call_args = mock_client.chat.completions.create.call_args
     assert call_args.kwargs["model"] == "gpt-oss-120b"
+
+
+def test_build_chat_messages_with_history():
+    history = [
+        {"role": "user", "content": "Who is the department head?"},
+        {"role": "assistant", "content": "Dr. Smith is the department head."},
+    ]
+    chunks = [{"title": "Faculty", "url": "https://example.com", "text": "Dr. Jones teaches CS."}]
+    messages = build_chat_messages("What does Dr. Jones teach?", chunks, history)
+    assert messages[0] == {"role": "system", "content": SYSTEM_PROMPT}
+    assert messages[1]["role"] == "user"
+    assert messages[1]["content"] == "Who is the department head?"
+    assert messages[2]["role"] == "assistant"
+    assert messages[2]["content"] == "Dr. Smith is the department head."
+    assert messages[3]["role"] == "user"
+    assert "Dr. Jones teaches CS." in messages[3]["content"]
+    assert "What does Dr. Jones teach?" in messages[3]["content"]
+
+
+def test_build_chat_messages_no_history():
+    chunks = [{"title": "Test", "url": "https://example.com", "text": "Some text."}]
+    messages = build_chat_messages("Hello?", chunks, [])
+    assert len(messages) == 2
+    assert messages[0] == {"role": "system", "content": SYSTEM_PROMPT}
+    assert messages[1]["role"] == "user"

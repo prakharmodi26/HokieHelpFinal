@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
@@ -39,6 +40,44 @@ class Source(BaseModel):
 class AskResponse(BaseModel):
     answer: str
     sources: list[Source]
+
+
+class HistoryMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+    @field_validator("content")
+    @classmethod
+    def content_not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("content must not be empty")
+        return v
+
+
+class ChatRequest(BaseModel):
+    question: str
+    history: list[HistoryMessage] = []
+
+    @field_validator("question")
+    @classmethod
+    def question_not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("question must not be empty")
+        return v.strip()
+
+    @field_validator("question")
+    @classmethod
+    def question_not_too_long(cls, v: str) -> str:
+        if len(v) > 2000:
+            raise ValueError("question must not exceed 2000 characters")
+        return v
+
+    @field_validator("history")
+    @classmethod
+    def history_not_too_long(cls, v: list) -> list:
+        if len(v) > 100:
+            raise ValueError("history must not exceed 100 messages")
+        return v
 
 
 @app.on_event("startup")
@@ -89,4 +128,27 @@ def ask(req: AskRequest) -> AskResponse:
     ]
 
     logger.info("RESPONSE sent — answer_len=%d  sources=%d", len(answer), len(sources))
+    return AskResponse(answer=answer, sources=sources)
+
+
+@app.post("/chat", response_model=AskResponse)
+def chat(req: ChatRequest) -> AskResponse:
+    if retriever is None or llm_client is None:
+        raise HTTPException(status_code=503, detail="Service not initialized")
+
+    logger.info("=" * 70)
+    logger.info("NEW CHAT: %s (history_turns=%d)", req.question, len(req.history))
+    logger.info("=" * 70)
+
+    chunks = retriever.search(req.question)
+
+    history_dicts = [{"role": m.role, "content": m.content} for m in req.history]
+    answer = llm_client.chat(req.question, chunks, history_dicts)
+
+    sources = [
+        Source(title=c.get("title", ""), url=c.get("url", ""), score=c["score"])
+        for c in chunks
+    ]
+
+    logger.info("CHAT RESPONSE sent — answer_len=%d  sources=%d", len(answer), len(sources))
     return AskResponse(answer=answer, sources=sources)

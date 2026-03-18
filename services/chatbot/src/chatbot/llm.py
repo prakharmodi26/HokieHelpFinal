@@ -38,6 +38,20 @@ def build_rag_prompt(question: str, chunks: List[dict]) -> str:
     )
 
 
+def build_chat_messages(
+    question: str,
+    chunks: List[dict],
+    history: List[dict],
+) -> List[dict]:
+    """Build the full message list for the LLM with conversation history."""
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    for msg in history:
+        messages.append({"role": msg["role"], "content": msg["content"]})
+    user_message = build_rag_prompt(question, chunks)
+    messages.append({"role": "user", "content": user_message})
+    return messages
+
+
 class LLMClient:
     """Calls VT ARC's OpenAI-compatible LLM API."""
 
@@ -72,4 +86,23 @@ class LLMClient:
             response.model if hasattr(response, 'model') else '?',
         )
         logger.info("LLM ANSWER:\n%s", answer)
+        return answer
+
+    def chat(self, question: str, chunks: List[dict], history: List[dict]) -> str:
+        """Send a RAG query with conversation history to the LLM."""
+        messages = build_chat_messages(question, chunks, history)
+        logger.info("LLM CHAT REQUEST — messages=%d  history_turns=%d", len(messages), len(history))
+        response = self._client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            temperature=0.3,
+        )
+        answer = response.choices[0].message.content
+        usage = response.usage
+        logger.info(
+            "LLM CHAT RESPONSE — answer_len=%d  prompt_tokens=%s  completion_tokens=%s",
+            len(answer),
+            getattr(usage, 'prompt_tokens', '?') if usage else '?',
+            getattr(usage, 'completion_tokens', '?') if usage else '?',
+        )
         return answer
