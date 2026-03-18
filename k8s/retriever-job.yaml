@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hokiehelp-retriever-test
+  namespace: test
+  labels:
+    app: hokiehelp-retriever
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        app: hokiehelp-retriever
+    spec:
+      restartPolicy: Never
+      volumes:
+        - name: script
+          configMap:
+            name: retriever-script
+      containers:
+        - name: retriever
+          image: ghcr.io/prakharmodi26/hokiehelp-embedder:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "/scripts/query.py"]
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+          env:
+            - name: QDRANT_HOST
+              value: "qdrant"
+            - name: QDRANT_PORT
+              value: "6333"
+            - name: QDRANT_COLLECTION
+              value: "hokiehelp_chunks"
+            - name: EMBEDDING_MODEL
+              value: "BAAI/bge-large-en-v1.5"
+            - name: TOP_K
+              value: "5"
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "500m"
+              nvidia.com/gpu: "1"
+            limits:
+              memory: "8Gi"
+              cpu: "2000m"
+              nvidia.com/gpu: "1"

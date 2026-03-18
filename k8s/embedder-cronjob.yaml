@@ -13,7 +13,7 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 2
-      activeDeadlineSeconds: 7200  # 2 hour timeout (model loading + embedding)
+      activeDeadlineSeconds: 14400  # 4 hour timeout (CPU embedding of 463 docs)
       template:
         metadata:
           labels:
@@ -40,8 +40,10 @@ spec:
                       key: secret-key
               resources:
                 requests:
-                  memory: "2Gi"
-                  cpu: "500m"
-                limits:
                   memory: "4Gi"
+                  cpu: "500m"
+                  nvidia.com/gpu: "1"
+                limits:
+                  memory: "8Gi"
                   cpu: "2000m"
+                  nvidia.com/gpu: "1"

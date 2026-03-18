@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: retriever-script
+  namespace: test
+  labels:
+    app: hokiehelp-retriever
+data:
+  query.py: |
+    """
+    HokieHelp Retrieval Tester
+    Embeds queries, searches Qdrant, logs top-k chunks with full metadata + scores.
+    """
+    import os
+    import logging
+
+    from sentence_transformers import SentenceTransformer
+    from qdrant_client import QdrantClient
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s: %(message)s",
+    )
+    logger = logging.getLogger(__name__)
+
+    MODEL         = os.environ.get("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
+    QDRANT_HOST   = os.environ.get("QDRANT_HOST", "qdrant")
+    QDRANT_PORT   = int(os.environ.get("QDRANT_PORT", "6333"))
+    COLLECTION    = os.environ.get("QDRANT_COLLECTION", "hokiehelp_chunks")
+    TOP_K         = int(os.environ.get("TOP_K", "5"))
+
+    BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
+
+    QUERIES = [
+        "Sally Hamouda",
+        "Who teaches CS 3214?",
+        "What are the prerequisites for CS 3214?",
+        "Distributed systems faculty",
+        "PhD application deadline",
+        "undergraduate checksheet",
+    ]
+
+
+    def embed_query(model, query):
+        text = BGE_QUERY_PREFIX + query
+        return model.encode(text, show_progress_bar=False).tolist()
+
+
+    def log_results(query, hits):
+        sep = "=" * 70
+        logger.info(sep)
+        logger.info("QUERY  : %s", query)
+        logger.info("TOP_K  : %d  |  COLLECTION: %s", TOP_K, COLLECTION)
+        logger.info(sep)
+        if not hits:
+            logger.info("  [no results]")
+            return
+        for rank, hit in enumerate(hits, start=1):
+            p = hit.payload
+            logger.info("  Rank %d | score=%.4f", rank, hit.score)
+            logger.info("    chunk_id    : %s", p.get("chunk_id"))
+            logger.info("    document_id : %s", p.get("document_id"))
+            logger.info("    url         : %s", p.get("url"))
+            logger.info("    title       : %s", p.get("title"))
+            logger.info("    page_type   : %s", p.get("page_type"))
+            logger.info("    headings    : %s", p.get("headings_path"))
+            logger.info("    chunk_index : %s", p.get("chunk_index"))
+            logger.info("    token_count : %s", p.get("token_count"))
+            logger.info("    content_hash: %s", p.get("content_hash"))
+            logger.info("    crawl_time  : %s", p.get("crawl_timestamp"))
+            logger.info("-" * 70)
+
+
+    def main():
+        logger.info("Loading model: %s", MODEL)
+        model = SentenceTransformer(MODEL)
+        dim = model.get_sentence_embedding_dimension()
+        logger.info("Model loaded — dimension=%d", dim)
+
+        client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+        info = client.get_collection(COLLECTION)
+        logger.info("Qdrant collection '%s': %d points", COLLECTION, info.points_count)
+
+        for query in QUERIES:
+            vector = embed_query(model, query)
+            response = client.query_points(
+                collection_name=COLLECTION,
+                query=vector,
+                limit=TOP_K,
+                with_payload=True,
+            )
+            log_results(query, response.points)
+
+        logger.info("All queries done.")
+
+
+    if __name__ == "__main__":
+        main()

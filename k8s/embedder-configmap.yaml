@@ -13,4 +13,4 @@ data:
   QDRANT_PORT: "6333"
   QDRANT_COLLECTION: "hokiehelp_chunks"
   EMBEDDING_MODEL: "BAAI/bge-large-en-v1.5"
-  EMBEDDING_BATCH_SIZE: "32"
+  EMBEDDING_BATCH_SIZE: "128"

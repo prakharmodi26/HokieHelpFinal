@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import List
 
+import torch
 from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
@@ -32,12 +33,26 @@ def build_context(chunk: dict) -> str:
 
 
 class Embedder:
-    """Loads a SentenceTransformers model and generates embeddings."""
+    """Loads a SentenceTransformers model and generates embeddings.
+
+    Uses CUDA with fp16 if a GPU is available, falls back to CPU fp32.
+    """
 
     def __init__(self, model_name: str) -> None:
-        logger.info("Loading embedding model: %s", model_name)
-        self._model = SentenceTransformer(model_name)
-        logger.info("Model loaded — dimension=%d", self.dimension)
+        self._device = "cuda" if torch.cuda.is_available() else "cpu"
+        logger.info("Loading embedding model: %s  (device=%s)", model_name, self._device)
+
+        model_kwargs = {}
+        if self._device == "cuda":
+            # fp16 on GPU: ~2x faster, half the memory, negligible quality loss
+            model_kwargs["torch_dtype"] = "float16"
+
+        self._model = SentenceTransformer(
+            model_name,
+            device=self._device,
+            model_kwargs=model_kwargs if model_kwargs else None,
+        )
+        logger.info("Model loaded — dimension=%d  device=%s", self.dimension, self._device)
 
     @property
     def dimension(self) -> int:

@@ -58,7 +58,8 @@ def mock_model():
 
 @pytest.fixture
 def embedder(mock_model):
-    with patch("embedder.embedder.SentenceTransformer", return_value=mock_model):
+    with patch("embedder.embedder.SentenceTransformer", return_value=mock_model), \
+         patch("embedder.embedder.torch.cuda.is_available", return_value=False):
         return Embedder("mock-model")
 
 
