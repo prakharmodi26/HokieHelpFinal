@@ -50,6 +50,9 @@ class LLMClient:
         """Send a RAG query to the LLM and return the answer."""
         user_message = build_rag_prompt(question, chunks)
 
+        logger.info("LLM REQUEST — system_prompt_len=%d  user_message_len=%d", len(SYSTEM_PROMPT), len(user_message))
+        logger.info("LLM FULL PROMPT TO LLM:\n%s", user_message)
+
         response = self._client.chat.completions.create(
             model=self._model,
             messages=[
@@ -60,5 +63,13 @@ class LLMClient:
         )
 
         answer = response.choices[0].message.content
-        logger.info("LLM responded — question=%r  answer_len=%d", question, len(answer))
+        usage = response.usage
+        logger.info(
+            "LLM RESPONSE — answer_len=%d  prompt_tokens=%s  completion_tokens=%s  model=%s",
+            len(answer),
+            getattr(usage, 'prompt_tokens', '?') if usage else '?',
+            getattr(usage, 'completion_tokens', '?') if usage else '?',
+            response.model if hasattr(response, 'model') else '?',
+        )
+        logger.info("LLM ANSWER:\n%s", answer)
         return answer

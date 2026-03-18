@@ -44,7 +44,9 @@ class Retriever:
     def search(self, query: str) -> List[dict]:
         """Embed query and return top-k chunks from Qdrant."""
         text = BGE_QUERY_PREFIX + query
+        logger.info("RETRIEVER query=%r  prefixed=%r", query, text[:120])
         vector = self._model.encode(text, show_progress_bar=False).tolist()
+        logger.info("RETRIEVER embedding done — dim=%d", len(vector))
 
         response = self._client.query_points(
             collection_name=self._collection,
@@ -54,14 +56,26 @@ class Retriever:
         )
 
         results = []
-        for hit in response.points:
-            results.append({
+        for rank, hit in enumerate(response.points, 1):
+            payload = hit.payload
+            chunk_text = payload.get("text", "")
+            result = {
                 "score": hit.score,
-                "chunk_id": hit.payload.get("chunk_id"),
-                "text": hit.payload.get("text", ""),
-                "url": hit.payload.get("url", ""),
-                "title": hit.payload.get("title", ""),
-                "headings_path": hit.payload.get("headings_path", []),
-                "page_type": hit.payload.get("page_type", ""),
-            })
+                "chunk_id": payload.get("chunk_id"),
+                "text": chunk_text,
+                "url": payload.get("url", ""),
+                "title": payload.get("title", ""),
+                "headings_path": payload.get("headings_path", []),
+                "page_type": payload.get("page_type", ""),
+            }
+            results.append(result)
+
+            text_preview = (chunk_text or "[EMPTY]")[:200].replace("\n", " ")
+            logger.info(
+                "RETRIEVER rank=%d  score=%.4f  chunk_id=%s  title=%s  text_len=%d  preview=%s",
+                rank, hit.score, payload.get("chunk_id"), payload.get("title", "")[:60],
+                len(chunk_text), text_preview,
+            )
+
+        logger.info("RETRIEVER total_results=%d  query=%r", len(results), query)
         return results

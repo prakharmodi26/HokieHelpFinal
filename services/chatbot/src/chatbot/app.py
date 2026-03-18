@@ -72,7 +72,15 @@ def ask(req: AskRequest) -> AskResponse:
     if retriever is None or llm_client is None:
         raise HTTPException(status_code=503, detail="Service not initialized")
 
+    logger.info("=" * 70)
+    logger.info("NEW QUERY: %s", req.question)
+    logger.info("=" * 70)
+
     chunks = retriever.search(req.question)
+
+    non_empty = sum(1 for c in chunks if c.get("text"))
+    logger.info("CHUNKS with text: %d / %d", non_empty, len(chunks))
+
     answer = llm_client.ask(req.question, chunks)
 
     sources = [
@@ -80,4 +88,5 @@ def ask(req: AskRequest) -> AskResponse:
         for c in chunks
     ]
 
+    logger.info("RESPONSE sent — answer_len=%d  sources=%d", len(answer), len(sources))
     return AskResponse(answer=answer, sources=sources)
