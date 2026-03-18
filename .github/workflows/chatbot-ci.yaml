@@ -3,24 +3,31 @@ name: Chatbot CI
 on:
   push:
     branches: [main]
-    paths: ["services/chatbot/**"]
+    paths:
+      - "services/chatbot/**"
+      - ".github/workflows/chatbot-ci.yaml"
   pull_request:
-    paths: ["services/chatbot/**"]
+    branches: [main]
+    paths:
+      - "services/chatbot/**"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: prakharmodi26/hokiehelp-chatbot
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/chatbot
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install dependencies
-        run: |
-          pip install --extra-index-url https://download.pytorch.org/whl/cpu \
-            -e "services/chatbot/.[dev]"
-      - name: Run tests
-        run: pytest services/chatbot/tests -v
+      - run: pip install --extra-index-url https://download.pytorch.org/whl/cpu ".[dev]"
+      - run: pytest -v
 
   build-and-push:
     needs: test
@@ -31,15 +38,24 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+
       - uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
       - uses: docker/build-push-action@v5
         with:
           context: services/chatbot
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/hokiehelp-chatbot:latest
-            ghcr.io/${{ github.repository_owner }}/hokiehelp-chatbot:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
