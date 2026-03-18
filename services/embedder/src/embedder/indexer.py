@@ -63,6 +63,7 @@ class QdrantIndexer:
                     "content_hash": chunk.get("content_hash", ""),
                     "crawl_timestamp": chunk.get("crawl_timestamp", ""),
                     "token_count": chunk.get("token_count", 0),
+                    "text": chunk.get("text", ""),
                 },
             ))
         self._client.upsert(

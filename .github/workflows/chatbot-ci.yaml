@@ -1,0 +1,45 @@
+name: Chatbot CI
+
+on:
+  push:
+    branches: [main]
+    paths: ["services/chatbot/**"]
+  pull_request:
+    paths: ["services/chatbot/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install --extra-index-url https://download.pytorch.org/whl/cpu \
+            -e "services/chatbot/.[dev]"
+      - name: Run tests
+        run: pytest services/chatbot/tests -v
+
+  build-and-push:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          context: services/chatbot
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/hokiehelp-chatbot:latest
+            ghcr.io/${{ github.repository_owner }}/hokiehelp-chatbot:${{ github.sha }}

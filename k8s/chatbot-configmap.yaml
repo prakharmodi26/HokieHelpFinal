@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chatbot-config
+  namespace: test
+  labels:
+    app: hokiehelp-chatbot
+data:
+  QDRANT_HOST: "qdrant"
+  QDRANT_PORT: "6333"
+  QDRANT_COLLECTION: "hokiehelp_chunks"
+  EMBEDDING_MODEL: "BAAI/bge-large-en-v1.5"
+  TOP_K: "5"
+  LLM_BASE_URL: "https://llm-api.arc.vt.edu/api/v1"
+  LLM_MODEL: "gpt-oss-120b"

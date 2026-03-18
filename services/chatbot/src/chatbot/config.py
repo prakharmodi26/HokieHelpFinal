@@ -1,0 +1,32 @@
+"""Chatbot service configuration loaded from environment variables."""
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class ChatbotConfig:
+    """Immutable configuration for the chatbot service."""
+
+    llm_api_key: str
+    llm_base_url: str
+    llm_model: str
+    qdrant_host: str
+    qdrant_port: int
+    qdrant_collection: str
+    embedding_model: str
+    top_k: int
+
+    @classmethod
+    def from_env(cls) -> ChatbotConfig:
+        return cls(
+            llm_api_key=os.environ["LLM_API_KEY"],
+            llm_base_url=os.environ.get("LLM_BASE_URL", "https://llm-api.arc.vt.edu/api/v1"),
+            llm_model=os.environ.get("LLM_MODEL", "gpt-oss-120b"),
+            qdrant_host=os.environ.get("QDRANT_HOST", "qdrant"),
+            qdrant_port=int(os.environ.get("QDRANT_PORT", "6333")),
+            qdrant_collection=os.environ.get("QDRANT_COLLECTION", "hokiehelp_chunks"),
+            embedding_model=os.environ.get("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5"),
+            top_k=int(os.environ.get("TOP_K", "5")),
+        )
