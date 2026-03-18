@@ -1,0 +1,18 @@
+[project]
+name = "hokiehelp-embedder"
+version = "0.1.0"
+description = "Embedding and Qdrant indexing service for HokieHelp RAG pipeline"
+requires-python = ">=3.11"
+dependencies = [
+    "minio>=7.2.0",
+    "qdrant-client>=1.7.0",
+    "sentence-transformers>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+hokiehelp-embed = "embedder.main:cli"

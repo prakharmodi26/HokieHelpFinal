@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hokiehelp-embedder
+  namespace: test
+  labels:
+    app: hokiehelp-embedder
+spec:
+  schedule: "0 5 * * 0"  # Weekly on Sunday at 5am (1h after chunker at 4am)
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 7200  # 2 hour timeout (model loading + embedding)
+      template:
+        metadata:
+          labels:
+            app: hokiehelp-embedder
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: embedder
+              image: ghcr.io/prakharmodi26/hokiehelp-embedder:latest
+              imagePullPolicy: Always
+              envFrom:
+                - configMapRef:
+                    name: embedder-config
+              env:
+                - name: MINIO_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: minio-credentials
+                      key: access-key
+                - name: MINIO_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: minio-credentials
+                      key: secret-key
+              resources:
+                requests:
+                  memory: "2Gi"
+                  cpu: "500m"
+                limits:
+                  memory: "4Gi"
+                  cpu: "2000m"
