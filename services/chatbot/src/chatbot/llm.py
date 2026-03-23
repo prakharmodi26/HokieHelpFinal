@@ -81,6 +81,19 @@ def build_chat_messages(
     return messages
 
 
+REWRITE_PROMPT = """\
+Given the conversation history and a follow-up question, rewrite the follow-up \
+into a standalone search query that captures the full intent. \
+Return ONLY the rewritten query, nothing else. \
+If the question is already standalone, return it unchanged.
+
+Conversation:
+{history}
+
+Follow-up question: {question}
+Standalone query:"""
+
+
 class LLMClient:
     """Calls VT ARC's OpenAI-compatible LLM API."""
 
@@ -88,6 +101,26 @@ class LLMClient:
         self._client = OpenAI(api_key=api_key, base_url=base_url)
         self._model = model
         logger.info("LLM client ready — model=%s  base_url=%s", model, base_url)
+
+    def rewrite_query(self, question: str, history: List[dict]) -> str:
+        """Rewrite a follow-up question into a standalone search query."""
+        if not history:
+            return question
+
+        hist_text = "\n".join(
+            f"{m['role'].capitalize()}: {m['content'][:200]}" for m in history[-6:]
+        )
+        prompt = REWRITE_PROMPT.format(history=hist_text, question=question)
+
+        response = self._client.chat.completions.create(
+            model=self._model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=150,
+        )
+        rewritten = response.choices[0].message.content.strip()
+        logger.info("QUERY REWRITE: '%s' → '%s'", question, rewritten)
+        return rewritten
 
     def ask(self, question: str, chunks: List[dict]) -> str:
         """Send a RAG query to the LLM and return the answer."""

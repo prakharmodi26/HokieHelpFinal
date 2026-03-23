@@ -153,9 +153,12 @@ def chat(req: ChatRequest) -> AskResponse:
     logger.info("NEW CHAT: %s (history_turns=%d)", req.question, len(req.history))
     logger.info("=" * 70)
 
-    chunks = retriever.search(req.question)
-
     history_dicts = [{"role": m.role, "content": m.content} for m in req.history]
+
+    # Rewrite follow-up questions into standalone search queries
+    search_query = llm_client.rewrite_query(req.question, history_dicts)
+    chunks = retriever.search(search_query)
+
     answer = llm_client.chat(req.question, chunks, history_dicts)
 
     sources = _dedup_sources(chunks)
