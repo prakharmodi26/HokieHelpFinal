@@ -23,6 +23,7 @@ class Retriever:
         qdrant_port: int,
         collection: str,
         top_k: int,
+        min_score: float = 0.53,
     ) -> None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         model_kwargs = {}
@@ -36,9 +37,10 @@ class Retriever:
         self._client = QdrantClient(host=qdrant_host, port=qdrant_port)
         self._collection = collection
         self._top_k = top_k
+        self._min_score = min_score
         logger.info(
-            "Retriever ready — model=%s  device=%s  collection=%s  top_k=%d",
-            embedding_model, device, collection, top_k,
+            "Retriever ready — model=%s  device=%s  collection=%s  top_k=%d  min_score=%.2f",
+            embedding_model, device, collection, top_k, min_score,
         )
 
     def search(self, query: str) -> List[dict]:
@@ -55,7 +57,7 @@ class Retriever:
             with_payload=True,
         )
 
-        results = []
+        all_results = []
         for rank, hit in enumerate(response.points, 1):
             payload = hit.payload
             chunk_text = payload.get("text", "")
@@ -68,7 +70,7 @@ class Retriever:
                 "headings_path": payload.get("headings_path", []),
                 "page_type": payload.get("page_type", ""),
             }
-            results.append(result)
+            all_results.append(result)
 
             text_preview = (chunk_text or "[EMPTY]")[:200].replace("\n", " ")
             logger.info(
@@ -77,5 +79,14 @@ class Retriever:
                 len(chunk_text), text_preview,
             )
 
-        logger.info("RETRIEVER total_results=%d  query=%r", len(results), query)
+        # Filter by minimum score threshold
+        results = [r for r in all_results if r["score"] >= self._min_score]
+        dropped = len(all_results) - len(results)
+        if dropped:
+            logger.info(
+                "RETRIEVER dropped %d chunks below min_score=%.2f",
+                dropped, self._min_score,
+            )
+
+        logger.info("RETRIEVER total_results=%d (kept=%d)  query=%r", len(all_results), len(results), query)
         return results

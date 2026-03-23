@@ -17,6 +17,7 @@ class ChatbotConfig:
     qdrant_collection: str
     embedding_model: str
     top_k: int
+    min_score: float
 
     @classmethod
     def from_env(cls) -> ChatbotConfig:
@@ -29,4 +30,5 @@ class ChatbotConfig:
             qdrant_collection=os.environ.get("QDRANT_COLLECTION", "hokiehelp_chunks"),
             embedding_model=os.environ.get("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5"),
             top_k=int(os.environ.get("TOP_K", "5")),
+            min_score=float(os.environ.get("MIN_SCORE", "0.53")),
         )

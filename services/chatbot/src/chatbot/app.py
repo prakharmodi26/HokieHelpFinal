@@ -92,6 +92,7 @@ def startup() -> None:
         qdrant_port=cfg.qdrant_port,
         collection=cfg.qdrant_collection,
         top_k=cfg.top_k,
+        min_score=cfg.min_score,
     )
     llm_client = LLMClient(
         api_key=cfg.llm_api_key,
@@ -99,6 +100,21 @@ def startup() -> None:
         model=cfg.llm_model,
     )
     logger.info("Chatbot startup complete")
+
+
+def _dedup_sources(chunks: list[dict]) -> list[Source]:
+    """Deduplicate sources by URL, keeping the highest-scoring chunk per URL."""
+    seen: dict[str, Source] = {}
+    for c in chunks:
+        url = c.get("url", "")
+        score = c["score"]
+        if url not in seen or score > seen[url].score:
+            seen[url] = Source(
+                title=c.get("title", ""),
+                url=url,
+                score=score,
+            )
+    return sorted(seen.values(), key=lambda s: s.score, reverse=True)
 
 
 @app.get("/health")
@@ -122,10 +138,7 @@ def ask(req: AskRequest) -> AskResponse:
 
     answer = llm_client.ask(req.question, chunks)
 
-    sources = [
-        Source(title=c.get("title", ""), url=c.get("url", ""), score=c["score"])
-        for c in chunks
-    ]
+    sources = _dedup_sources(chunks)
 
     logger.info("RESPONSE sent — answer_len=%d  sources=%d", len(answer), len(sources))
     return AskResponse(answer=answer, sources=sources)
@@ -145,10 +158,7 @@ def chat(req: ChatRequest) -> AskResponse:
     history_dicts = [{"role": m.role, "content": m.content} for m in req.history]
     answer = llm_client.chat(req.question, chunks, history_dicts)
 
-    sources = [
-        Source(title=c.get("title", ""), url=c.get("url", ""), score=c["score"])
-        for c in chunks
-    ]
+    sources = _dedup_sources(chunks)
 
     logger.info("CHAT RESPONSE sent — answer_len=%d  sources=%d", len(answer), len(sources))
     return AskResponse(answer=answer, sources=sources)
