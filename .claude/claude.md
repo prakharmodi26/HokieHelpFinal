@@ -1,3 +1,11 @@
+# Documentation
+
+- Always use the `ctx7` CLI for any documentation needs (library APIs, configuration, code examples).
+- Workflow: `ctx7 library <name> "<query>"` to resolve the library ID, then `ctx7 docs <id> "<query>"` to fetch docs.
+- Do not rely on training knowledge for library APIs — always verify with ctx7 first to catch deprecations and version changes.
+
+---
+
 # Kubernetes deployment rules
 
 - Always show the current kubectl context before applying changes.

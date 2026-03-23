@@ -1,0 +1,27 @@
+{
+  "name": "hokiehelp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prakharmodi26/HokieHelpFinal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/prakharmodi26/HokieHelpFinal/issues"
+  },
+  "homepage": "https://github.com/prakharmodi26/HokieHelpFinal#readme",
+  "dependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

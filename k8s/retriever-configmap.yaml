@@ -68,6 +68,8 @@ data:
             logger.info("    token_count : %s", p.get("token_count"))
             logger.info("    content_hash: %s", p.get("content_hash"))
             logger.info("    crawl_time  : %s", p.get("crawl_timestamp"))
+            text = (p.get("text") or "").replace("\n", " ").strip()
+            logger.info("    text_preview: %s", text[:400])
             logger.info("-" * 70)
 
 
