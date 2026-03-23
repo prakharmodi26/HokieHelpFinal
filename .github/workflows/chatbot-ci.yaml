@@ -27,6 +27,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
       - run: pip install --extra-index-url https://download.pytorch.org/whl/cpu ".[dev]"
       - run: pytest -v
 
