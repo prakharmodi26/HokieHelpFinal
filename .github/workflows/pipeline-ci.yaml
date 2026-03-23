@@ -1,0 +1,61 @@
+name: Pipeline CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/pipeline/**"
+      - ".github/workflows/pipeline-ci.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "services/pipeline/**"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: prakharmodi26/hokiehelp-pipeline
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/pipeline
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ".[dev]"
+      - run: pytest -v
+
+  build-and-push:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: services/pipeline
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
