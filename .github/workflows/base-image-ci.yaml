@@ -1,37 +1,19 @@
-name: Chatbot CI
+name: Base Image CI
 
 on:
   push:
     branches: [main]
     paths:
-      - "services/chatbot/**"
-      - ".github/workflows/chatbot-ci.yaml"
-  pull_request:
-    branches: [main]
-    paths:
-      - "services/chatbot/**"
+      - "docker/base.Dockerfile"
+      - ".github/workflows/base-image-ci.yaml"
+  workflow_dispatch:  # manual trigger
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: prakharmodi26/hokiehelp-chatbot
+  IMAGE_NAME: prakharmodi26/hokiehelp-base
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/chatbot
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: pip install --extra-index-url https://download.pytorch.org/whl/cpu ".[dev]"
-      - run: pytest -v
-
   build-and-push:
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -55,7 +37,8 @@ jobs:
 
       - uses: docker/build-push-action@v5
         with:
-          context: services/chatbot
+          context: .
+          file: docker/base.Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

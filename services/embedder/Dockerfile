@@ -1,15 +1,12 @@
-FROM python:3.11-slim
+FROM ghcr.io/prakharmodi26/hokiehelp-base:latest
 
 WORKDIR /app
 
 COPY pyproject.toml .
 COPY src/ src/
 
-# Install CUDA-enabled PyTorch + service deps
-RUN pip install --no-cache-dir \
-    torch \
-    --index-url https://download.pytorch.org/whl/cu121 && \
-    pip install --no-cache-dir .
-
+# Base image already has torch, sentence-transformers, qdrant-client, minio, etc.
+# This only installs the package itself — takes seconds.
+RUN pip install --no-cache-dir --no-deps .
 
 CMD ["python", "-m", "embedder.main"]
