@@ -1,0 +1,16 @@
+[project]
+name = "hokiehelp-pipeline"
+version = "0.1.0"
+description = "Sequential ingestion pipeline orchestrator for HokieHelp"
+requires-python = ">=3.11"
+dependencies = [
+    "kubernetes>=29.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+hokiehelp-pipeline = "pipeline.main:cli"
