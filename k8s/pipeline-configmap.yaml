@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pipeline-config
+  namespace: test
+  labels:
+    app: hokiehelp-pipeline
+data:
+  # Default crawl settings for scheduled runs
+  CRAWL_SEED_URL: "https://website.cs.vt.edu"
+  CRAWL_MAX_DEPTH: "3"
+  CRAWL_MAX_PAGES: "100000"
+  # Pipeline behavior
+  PIPELINE_NAMESPACE: "test"
+  PIPELINE_POLL_INTERVAL: "30"

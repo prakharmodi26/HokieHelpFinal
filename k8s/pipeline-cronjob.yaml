@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hokiehelp-pipeline
+  namespace: test
+  labels:
+    app: hokiehelp-pipeline
+spec:
+  schedule: "0 3 * * 0"  # Weekly on Sunday at 3:00 AM UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0  # Pipeline handles retries per-stage; don't re-run the whole thing
+      activeDeadlineSeconds: 28800  # 8 hour overall timeout
+      template:
+        metadata:
+          labels:
+            app: hokiehelp-pipeline
+        spec:
+          serviceAccountName: hokiehelp-pipeline
+          restartPolicy: Never
+          containers:
+            - name: pipeline
+              image: ghcr.io/prakharmodi26/hokiehelp-pipeline:latest
+              imagePullPolicy: Always
+              envFrom:
+                - configMapRef:
+                    name: pipeline-config
+              resources:
+                requests:
+                  memory: "64Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "128Mi"
+                  cpu: "200m"
