@@ -357,3 +357,35 @@ async def test_run_crawl_metadata_fields_populated(crawler_config):
     assert "https://eng.vt.edu" in meta.external_links
     assert len(meta.doc_id) == 16
     assert len(meta.content_hash) == 64
+
+
+from crawler.crawl import _is_blocked_path
+
+
+def test_blocked_path_matches_content_prefix():
+    blocked = ("/content/", "/editor.html")
+    assert _is_blocked_path("https://website.cs.vt.edu/content/tags/foo", blocked) is True
+
+
+def test_blocked_path_matches_editor_page():
+    blocked = ("/content/", "/editor.html")
+    assert _is_blocked_path("https://website.cs.vt.edu/editor.html/content/foo", blocked) is True
+
+
+def test_blocked_path_matches_cs_root():
+    blocked = ("/cs-root.html",)
+    assert _is_blocked_path("https://website.cs.vt.edu/cs-root.html", blocked) is True
+
+
+def test_blocked_path_allows_faculty_page():
+    blocked = ("/content/", "/editor.html", "/cs-root.html", "/cs-source.html")
+    assert _is_blocked_path("https://website.cs.vt.edu/people/faculty/denis-gracanin.html", blocked) is False
+
+
+def test_blocked_path_allows_seminar_page():
+    blocked = ("/content/", "/editor.html", "/cs-root.html", "/cs-source.html")
+    assert _is_blocked_path("https://website.cs.vt.edu/research/Seminars/Ali_Butt.html", blocked) is False
+
+
+def test_blocked_path_empty_blocks_nothing():
+    assert _is_blocked_path("https://website.cs.vt.edu/content/anything", ()) is False

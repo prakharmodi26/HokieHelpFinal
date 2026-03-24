@@ -20,6 +20,7 @@ def crawler_config():
         max_pages=100,
         allowed_domains=("website.cs.vt.edu",),
         blocked_domains=("git.cs.vt.edu", "login.cs.vt.edu", "students.cs.vt.edu"),
+        blocked_paths=(),
         prune_threshold=0.45,
         request_delay=0.0,
     )

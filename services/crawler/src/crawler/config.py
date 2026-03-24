@@ -21,6 +21,7 @@ class CrawlerConfig:
     max_pages: int
     allowed_domains: tuple[str, ...]
     blocked_domains: tuple[str, ...]
+    blocked_paths: tuple[str, ...]
     prune_threshold: float
     request_delay: float  # seconds between requests to avoid rate limiting
 
@@ -63,6 +64,10 @@ class CrawlerConfig:
                 "git.cs.vt.edu,gitlab.cs.vt.edu,mail.cs.vt.edu,webmail.cs.vt.edu,"
                 "portal.cs.vt.edu,api.cs.vt.edu,forum.cs.vt.edu,login.cs.vt.edu,"
                 "students.cs.vt.edu,wordpress.cs.vt.edu,wiki.cs.vt.edu",
+            ),
+            blocked_paths=_domains(
+                "CRAWL_BLOCKED_PATHS",
+                "/content/,/editor.html,/cs-root.html,/cs-source.html",
             ),
             prune_threshold=float(os.environ.get("CRAWL_PRUNE_THRESHOLD", "0.45")),
             request_delay=float(os.environ.get("CRAWL_REQUEST_DELAY", "0.5")),

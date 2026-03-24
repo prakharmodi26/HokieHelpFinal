@@ -27,6 +27,12 @@ def _rewrite_to_website(url: str) -> str:
     return urlunparse(parsed._replace(netloc="website.cs.vt.edu", scheme="https"))
 
 
+def _is_blocked_path(url: str, blocked_paths: tuple[str, ...]) -> bool:
+    """Return True if the URL path starts with any blocked prefix."""
+    path = urlparse(url).path
+    return any(path.startswith(prefix) for prefix in blocked_paths)
+
+
 def _make_markdown_config(prune_threshold: float, request_delay: float = 0.5) -> CrawlerRunConfig:
     return CrawlerRunConfig(
         verbose=False,
@@ -171,6 +177,11 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
                 stats["pages_failed"] += 1
                 continue
 
+            if _is_blocked_path(result.url, config.blocked_paths):
+                logger.debug("Blocked path, skipping: %s", result.url)
+                stats["pages_failed"] += 1
+                continue
+
             final_host = urlparse(result.url).hostname
 
             # Page landed on cs.vt.edu — rewrite and queue for phase 2
@@ -223,6 +234,10 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
 
             for url in pending_fetches:
                 if url in stored_urls:
+                    continue
+
+                if _is_blocked_path(url, config.blocked_paths):
+                    logger.debug("Blocked path (phase 2), skipping: %s", url)
                     continue
 
                 result = await crawler.arun(url=url, config=single_config)
