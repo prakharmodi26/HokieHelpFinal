@@ -162,3 +162,52 @@ def test_infer_page_type_about():
 
 def test_infer_page_type_default():
     assert infer_page_type("https://website.cs.vt.edu/") == "general"
+
+
+# --- is_stale_time_sensitive_page ---
+
+from datetime import datetime, timezone, timedelta
+from chunker.parser import is_stale_time_sensitive_page
+
+
+SEMINAR_URL = "https://website.cs.vt.edu/research/Seminars/Ali_Butt.html"
+NEWS_URL = "https://website.cs.vt.edu/News/Seminars/someone.html"
+FACULTY_URL = "https://website.cs.vt.edu/people/faculty/denis-gracanin.html"
+
+
+def _body_with_date(date: datetime) -> str:
+    """Fake seminar body with date in the VT CS site format."""
+    return (
+        f"### {date.strftime('%A')}, {date.strftime('%B')} {date.day}, {date.year}"
+        " 2:30 - 3:45 p.m. Room 260\n### Abstract\nSome content here."
+    )
+
+
+def test_non_seminar_page_never_stale():
+    body = _body_with_date(datetime.now(timezone.utc) - timedelta(days=400))
+    assert is_stale_time_sensitive_page(FACULTY_URL, body) is False
+
+
+def test_recent_seminar_not_stale():
+    recent = datetime.now(timezone.utc) - timedelta(days=30)
+    assert is_stale_time_sensitive_page(SEMINAR_URL, _body_with_date(recent)) is False
+
+
+def test_old_seminar_is_stale():
+    old = datetime.now(timezone.utc) - timedelta(days=200)
+    assert is_stale_time_sensitive_page(SEMINAR_URL, _body_with_date(old)) is True
+
+
+def test_recent_news_seminar_not_stale():
+    recent = datetime.now(timezone.utc) - timedelta(days=45)
+    assert is_stale_time_sensitive_page(NEWS_URL, _body_with_date(recent)) is False
+
+
+def test_old_news_seminar_is_stale():
+    old = datetime.now(timezone.utc) - timedelta(days=210)
+    assert is_stale_time_sensitive_page(NEWS_URL, _body_with_date(old)) is True
+
+
+def test_seminar_no_date_is_not_stale():
+    """If date cannot be parsed, keep the page (fail safe)."""
+    assert is_stale_time_sensitive_page(SEMINAR_URL, "### Abstract\nNo date here.") is False

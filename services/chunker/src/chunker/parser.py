@@ -1,10 +1,13 @@
 """Parse YAML frontmatter and split markdown into semantic sections."""
 from __future__ import annotations
 
+import calendar
 import hashlib
 import re
 from dataclasses import dataclass, field
+from datetime import datetime, timezone, timedelta
 from typing import List, Tuple
+from urllib.parse import urlparse
 
 
 _CMS_ERROR_RE = re.compile(r"^#\s+Resource at '.*?' not found", re.MULTILINE)
@@ -13,6 +16,45 @@ _CMS_ERROR_RE = re.compile(r"^#\s+Resource at '.*?' not found", re.MULTILINE)
 def is_cms_error_page(body: str) -> bool:
     """Return True if the body is a CMS 'Resource not found' page (safety-net filter)."""
     return bool(_CMS_ERROR_RE.search(body[:500]))
+
+
+_TIME_SENSITIVE_PATHS = (
+    "/research/Seminars/",
+    "/News/Seminars/",
+)
+
+# Matches "Friday, November 7, 2025" — date format on VT CS seminar/news pages
+_EVENT_DATE_RE = re.compile(
+    r"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)"
+    r",\s+([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})",
+)
+
+_STALENESS_DAYS = 180  # ~6 months
+
+
+def is_stale_time_sensitive_page(url: str, body: str) -> bool:
+    """Return True if a seminar/news page's event date is older than 6 months.
+
+    Only applies to /research/Seminars/ and /News/Seminars/ paths.
+    All other pages return False. If date cannot be extracted, returns False
+    (fail safe — keep the page rather than silently dropping it).
+    """
+    path = urlparse(url).path
+    if not any(path.startswith(prefix) for prefix in _TIME_SENSITIVE_PATHS):
+        return False
+
+    match = _EVENT_DATE_RE.search(body[:2000])  # date is near the top
+    if not match:
+        return False
+
+    month_name, day_str, year_str = match.group(1), match.group(2), match.group(3)
+    try:
+        month_num = list(calendar.month_name).index(month_name)
+        event_date = datetime(int(year_str), month_num, int(day_str), tzinfo=timezone.utc)
+    except (ValueError, IndexError):
+        return False
+
+    return (datetime.now(timezone.utc) - event_date).days > _STALENESS_DAYS
 
 
 @dataclass
