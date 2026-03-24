@@ -5,7 +5,7 @@ import logging
 import sys
 
 from chunker.config import ChunkerConfig
-from chunker.parser import parse_frontmatter, split_sections, is_cms_error_page
+from chunker.parser import parse_frontmatter, split_sections, is_cms_error_page, is_stale_time_sensitive_page
 from chunker.splitter import build_chunks
 from chunker.storage import ChunkerStorage
 
@@ -38,6 +38,11 @@ def run_chunking(storage: ChunkerStorage, config: ChunkerConfig) -> dict:
 
             if is_cms_error_page(body):
                 logger.debug("Skipping %s — CMS error page", key)
+                stats["skipped"] += 1
+                continue
+
+            if is_stale_time_sensitive_page(frontmatter.url, body):
+                logger.info("Skipping stale time-sensitive page: %s", frontmatter.url)
                 stats["skipped"] += 1
                 continue
 

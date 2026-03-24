@@ -91,3 +91,25 @@ def test_run_chunking_multiple_docs(chunker_config):
     stats = run_chunking(storage, chunker_config)
     assert stats["processed"] == 2
     assert storage.upload_chunks.call_count == 2
+
+
+def test_stale_seminar_is_skipped(chunker_config):
+    """A seminar page older than 6 months must be skipped, not chunked."""
+    from datetime import datetime, timezone, timedelta
+    old = datetime.now(timezone.utc) - timedelta(days=200)
+    stale_doc = (
+        "---\n"
+        "doc_id: 'stale00000000001'\n"
+        "url: 'https://website.cs.vt.edu/research/Seminars/OldSeminar.html'\n"
+        "title: 'Old Seminar'\n"
+        "content_hash: 'abc123'\n"
+        "crawl_timestamp: '2024-01-01T00:00:00+00:00'\n"
+        "---\n"
+        f"### {old.strftime('%A')}, {old.strftime('%B')} {old.day}, {old.year} 2:30 p.m.\n"
+        "### Abstract\nOld content that should not be indexed."
+    )
+    storage = _make_storage({"website.cs.vt.edu/research/Seminars/OldSeminar.md": stale_doc})
+    stats = run_chunking(storage, chunker_config)
+    assert stats["skipped"] == 1
+    assert stats["processed"] == 0
+    assert not storage.upload_chunks.called
