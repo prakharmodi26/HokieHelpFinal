@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 @pytest.fixture
 def mock_retriever():
     r = MagicMock()
-    r.search.return_value = [
+    chunks = [
         {
             "score": 0.85,
             "chunk_id": "abc_0000",
@@ -18,6 +18,8 @@ def mock_retriever():
             "page_type": "faculty",
         }
     ]
+    r.search.return_value = chunks
+    r.search_with_context.return_value = chunks
     return r
 
 
@@ -107,3 +109,56 @@ def test_chat_history_too_many_turns(client, mock_retriever, mock_llm):
         "history": long_history,
     })
     assert resp.status_code == 422
+
+
+def test_chat_uses_history_aware_retrieval(client, mock_retriever, mock_llm):
+    """The /chat endpoint passes history to search_with_context."""
+    resp = client.post("/chat", json={
+        "question": "What about their research?",
+        "history": [
+            {"role": "user", "content": "Who is Dr. Smith?"},
+            {"role": "assistant", "content": "Dr. Smith is a professor."},
+        ],
+    })
+    assert resp.status_code == 200
+    # Verify search_with_context was called (not plain search)
+    mock_retriever.search_with_context.assert_called_once()
+    call_args = mock_retriever.search_with_context.call_args
+    assert call_args[0][0] == "What about their research?"
+    assert len(call_args[0][1]) == 2  # history passed
+
+
+def test_chat_llm_receives_proper_history(client, mock_retriever, mock_llm):
+    """The /chat endpoint passes history as separate argument."""
+    resp = client.post("/chat", json={
+        "question": "Follow-up question",
+        "history": [
+            {"role": "user", "content": "First question"},
+            {"role": "assistant", "content": "First answer"},
+        ],
+    })
+    assert resp.status_code == 200
+    mock_llm.chat.assert_called_once()
+    call_args = mock_llm.chat.call_args
+    # chat(question, chunks, history)
+    assert call_args[0][0] == "Follow-up question"
+    assert len(call_args[0][2]) == 2  # history passed through
+
+
+def test_stream_endpoint(client, mock_retriever, mock_llm):
+    """The /chat/stream endpoint returns SSE events."""
+    mock_llm.chat_stream.return_value = iter(["Hello", " world"])
+
+    resp = client.post("/chat/stream", json={
+        "question": "Hello",
+        "history": [],
+    })
+    assert resp.status_code == 200
+    assert "text/event-stream" in resp.headers["content-type"]
+
+    body = resp.text
+    assert '"type": "token"' in body
+    assert '"content": "Hello"' in body
+    assert '"content": " world"' in body
+    assert '"type": "sources"' in body
+    assert '"type": "done"' in body

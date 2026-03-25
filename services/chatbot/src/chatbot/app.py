@@ -1,10 +1,12 @@
 """FastAPI application for HokieHelp chatbot."""
 from __future__ import annotations
 
+import json
 import logging
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator
 
 from chatbot.config import ChatbotConfig
@@ -153,12 +155,35 @@ def chat(req: ChatRequest) -> AskResponse:
     logger.info("NEW CHAT: %s (history_turns=%d)", req.question, len(req.history))
     logger.info("=" * 70)
 
-    chunks = retriever.search(req.question)
-
     history_dicts = [{"role": m.role, "content": m.content} for m in req.history]
+    chunks = retriever.search_with_context(req.question, history_dicts)
+
     answer = llm_client.chat(req.question, chunks, history_dicts)
 
     sources = _dedup_sources(chunks)
 
     logger.info("CHAT RESPONSE sent — answer_len=%d  sources=%d", len(answer), len(sources))
     return AskResponse(answer=answer, sources=sources)
+
+
+@app.post("/chat/stream")
+def chat_stream(req: ChatRequest) -> StreamingResponse:
+    if retriever is None or llm_client is None:
+        raise HTTPException(status_code=503, detail="Service not initialized")
+
+    logger.info("=" * 70)
+    logger.info("NEW STREAM CHAT: %s (history_turns=%d)", req.question, len(req.history))
+    logger.info("=" * 70)
+
+    history_dicts = [{"role": m.role, "content": m.content} for m in req.history]
+    chunks = retriever.search_with_context(req.question, history_dicts)
+    sources = _dedup_sources(chunks)
+
+    def generate():
+        for token in llm_client.chat_stream(req.question, chunks, history_dicts):
+            yield f'data: {json.dumps({"type": "token", "content": token})}\n\n'
+
+        yield f'data: {json.dumps({"type": "sources", "sources": [s.model_dump() for s in sources]})}\n\n'
+        yield f'data: {json.dumps({"type": "done"})}\n\n'
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
