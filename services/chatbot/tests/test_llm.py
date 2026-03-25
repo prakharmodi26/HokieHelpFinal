@@ -141,3 +141,31 @@ def test_llm_client_chat_sends_proper_messages_array():
     assert messages[3] == {"role": "user", "content": "Who did I ask about?"}
     # No "CHAT HISTORY:" text block — each message is a proper dict
     assert "CHAT HISTORY:" not in messages[1]["content"]
+
+
+def test_llm_client_chat_stream():
+    """chat_stream() yields content deltas from a streaming response."""
+    mock_client = MagicMock()
+
+    # Simulate streaming chunks
+    chunk1 = MagicMock()
+    chunk1.choices = [MagicMock()]
+    chunk1.choices[0].delta.content = "Sally"
+
+    chunk2 = MagicMock()
+    chunk2.choices = [MagicMock()]
+    chunk2.choices[0].delta.content = " is a professor."
+
+    chunk3 = MagicMock()
+    chunk3.choices = [MagicMock()]
+    chunk3.choices[0].delta.content = None  # final chunk
+
+    mock_client.chat.completions.create.return_value = iter([chunk1, chunk2, chunk3])
+
+    with patch("chatbot.llm.OpenAI", return_value=mock_client):
+        client = LLMClient(api_key="sk-test", base_url="https://test.com/api/v1", model="gpt-oss-120b")
+        tokens = list(client.chat_stream("Who is Sally?", [{"text": "Context", "url": "u", "title": "T"}], []))
+
+    assert tokens == ["Sally", " is a professor."]
+    call_args = mock_client.chat.completions.create.call_args
+    assert call_args.kwargs["stream"] is True

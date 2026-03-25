@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Generator
 
 from openai import OpenAI
 
@@ -136,3 +137,29 @@ class LLMClient:
             response.model if hasattr(response, "model") else "?",
         )
         return answer
+
+    def chat_stream(
+        self,
+        question: str,
+        chunks: list[dict],
+        history: list[dict],
+    ) -> Generator[str, None, None]:
+        """Stream a RAG conversation response, yielding content tokens."""
+        messages = build_messages(question, chunks, history)
+
+        logger.info(
+            "LLM STREAM REQUEST — messages=%d  history_turns=%d  chunks=%d",
+            len(messages), len(history), len(chunks),
+        )
+
+        stream = self._client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            temperature=0.3,
+            stream=True,
+        )
+
+        for chunk in stream:
+            delta = chunk.choices[0].delta
+            if delta.content:
+                yield delta.content
