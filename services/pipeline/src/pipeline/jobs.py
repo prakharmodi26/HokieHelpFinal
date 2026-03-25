@@ -62,8 +62,8 @@ def build_crawler_job(config: PipelineConfig, run_id: str) -> client.V1Job:
         ],
         env=env_overrides + _minio_secret_envs(),
         resources=client.V1ResourceRequirements(
-            requests={"memory": "512Mi", "cpu": "250m"},
-            limits={"memory": "2Gi", "cpu": "1000m"},
+            requests={"memory": "2Gi", "cpu": "1000m"},
+            limits={"memory": "4Gi", "cpu": "2000m"},
         ),
     )
 
@@ -77,7 +77,7 @@ def build_crawler_job(config: PipelineConfig, run_id: str) -> client.V1Job:
         ),
         spec=client.V1JobSpec(
             backoff_limit=2,
-            active_deadline_seconds=7200,
+            active_deadline_seconds=28800,
             template=client.V1PodTemplateSpec(
                 metadata=client.V1ObjectMeta(
                     labels=_pipeline_labels("crawler", run_id),
