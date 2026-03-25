@@ -3,7 +3,7 @@ import numpy as np
 from unittest.mock import MagicMock, patch
 import pytest
 
-from chatbot.retriever import Retriever, BGE_QUERY_PREFIX
+from chatbot.retriever import Retriever, BGE_QUERY_PREFIX, contextualize_query
 
 
 @pytest.fixture
@@ -76,3 +76,48 @@ def test_search_empty_results(retriever, mock_qdrant):
 
     results = retriever.search("nonexistent topic")
     assert results == []
+
+
+def test_search_with_context_uses_enriched_query(retriever, mock_model, mock_qdrant):
+    """search_with_context passes the enriched query to the underlying search."""
+    mock_response = MagicMock()
+    mock_response.points = []
+    mock_qdrant.query_points.return_value = mock_response
+
+    history = [{"role": "user", "content": "Who is Sally Hamouda?"}]
+    retriever.search_with_context("What about their research?", history)
+
+    encoded_text = mock_model.encode.call_args[0][0]
+    assert "Sally Hamouda" in encoded_text
+    assert "What about their research?" in encoded_text
+
+
+def test_contextualize_query_no_history():
+    """Without history, query is returned unchanged."""
+    assert contextualize_query("Who is Sally?", []) == "Who is Sally?"
+
+
+def test_contextualize_query_with_history():
+    """Follow-up question gets the last user message prepended."""
+    history = [
+        {"role": "user", "content": "Who is Sally Hamouda?"},
+        {"role": "assistant", "content": "Sally Hamouda is a professor of CS."},
+    ]
+    result = contextualize_query("What about their research?", history)
+    assert "Sally Hamouda" in result
+    assert "What about their research?" in result
+
+
+def test_contextualize_query_multiple_turns():
+    """With several turns, only the last user message is used for context."""
+    history = [
+        {"role": "user", "content": "Tell me about the graduate program."},
+        {"role": "assistant", "content": "The CS department offers MS and PhD."},
+        {"role": "user", "content": "Who is the department head?"},
+        {"role": "assistant", "content": "Dr. Cal Ribbens is the department head."},
+    ]
+    result = contextualize_query("What are their research interests?", history)
+    assert "department head" in result
+    assert "What are their research interests?" in result
+    # Should NOT include old context about grad program
+    assert "graduate program" not in result

@@ -13,6 +13,23 @@ logger = logging.getLogger(__name__)
 BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
 
+def contextualize_query(query: str, history: list[dict]) -> str:
+    """Enrich a follow-up question with conversation context for better retrieval.
+
+    Prepends the last user message so pronouns like "their", "he", "she"
+    resolve to the correct entity during embedding.
+    """
+    if not history:
+        return query
+
+    # Find the last user message
+    for msg in reversed(history):
+        if msg.get("role") == "user":
+            return f"{msg['content']} {query}"
+
+    return query
+
+
 class Retriever:
     """Embeds queries with BGE prefix and searches Qdrant."""
 
@@ -90,3 +107,9 @@ class Retriever:
 
         logger.info("RETRIEVER total_results=%d (kept=%d)  query=%r", len(all_results), len(results), query)
         return results
+
+    def search_with_context(self, query: str, history: list[dict]) -> list[dict]:
+        """Search with conversation-aware query enrichment."""
+        enriched = contextualize_query(query, history)
+        logger.info("RETRIEVER contextualized query=%r -> %r", query, enriched[:120])
+        return self.search(enriched)
