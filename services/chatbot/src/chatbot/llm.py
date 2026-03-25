@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import List
 
 from openai import OpenAI
 
@@ -45,49 +44,24 @@ Example:
 **Sources:**
 - **[Page Title | Computer Science](https://website.cs.vt.edu/...)**"""
 
-
-def build_rag_prompt(question: str, chunks: List[dict]) -> str:
-    """Build the user message with retrieved context."""
-    if not chunks:
-        return (
-            f"Question: {question}\n\n"
-            "No relevant information was found in the CS department website. "
-            "Please let the user know you couldn't find an answer."
-        )
-
-    context_parts = []
-    for i, chunk in enumerate(chunks, 1):
-        context_parts.append(
-            f"[Source {i}] {chunk.get('title', 'Untitled')} — {chunk.get('url', '')}\n"
-            f"{chunk['text']}"
-        )
-
-    context = "\n\n---\n\n".join(context_parts)
-    return (
-        f"Context from the VT CS department website:\n\n{context}\n\n"
-        f"---\n\nQuestion: {question}"
-    )
+MAX_HISTORY_MESSAGES = 20  # 10 turns; override via parameter
 
 
-def build_chat_prompt(
+def build_messages(
     question: str,
-    chunks: List[dict],
-    history: List[dict],
-) -> str:
-    """Build the user message with chat history and optional retrieved context."""
-    parts = []
+    chunks: list[dict],
+    history: list[dict],
+    max_history_messages: int = MAX_HISTORY_MESSAGES,
+) -> list[dict]:
+    """Build the OpenAI messages array for a RAG conversation.
 
-    # Chat history section
-    if history:
-        hist_lines = []
-        for msg in history[-10:]:  # last 10 messages (5 turns)
-            role = msg["role"].capitalize()
-            hist_lines.append(f"{role}: {msg['content']}")
-        parts.append(
-            "CHAT HISTORY:\n" + "\n".join(hist_lines)
-        )
-
-    # Retrieved context section
+    Structure:
+      [0]   system  — base prompt + retrieved context (or "no context" notice)
+      [1..N] user/assistant — conversation history (last max_history_messages)
+      [N+1] user — current question
+    """
+    # --- System message: base prompt + RAG context ---
+    system_content = SYSTEM_PROMPT
     if chunks:
         context_parts = []
         for i, chunk in enumerate(chunks, 1):
@@ -96,13 +70,28 @@ def build_chat_prompt(
                 f"{chunk['text']}"
             )
         context = "\n\n---\n\n".join(context_parts)
-        parts.append(
-            "RETRIEVED CONTEXT:\n" + context
+        system_content += (
+            "\n\n---\n\n"
+            "Retrieved context from the VT CS department website:\n\n"
+            + context
+        )
+    else:
+        system_content += (
+            "\n\n---\n\n"
+            "No relevant information was found in the CS department website for this query."
         )
 
-    parts.append(f"Question: {question}")
+    messages: list[dict] = [{"role": "system", "content": system_content}]
 
-    return "\n\n---\n\n".join(parts)
+    # --- Conversation history as proper alternating messages ---
+    trimmed = history[-max_history_messages:] if history else []
+    for msg in trimmed:
+        messages.append({"role": msg["role"], "content": msg["content"]})
+
+    # --- Current question ---
+    messages.append({"role": "user", "content": question})
+
+    return messages
 
 
 class LLMClient:
@@ -113,18 +102,27 @@ class LLMClient:
         self._model = model
         logger.info("LLM client ready — model=%s  base_url=%s", model, base_url)
 
-    def ask(self, question: str, chunks: List[dict]) -> str:
-        """Send a RAG query to the LLM and return the answer."""
-        user_message = build_rag_prompt(question, chunks)
+    def ask(self, question: str, chunks: list[dict]) -> str:
+        """Simple RAG query (no history). Delegates to chat()."""
+        return self.chat(question, chunks, [])
 
-        logger.info("LLM REQUEST — system_prompt_len=%d  user_message_len=%d", len(SYSTEM_PROMPT), len(user_message))
+    def chat(
+        self,
+        question: str,
+        chunks: list[dict],
+        history: list[dict],
+    ) -> str:
+        """Send a RAG conversation to the LLM and return the answer."""
+        messages = build_messages(question, chunks, history)
+
+        logger.info(
+            "LLM REQUEST — messages=%d  history_turns=%d  chunks=%d",
+            len(messages), len(history), len(chunks),
+        )
 
         response = self._client.chat.completions.create(
             model=self._model,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_message},
-            ],
+            messages=messages,
             temperature=0.3,
         )
 
@@ -133,35 +131,8 @@ class LLMClient:
         logger.info(
             "LLM RESPONSE — answer_len=%d  prompt_tokens=%s  completion_tokens=%s  model=%s",
             len(answer),
-            getattr(usage, 'prompt_tokens', '?') if usage else '?',
-            getattr(usage, 'completion_tokens', '?') if usage else '?',
-            response.model if hasattr(response, 'model') else '?',
-        )
-        return answer
-
-    def chat(self, question: str, chunks: List[dict], history: List[dict]) -> str:
-        """Send a RAG query with conversation history to the LLM."""
-        user_message = build_chat_prompt(question, chunks, history)
-
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_message},
-        ]
-
-        logger.info("LLM CHAT REQUEST — history_turns=%d  chunks=%d  prompt_len=%d",
-                     len(history), len(chunks), len(user_message))
-
-        response = self._client.chat.completions.create(
-            model=self._model,
-            messages=messages,
-            temperature=0.3,
-        )
-        answer = response.choices[0].message.content
-        usage = response.usage
-        logger.info(
-            "LLM CHAT RESPONSE — answer_len=%d  prompt_tokens=%s  completion_tokens=%s",
-            len(answer),
-            getattr(usage, 'prompt_tokens', '?') if usage else '?',
-            getattr(usage, 'completion_tokens', '?') if usage else '?',
+            getattr(usage, "prompt_tokens", "?") if usage else "?",
+            getattr(usage, "completion_tokens", "?") if usage else "?",
+            response.model if hasattr(response, "model") else "?",
         )
         return answer
