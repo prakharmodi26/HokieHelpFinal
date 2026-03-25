@@ -18,6 +18,7 @@ class ChatbotConfig:
     embedding_model: str
     top_k: int
     min_score: float
+    max_history_messages: int
 
     @classmethod
     def from_env(cls) -> ChatbotConfig:
@@ -31,4 +32,5 @@ class ChatbotConfig:
             embedding_model=os.environ.get("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5"),
             top_k=int(os.environ.get("TOP_K", "5")),
             min_score=float(os.environ.get("MIN_SCORE", "0.53")),
+            max_history_messages=int(os.environ.get("MAX_HISTORY_MESSAGES", "20")),
         )

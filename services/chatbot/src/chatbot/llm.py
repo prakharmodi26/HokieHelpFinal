@@ -98,10 +98,11 @@ def build_messages(
 class LLMClient:
     """Calls VT ARC's OpenAI-compatible LLM API."""
 
-    def __init__(self, api_key: str, base_url: str, model: str) -> None:
+    def __init__(self, api_key: str, base_url: str, model: str, max_history_messages: int = 20) -> None:
         self._client = OpenAI(api_key=api_key, base_url=base_url)
         self._model = model
-        logger.info("LLM client ready — model=%s  base_url=%s", model, base_url)
+        self._max_history = max_history_messages
+        logger.info("LLM client ready — model=%s  base_url=%s  max_history=%d", model, base_url, max_history_messages)
 
     def ask(self, question: str, chunks: list[dict]) -> str:
         """Simple RAG query (no history). Delegates to chat()."""
@@ -114,7 +115,7 @@ class LLMClient:
         history: list[dict],
     ) -> str:
         """Send a RAG conversation to the LLM and return the answer."""
-        messages = build_messages(question, chunks, history)
+        messages = build_messages(question, chunks, history, max_history_messages=self._max_history)
 
         logger.info(
             "LLM REQUEST — messages=%d  history_turns=%d  chunks=%d",
@@ -145,7 +146,7 @@ class LLMClient:
         history: list[dict],
     ) -> Generator[str, None, None]:
         """Stream a RAG conversation response, yielding content tokens."""
-        messages = build_messages(question, chunks, history)
+        messages = build_messages(question, chunks, history, max_history_messages=self._max_history)
 
         logger.info(
             "LLM STREAM REQUEST — messages=%d  history_turns=%d  chunks=%d",

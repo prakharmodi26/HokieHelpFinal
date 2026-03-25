@@ -17,6 +17,7 @@ def test_from_env_defaults():
     assert cfg.qdrant_collection == "hokiehelp_chunks"
     assert cfg.embedding_model == "BAAI/bge-large-en-v1.5"
     assert cfg.top_k == 5
+    assert cfg.max_history_messages == 20
 
 
 def test_from_env_overrides():

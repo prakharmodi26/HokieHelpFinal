@@ -100,6 +100,7 @@ def startup() -> None:
         api_key=cfg.llm_api_key,
         base_url=cfg.llm_base_url,
         model=cfg.llm_model,
+        max_history_messages=cfg.max_history_messages,
     )
     logger.info("Chatbot startup complete")
 
