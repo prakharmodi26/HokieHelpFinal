@@ -23,9 +23,8 @@ _INJECTION_PATTERNS: list[re.Pattern] = [
     re.compile(r'\breveal\s+(your\s+)?(system\s+)?prompt\b'),
     re.compile(r'\bprint\s+(your\s+)?(instructions?|system\s+prompt)\b'),
     re.compile(r'\brepeat\s+(everything|all)\s+(above|before)\b'),
-    re.compile(r'\bsystem\s+prompt\b'),
     re.compile(r'\bpretend\s+(you\s+are|to\s+be)\b'),
-    re.compile(r'\bdo\s+anything\s+now\b'),   # DAN variant
+    re.compile(r'\bdo\s+anything\s+now\b'),   # DAN ("Do Anything Now") jailbreak variant
 ]
 
 
