@@ -38,3 +38,33 @@ def test_from_env_missing_api_key():
     with patch.dict(os.environ, {}, clear=True):
         with pytest.raises(KeyError):
             ChatbotConfig.from_env()
+
+
+def test_rate_limit_defaults():
+    """Config should default to 100 requests / 3600 seconds when env vars are absent."""
+    env = {
+        "LLM_API_KEY": "test-key",
+        "LLM_BASE_URL": "http://localhost",
+        "LLM_MODEL": "test-model",
+    }
+    with patch.dict(os.environ, env, clear=False):
+        os.environ.pop("RATE_LIMIT_REQUESTS", None)
+        os.environ.pop("RATE_LIMIT_WINDOW_SECONDS", None)
+        cfg = ChatbotConfig.from_env()
+    assert cfg.rate_limit_requests == 100
+    assert cfg.rate_limit_window_seconds == 3600
+
+
+def test_rate_limit_from_env():
+    """Config should honour RATE_LIMIT_REQUESTS and RATE_LIMIT_WINDOW_SECONDS."""
+    env = {
+        "LLM_API_KEY": "test-key",
+        "LLM_BASE_URL": "http://localhost",
+        "LLM_MODEL": "test-model",
+        "RATE_LIMIT_REQUESTS": "50",
+        "RATE_LIMIT_WINDOW_SECONDS": "1800",
+    }
+    with patch.dict(os.environ, env, clear=False):
+        cfg = ChatbotConfig.from_env()
+    assert cfg.rate_limit_requests == 50
+    assert cfg.rate_limit_window_seconds == 1800
