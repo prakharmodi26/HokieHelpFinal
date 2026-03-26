@@ -75,19 +75,17 @@ body {
     gap: 14px;
 }
 
-.logo-mark {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.15);
-    color: #FFFFFF;
-    font-family: var(--font);
-    font-size: 20px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    letter-spacing: -0.02em;
+.logo-header {
+    height: 36px;
+    width: auto;
+    display: block;
+}
+
+.logo-divider {
+    width: 1.5px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
 }
 
 .logo-text h1 {
@@ -169,19 +167,6 @@ body {
     animation: fadeSlideUp 0.5s var(--ease) forwards;
 }
 
-.welcome-card::after {
-    content: 'H';
-    position: absolute;
-    bottom: -20px;
-    right: 24px;
-    font-family: var(--font);
-    font-size: 160px;
-    font-weight: 800;
-    color: rgba(255, 255, 255, 0.04);
-    line-height: 1;
-    pointer-events: none;
-}
-
 .welcome-card h2 {
     font-family: var(--font);
     font-size: 28px;
@@ -253,9 +238,15 @@ body {
 }
 
 .msg-avatar.assistant-avatar {
-    background: var(--maroon);
-    color: #FFFFFF;
-    letter-spacing: -0.02em;
+    background: var(--bg-warm);
+    border: 1.5px solid var(--border);
+    padding: 4px;
+}
+
+.msg-avatar.assistant-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .msg-avatar.user-avatar {
@@ -400,15 +391,19 @@ body {
     width: 36px;
     height: 36px;
     border-radius: 12px;
-    background: var(--maroon);
-    color: #FFFFFF;
-    font-family: var(--font);
-    font-size: 15px;
-    font-weight: 800;
+    background: var(--bg-warm);
+    border: 1.5px solid var(--border);
+    padding: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+}
+
+.typing-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .typing-dots {

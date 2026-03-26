@@ -47,13 +47,7 @@
         card.id = "welcome-card";
         card.innerHTML =
             '<h2>Welcome to HokieHelp</h2>' +
-            '<p>Your AI assistant for Virginia Tech\'s Computer Science department. Ask me about faculty, courses, research, admissions, and more.</p>' +
-            '<div class="welcome-suggestions">' +
-                '<button class="suggestion-chip" data-q="Who are the faculty in the CS department?">Faculty</button>' +
-                '<button class="suggestion-chip" data-q="What research areas does the CS department focus on?">Research areas</button>' +
-                '<button class="suggestion-chip" data-q="Tell me about the CS undergraduate program">Undergrad program</button>' +
-                '<button class="suggestion-chip" data-q="What are the admission requirements for CS?">Admissions</button>' +
-            '</div>';
+            '<p>Your AI assistant for Virginia Tech\'s Computer Science department. Ask me about faculty, courses, research, admissions, and more.</p>';
         messagesEl.appendChild(card);
 
         var chips = card.querySelectorAll(".suggestion-chip");
@@ -76,7 +70,14 @@
 
         var avatar = document.createElement("div");
         avatar.className = "msg-avatar " + (role === "assistant" ? "assistant-avatar" : "user-avatar");
-        avatar.textContent = role === "assistant" ? "H" : "Y";
+        if (role === "assistant") {
+            var img = document.createElement("img");
+            img.src = "assets/images/vt-mark-orange.svg";
+            img.alt = "VT";
+            avatar.appendChild(img);
+        } else {
+            avatar.textContent = "Y";
+        }
 
         var bubble = document.createElement("div");
         bubble.className = "message " + role;
