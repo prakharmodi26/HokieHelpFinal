@@ -46,7 +46,6 @@
         card.className = "welcome-card";
         card.id = "welcome-card";
         card.innerHTML =
-            '<img src="assets/images/vt-mark-orange.svg" alt="Virginia Tech" class="welcome-logo">' +
             '<h2>Hi Hokies!</h2>' +
             '<p>I am your AI assistant for Virginia Tech\'s Computer Science department. Ask me about faculty, courses, research, admissions, and more.</p>';
         messagesEl.appendChild(card);
