@@ -12,6 +12,7 @@
     var typingEl = document.getElementById("typing-indicator");
     var newChatBtn = document.getElementById("new-chat-btn");
 
+    var appEl = document.getElementById("app");
     var history = [];
 
     // ── Helpers ──────────────────────────────────────────
@@ -46,8 +47,9 @@
         card.className = "welcome-card";
         card.id = "welcome-card";
         card.innerHTML =
-            '<h2>Welcome to HokieHelp</h2>' +
-            '<p>Your AI assistant for Virginia Tech\'s Computer Science department. Ask me about faculty, courses, research, admissions, and more.</p>';
+            '<img src="assets/images/vt-mark-orange.svg" alt="Virginia Tech" class="welcome-logo">' +
+            '<h2>Hi Hokies!</h2>' +
+            '<p>I am your AI assistant for Virginia Tech\'s Computer Science department. Ask me about faculty, courses, research, admissions, and more.</p>';
         messagesEl.appendChild(card);
 
         var chips = card.querySelectorAll(".suggestion-chip");
@@ -90,6 +92,7 @@
     function addMessage(role, content, sources) {
         var welcome = document.getElementById("welcome-card");
         if (welcome && role === "user") {
+            appEl.classList.remove("welcome-mode");
             welcome.style.animation = "none";
             welcome.style.opacity = "0";
             welcome.style.transform = "translateY(-8px)";
@@ -249,6 +252,7 @@
     function resetChat() {
         history = [];
         messagesEl.innerHTML = "";
+        appEl.classList.add("welcome-mode");
         showWelcome();
         inputEl.focus();
     }
@@ -273,6 +277,7 @@
     });
 
     // ── Init ────────────────────────────────────────────
+    appEl.classList.add("welcome-mode");
     showWelcome();
     inputEl.focus();
 })();
