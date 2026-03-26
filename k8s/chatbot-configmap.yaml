@@ -14,3 +14,5 @@ data:
   MIN_SCORE: "0.53"
   LLM_BASE_URL: "https://llm-api.arc.vt.edu/api/v1"
   LLM_MODEL: "gpt-oss-120b"
+  RATE_LIMIT_REQUESTS: "100"
+  RATE_LIMIT_WINDOW_SECONDS: "3600"
