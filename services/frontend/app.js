@@ -190,7 +190,14 @@
 
             if (!resp.ok) {
                 var errData = await resp.json().catch(function () { return {}; });
-                throw new Error(errData.detail || "Server error " + resp.status);
+                var detail = errData.detail || "";
+                if (resp.status === 429) {
+                    throw new Error("You've reached the limit of 100 messages per hour. Please try again later.");
+                } else if (resp.status === 400 && detail) {
+                    throw new Error(detail);
+                } else {
+                    throw new Error(detail || "Server error " + resp.status);
+                }
             }
 
             typingEl.classList.add("hidden");
