@@ -24,19 +24,13 @@
 
     function renderMarkdownLight(text) {
         var html = escapeHtml(text);
-        // Bold links: **[text](url)**
         html = html.replace(/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g,
             '<strong><a href="$2" target="_blank" rel="noopener">$1</a></strong>');
-        // Links: [text](url)
         html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g,
             '<a href="$2" target="_blank" rel="noopener">$1</a>');
-        // Bold
         html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-        // Italic
         html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
-        // Inline code
         html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
-        // Line breaks
         html = html.replace(/\n/g, "<br>");
         return html;
     }
@@ -44,17 +38,6 @@
     function scrollToBottom() {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
-
-    // ── SVG Icons ───────────────────────────────────────
-
-    var assistantAvatarSVG = '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-        '<path d="M14 18L20 24L26 14" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '</svg>';
-
-    var userAvatarSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>' +
-        '<circle cx="12" cy="7" r="4"/>' +
-        '</svg>';
 
     // ── Welcome Card ────────────────────────────────────
 
@@ -73,7 +56,6 @@
             '</div>';
         messagesEl.appendChild(card);
 
-        // Suggestion chip click handlers
         var chips = card.querySelectorAll(".suggestion-chip");
         for (var i = 0; i < chips.length; i++) {
             chips[i].addEventListener("click", function () {
@@ -94,7 +76,7 @@
 
         var avatar = document.createElement("div");
         avatar.className = "msg-avatar " + (role === "assistant" ? "assistant-avatar" : "user-avatar");
-        avatar.innerHTML = role === "assistant" ? assistantAvatarSVG : userAvatarSVG;
+        avatar.textContent = role === "assistant" ? "H" : "Y";
 
         var bubble = document.createElement("div");
         bubble.className = "message " + role;
@@ -105,14 +87,13 @@
     }
 
     function addMessage(role, content, sources) {
-        // Remove welcome card on first real interaction
         var welcome = document.getElementById("welcome-card");
         if (welcome && role === "user") {
             welcome.style.animation = "none";
             welcome.style.opacity = "0";
             welcome.style.transform = "translateY(-8px)";
-            welcome.style.transition = "all 0.3s ease";
-            setTimeout(function () { welcome.remove(); }, 300);
+            welcome.style.transition = "all 0.25s ease";
+            setTimeout(function () { welcome.remove(); }, 250);
         }
 
         if (role === "error") {
@@ -179,7 +160,6 @@
         var sendHistory = history.slice(-MAX_HISTORY);
         setLoading(true);
 
-        // Create assistant message row for streaming
         var els = createMessageRow("assistant");
         messagesEl.appendChild(els.row);
         var assistantBubble = els.bubble;
@@ -201,7 +181,6 @@
                 throw new Error(errData.detail || "Server error " + resp.status);
             }
 
-            // Hide typing indicator once stream begins
             typingEl.classList.add("hidden");
 
             var reader = resp.body.getReader();
@@ -274,7 +253,6 @@
 
     newChatBtn.addEventListener("click", resetChat);
 
-    // Auto-resize input height (future multi-line support)
     inputEl.addEventListener("keydown", function (e) {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
