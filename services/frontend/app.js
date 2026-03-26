@@ -12,7 +12,6 @@
     var typingEl = document.getElementById("typing-indicator");
     var newChatBtn = document.getElementById("new-chat-btn");
 
-    var appEl = document.getElementById("app");
     var history = [];
 
     // ── Helpers ──────────────────────────────────────────
@@ -92,7 +91,6 @@
     function addMessage(role, content, sources) {
         var welcome = document.getElementById("welcome-card");
         if (welcome && role === "user") {
-            appEl.classList.remove("welcome-mode");
             welcome.style.animation = "none";
             welcome.style.opacity = "0";
             welcome.style.transform = "translateY(-8px)";
@@ -252,7 +250,6 @@
     function resetChat() {
         history = [];
         messagesEl.innerHTML = "";
-        appEl.classList.add("welcome-mode");
         showWelcome();
         inputEl.focus();
     }
@@ -277,7 +274,6 @@
     });
 
     // ── Init ────────────────────────────────────────────
-    appEl.classList.add("welcome-mode");
     showWelcome();
     inputEl.focus();
 })();
