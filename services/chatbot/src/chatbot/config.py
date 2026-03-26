@@ -19,6 +19,9 @@ class ChatbotConfig:
     top_k: int
     min_score: float
     max_history_messages: int
+    hybrid_enabled: bool
+    keyword_search_limit: int
+    rrf_k: int
 
     @classmethod
     def from_env(cls) -> ChatbotConfig:
@@ -33,4 +36,7 @@ class ChatbotConfig:
             top_k=int(os.environ.get("TOP_K", "5")),
             min_score=float(os.environ.get("MIN_SCORE", "0.53")),
             max_history_messages=int(os.environ.get("MAX_HISTORY_MESSAGES", "20")),
+            hybrid_enabled=os.environ.get("HYBRID_ENABLED", "true").lower() == "true",
+            keyword_search_limit=int(os.environ.get("KEYWORD_SEARCH_LIMIT", "10")),
+            rrf_k=int(os.environ.get("RRF_K", "60")),
         )

@@ -95,6 +95,9 @@ def startup() -> None:
         collection=cfg.qdrant_collection,
         top_k=cfg.top_k,
         min_score=cfg.min_score,
+        hybrid_enabled=cfg.hybrid_enabled,
+        keyword_search_limit=cfg.keyword_search_limit,
+        rrf_k=cfg.rrf_k,
     )
     llm_client = LLMClient(
         api_key=cfg.llm_api_key,

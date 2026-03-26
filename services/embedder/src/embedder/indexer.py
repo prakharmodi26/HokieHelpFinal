@@ -43,7 +43,18 @@ class QdrantIndexer:
             field_name="document_id",
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
-        logger.info("Created collection %s (dim=%d, cosine)", self._collection, self._vector_size)
+        self._client.create_payload_index(
+            collection_name=self._collection,
+            field_name="text",
+            field_schema=models.TextIndexParams(
+                type=models.TextIndexType.TEXT,
+                tokenizer=models.TokenizerType.WORD,
+                min_token_len=2,
+                max_token_len=20,
+                lowercase=True,
+            ),
+        )
+        logger.info("Created collection %s (dim=%d, cosine, text index)", self._collection, self._vector_size)
 
     def upsert_chunks(self, chunks: List[dict], embeddings: List[List[float]]) -> None:
         """Upsert chunk embeddings as Qdrant points."""
