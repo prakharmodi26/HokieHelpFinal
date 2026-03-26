@@ -22,7 +22,7 @@ app = FastAPI(title="HokieHelp Chatbot", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[],
     allow_methods=["POST", "GET"],
     allow_headers=["Content-Type"],
     allow_credentials=False,

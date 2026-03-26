@@ -22,12 +22,20 @@
         return div.innerHTML;
     }
 
+    function sanitizeUrl(url) {
+        url = url.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) return "#";
+        return url;
+    }
+
     function renderMarkdownLight(text) {
         var html = escapeHtml(text);
-        html = html.replace(/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g,
-            '<strong><a href="$2" target="_blank" rel="noopener">$1</a></strong>');
-        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g,
-            '<a href="$2" target="_blank" rel="noopener">$1</a>');
+        html = html.replace(/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g, function (_, label, url) {
+            return '<strong><a href="' + sanitizeUrl(url) + '" target="_blank" rel="noopener">' + label + '</a></strong>';
+        });
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_, label, url) {
+            return '<a href="' + sanitizeUrl(url) + '" target="_blank" rel="noopener">' + label + '</a>';
+        });
         html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
         html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
         html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
