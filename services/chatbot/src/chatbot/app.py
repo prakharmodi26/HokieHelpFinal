@@ -129,6 +129,8 @@ def startup() -> None:
 
 def _get_session_id(request: Request) -> str:
     """FastAPI dependency: return existing session cookie or mint a new UUID."""
+    if _session_store is None:
+        raise HTTPException(status_code=503, detail="Service not initialized")
     return _session_store.get_or_create_session(
         request.cookies.get(SESSION_COOKIE)
     )

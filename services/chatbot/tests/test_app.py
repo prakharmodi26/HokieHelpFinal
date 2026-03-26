@@ -265,6 +265,7 @@ def test_stream_response_sets_session_cookie(mock_retriever, mock_llm):
         assert "hokiehelp_session" in resp.headers["set-cookie"]
         assert "HttpOnly" in resp.headers["set-cookie"]
         assert "SameSite=Strict" in resp.headers["set-cookie"]
+        assert "Secure" in resp.headers["set-cookie"]
 
 
 def test_new_session_minted_when_no_cookie(mock_retriever, mock_llm):
