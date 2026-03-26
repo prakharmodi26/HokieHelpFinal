@@ -144,8 +144,8 @@ def _check_rate_limit(session_id: str = Depends(_get_session_id)) -> str:
         remaining = _session_store.remaining(session_id)
         raise HTTPException(
             status_code=429,
-            detail="Rate limit exceeded. You may send up to 100 messages per hour.",
-            headers={"Retry-After": "3600", "X-RateLimit-Remaining": str(remaining)},
+            detail=f"Rate limit exceeded. You may send up to {_session_store._max} messages per hour.",
+            headers={"Retry-After": str(_session_store._window), "X-RateLimit-Remaining": str(remaining)},
         )
     return session_id
 
