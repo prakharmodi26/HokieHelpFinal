@@ -240,7 +240,8 @@ body {
 .msg-avatar.assistant-avatar {
     background: var(--bg-warm);
     border: 1.5px solid var(--border);
-    padding: 4px;
+    padding: 3px;
+    margin-left: -4px;
 }
 
 .msg-avatar.assistant-avatar img {
@@ -252,6 +253,12 @@ body {
 .msg-avatar.user-avatar {
     background: var(--bg-warm);
     border: 1.5px solid var(--border);
+    overflow: hidden;
+}
+
+.msg-avatar.user-avatar svg {
+    width: 20px;
+    height: 20px;
     color: var(--maroon);
 }
 
@@ -306,20 +313,58 @@ body {
     font-weight: 600;
 }
 
-/* ── Sources ─────────────────────────────────────────────── */
+/* ── Sources (collapsible) ────────────────────────────────── */
 .sources {
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1.5px solid var(--border);
 }
 
-.sources-label {
+.sources-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
     font-size: 11px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-muted);
-    margin-bottom: 10px;
+    padding: 0;
+    transition: color 0.15s var(--ease);
+}
+
+.sources-toggle:hover {
+    color: var(--orange);
+}
+
+.sources-arrow {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 4.5px solid transparent;
+    border-right: 4.5px solid transparent;
+    border-top: 5.5px solid var(--orange);
+    transition: transform 0.25s var(--ease);
+    transform: rotate(-90deg);
+}
+
+.sources-toggle.open .sources-arrow {
+    transform: rotate(0deg);
+}
+
+.sources-list {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.sources-list.visible {
+    display: flex;
 }
 
 .source-link {
@@ -327,7 +372,6 @@ body {
     align-items: center;
     gap: 8px;
     padding: 7px 16px;
-    margin: 3px 6px 3px 0;
     background: var(--maroon-pale);
     border: 1.5px solid var(--border);
     border-radius: var(--radius-pill);
@@ -393,11 +437,12 @@ body {
     border-radius: 12px;
     background: var(--bg-warm);
     border: 1.5px solid var(--border);
-    padding: 4px;
+    padding: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    margin-left: -4px;
 }
 
 .typing-avatar img {

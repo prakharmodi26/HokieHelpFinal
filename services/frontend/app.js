@@ -76,7 +76,7 @@
             img.alt = "VT";
             avatar.appendChild(img);
         } else {
-            avatar.textContent = "Y";
+            avatar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>';
         }
 
         var bubble = document.createElement("div");
@@ -127,10 +127,14 @@
     function appendSources(bubble, sources) {
         var srcDiv = document.createElement("div");
         srcDiv.className = "sources";
-        var label = document.createElement("div");
-        label.className = "sources-label";
-        label.textContent = "Sources";
-        srcDiv.appendChild(label);
+
+        var toggle = document.createElement("button");
+        toggle.className = "sources-toggle";
+        toggle.innerHTML = '<span class="sources-arrow"></span> Sources (' + sources.length + ')';
+        srcDiv.appendChild(toggle);
+
+        var list = document.createElement("div");
+        list.className = "sources-list";
 
         for (var i = 0; i < sources.length; i++) {
             var s = sources[i];
@@ -140,8 +144,15 @@
             a.target = "_blank";
             a.rel = "noopener";
             a.textContent = s.title || s.url;
-            srcDiv.appendChild(a);
+            list.appendChild(a);
         }
+        srcDiv.appendChild(list);
+
+        toggle.addEventListener("click", function () {
+            toggle.classList.toggle("open");
+            list.classList.toggle("visible");
+        });
+
         bubble.appendChild(srcDiv);
     }
 
