@@ -3,33 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HokieHelp</title>
+    <title>HokieHelp — Virginia Tech CS Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="bg-grain"></div>
+
     <div id="app">
-        <header>
-            <h1>HokieHelp</h1>
-            <p>Virginia Tech CS Department Assistant</p>
+        <!-- Header -->
+        <header id="app-header">
+            <div class="header-inner">
+                <div class="logo-group">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 4L6 14V28L20 38L34 28V14L20 4Z" fill="url(#logoGrad)" opacity="0.9"/>
+                            <path d="M14 18L20 24L26 14" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <defs>
+                                <linearGradient id="logoGrad" x1="6" y1="4" x2="34" y2="38">
+                                    <stop stop-color="#861F41"/>
+                                    <stop offset="1" stop-color="#E87722"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <h1>HokieHelp</h1>
+                        <span class="logo-subtitle">CS Department Assistant</span>
+                    </div>
+                </div>
+                <button id="new-chat-btn" title="New conversation" aria-label="New conversation">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                </button>
+            </div>
         </header>
+
+        <!-- Chat Area -->
         <main id="chat-container">
-            <div id="messages"></div>
+            <div id="messages">
+                <!-- Welcome card injected by JS -->
+            </div>
             <div id="typing-indicator" class="hidden">
-                <span></span><span></span><span></span>
+                <div class="typing-avatar">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 4L6 14V28L20 38L34 28V14L20 4Z" fill="url(#typingGrad)" opacity="0.9"/>
+                        <path d="M14 18L20 24L26 14" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs>
+                            <linearGradient id="typingGrad" x1="6" y1="4" x2="34" y2="38">
+                                <stop stop-color="#861F41"/>
+                                <stop offset="1" stop-color="#E87722"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
             </div>
         </main>
-        <form id="chat-form">
-            <input
-                type="text"
-                id="question-input"
-                placeholder="Ask about VT Computer Science..."
-                autocomplete="off"
-                maxlength="2000"
-                required
-            >
-            <button type="submit" id="send-btn">Send</button>
-        </form>
+
+        <!-- Input Area -->
+        <div id="input-area">
+            <form id="chat-form">
+                <div class="input-wrapper">
+                    <input
+                        type="text"
+                        id="question-input"
+                        placeholder="Ask about Virginia Tech CS..."
+                        autocomplete="off"
+                        maxlength="2000"
+                        required
+                    >
+                    <button type="submit" id="send-btn" aria-label="Send message">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 2L11 13"/>
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+                        </svg>
+                    </button>
+                </div>
+                <p class="input-hint">HokieHelp answers from the VT CS department knowledge base</p>
+            </form>
+        </div>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>
