@@ -55,9 +55,10 @@ def test_ensure_collection_creates_if_missing(mock_qdrant, indexer):
 
 
 def test_ensure_collection_creates_payload_index(mock_qdrant, indexer):
-    mock_qdrant.create_payload_index.assert_called_once()
-    call_args = mock_qdrant.create_payload_index.call_args
-    assert call_args.kwargs["field_name"] == "document_id"
+    assert mock_qdrant.create_payload_index.call_count == 2
+    calls = mock_qdrant.create_payload_index.call_args_list
+    assert calls[0].kwargs["field_name"] == "document_id"
+    assert calls[1].kwargs["field_name"] == "text"
 
 
 def test_upsert_chunks(indexer, mock_qdrant):
