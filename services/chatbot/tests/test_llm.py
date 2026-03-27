@@ -1,4 +1,4 @@
-"""Tests for the LLM client — HTTP calls are mocked."""
+"""Tests for the LLM client — Ollama calls are mocked."""
 from unittest.mock import MagicMock, patch
 
 from chatbot.llm import build_messages, LLMClient, SYSTEM_PROMPT
@@ -72,6 +72,7 @@ def test_build_messages_truncates_long_history():
 
     # system + 10 history + user question = 12
     assert len(messages) == 12
+    # Should keep the LAST 10 messages (msg 20 through msg 29)
     assert messages[1]["content"] == "msg 20"
     assert messages[10]["content"] == "msg 29"
 
@@ -93,28 +94,35 @@ def test_build_messages_multiple_chunks_formatted():
 
 def test_llm_client_ask_delegates_to_chat():
     """ask() is just chat() with empty history."""
-    mock_resp = MagicMock()
-    mock_resp.raise_for_status = MagicMock()
-    mock_resp.json.return_value = {"message": {"content": "Sally is a professor."}}
+    mock_ollama = MagicMock()
+    mock_response = MagicMock()
+    mock_response.message.content = "Sally is a professor."
+    mock_response.get = lambda k, d=None: {"model": "qwen2.5:14b", "eval_count": 10, "total_duration": 100}.get(k, d)
+    mock_ollama.chat.return_value = mock_response
 
-    with patch("chatbot.llm.httpx.Client") as mock_client_cls:
-        mock_client_cls.return_value.__enter__.return_value.post.return_value = mock_resp
-        client = LLMClient(api_key="sk-test", base_url="http://ollama:11434/v1", model="qwen2.5:14b")
+    with patch("chatbot.llm.Client", return_value=mock_ollama):
+        client = LLMClient(api_key="unused", base_url="http://ollama:11434/v1", model="qwen2.5:14b")
         answer = client.ask("Who is Sally?", [{"text": "Context", "url": "https://example.com", "title": "Test"}])
 
     assert answer == "Sally is a professor."
+    call_kwargs = mock_ollama.chat.call_args.kwargs
+    messages = call_kwargs["messages"]
+    assert len(messages) == 2
+    assert messages[0]["role"] == "system"
+    assert messages[1]["role"] == "user"
+    assert messages[1]["content"] == "Who is Sally?"
 
 
 def test_llm_client_chat_sends_proper_messages_array():
-    """chat() sends history as separate messages."""
-    mock_resp = MagicMock()
-    mock_resp.raise_for_status = MagicMock()
-    mock_resp.json.return_value = {"message": {"content": "You asked about Denis."}}
+    """chat() sends history as separate messages, not concatenated text."""
+    mock_ollama = MagicMock()
+    mock_response = MagicMock()
+    mock_response.message.content = "You asked about Denis."
+    mock_response.get = lambda k, d=None: {"model": "qwen2.5:14b"}.get(k, d)
+    mock_ollama.chat.return_value = mock_response
 
-    with patch("chatbot.llm.httpx.Client") as mock_client_cls:
-        http = mock_client_cls.return_value.__enter__.return_value
-        http.post.return_value = mock_resp
-        client = LLMClient(api_key="sk-test", base_url="http://ollama:11434/v1", model="qwen2.5:14b")
+    with patch("chatbot.llm.Client", return_value=mock_ollama):
+        client = LLMClient(api_key="unused", base_url="http://ollama:11434/v1", model="qwen2.5:14b")
         history = [
             {"role": "user", "content": "Who is Denis?"},
             {"role": "assistant", "content": "He is a prof."},
@@ -122,8 +130,9 @@ def test_llm_client_chat_sends_proper_messages_array():
         answer = client.chat("Who did I ask about?", [], history)
 
     assert answer == "You asked about Denis."
-    call_kwargs = http.post.call_args.kwargs
-    messages = call_kwargs["json"]["messages"]
+    call_kwargs = mock_ollama.chat.call_args.kwargs
+    messages = call_kwargs["messages"]
+    # System + 2 history + user question = 4
     assert len(messages) == 4
     assert messages[0]["role"] == "system"
     assert messages[1] == {"role": "user", "content": "Who is Denis?"}
@@ -133,24 +142,26 @@ def test_llm_client_chat_sends_proper_messages_array():
 
 def test_llm_client_chat_stream():
     """chat_stream() yields content tokens from Ollama streaming response."""
-    stream_lines = [
-        '{"message": {"content": "Sally"}, "done": false}',
-        '{"message": {"content": " is a professor."}, "done": false}',
-        '{"message": {"content": ""}, "done": true}',
-    ]
+    mock_ollama = MagicMock()
 
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    mock_response.iter_lines.return_value = iter(stream_lines)
-    mock_response.__enter__ = MagicMock(return_value=mock_response)
-    mock_response.__exit__ = MagicMock(return_value=False)
+    chunk1 = MagicMock()
+    chunk1.message.content = "Sally"
+    chunk1.get = lambda k, d=None: {"done": False}.get(k, d)
 
-    with patch("chatbot.llm.httpx.Client") as mock_client_cls:
-        http = mock_client_cls.return_value.__enter__.return_value
-        http.stream.return_value = mock_response
-        client = LLMClient(api_key="sk-test", base_url="http://ollama:11434/v1", model="qwen2.5:14b")
+    chunk2 = MagicMock()
+    chunk2.message.content = " is a professor."
+    chunk2.get = lambda k, d=None: {"done": False}.get(k, d)
+
+    chunk3 = MagicMock()
+    chunk3.message.content = ""
+    chunk3.get = lambda k, d=None: {"done": True}.get(k, d)
+
+    mock_ollama.chat.return_value = iter([chunk1, chunk2, chunk3])
+
+    with patch("chatbot.llm.Client", return_value=mock_ollama):
+        client = LLMClient(api_key="unused", base_url="http://ollama:11434/v1", model="qwen2.5:14b")
         tokens = list(client.chat_stream("Who is Sally?", [{"text": "Context", "url": "u", "title": "T"}], []))
 
     assert tokens == ["Sally", " is a professor."]
-    call_kwargs = http.stream.call_args.kwargs
-    assert call_kwargs["json"]["stream"] is True
+    call_kwargs = mock_ollama.chat.call_args.kwargs
+    assert call_kwargs["stream"] is True
