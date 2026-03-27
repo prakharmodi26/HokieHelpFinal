@@ -99,7 +99,7 @@ class LLMClient:
     """Calls VT ARC's OpenAI-compatible LLM API."""
 
     def __init__(self, api_key: str, base_url: str, model: str, max_history_messages: int = 20) -> None:
-        self._client = OpenAI(api_key=api_key, base_url=base_url)
+        self._client = OpenAI(api_key=api_key, base_url=base_url, timeout=120.0)
         self._model = model
         self._max_history = max_history_messages
         logger.info("LLM client ready — model=%s  base_url=%s  max_history=%d", model, base_url, max_history_messages)
