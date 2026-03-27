@@ -181,8 +181,8 @@
         setLoading(true);
 
         var els = createMessageRow("assistant");
-        messagesEl.appendChild(els.row);
         var assistantBubble = els.bubble;
+        var assistantRowAdded = false;
 
         var fullAnswer = "";
 
@@ -211,7 +211,6 @@
             var reader = resp.body.getReader();
             var decoder = new TextDecoder();
             var buffer = "";
-            var receivedFirstToken = false;
 
             while (true) {
                 var result = await reader.read();
@@ -233,9 +232,10 @@
                     }
 
                     if (event.type === "token") {
-                        if (!receivedFirstToken) {
-                            receivedFirstToken = true;
+                        if (!assistantRowAdded) {
+                            assistantRowAdded = true;
                             typingEl.classList.add("hidden");
+                            messagesEl.appendChild(els.row);
                         }
                         fullAnswer += event.content;
                         assistantBubble.innerHTML = renderMarkdownLight(fullAnswer); // existing pattern — content is escaped by renderMarkdownLight
@@ -252,7 +252,7 @@
             history.push({ role: "assistant", content: fullAnswer });
 
         } catch (err) {
-            if (!fullAnswer) {
+            if (!fullAnswer && assistantRowAdded) {
                 els.row.remove();
             }
             addMessage("error", "Error: " + err.message);
