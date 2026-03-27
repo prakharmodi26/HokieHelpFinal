@@ -30,7 +30,7 @@ class ChatbotConfig:
         return cls(
             llm_api_key=os.environ["LLM_API_KEY"],
             llm_base_url=os.environ.get("LLM_BASE_URL", "http://ollama-cluster-ip:11434/v1"),
-            llm_model=os.environ.get("LLM_MODEL", "qwen3:30b-a3b"),
+            llm_model=os.environ.get("LLM_MODEL", "qwen2.5:14b"),
             qdrant_host=os.environ.get("QDRANT_HOST", "qdrant"),
             qdrant_port=int(os.environ.get("QDRANT_PORT", "6333")),
             qdrant_collection=os.environ.get("QDRANT_COLLECTION", "hokiehelp_chunks"),

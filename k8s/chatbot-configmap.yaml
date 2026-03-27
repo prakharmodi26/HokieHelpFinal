@@ -13,6 +13,6 @@ data:
   TOP_K: "5"
   MIN_SCORE: "0.53"
   LLM_BASE_URL: "http://ollama-cluster-ip:11434/v1"
-  LLM_MODEL: "qwen3:30b-a3b"
+  LLM_MODEL: "qwen2.5:14b"
   RATE_LIMIT_REQUESTS: "100"
   RATE_LIMIT_WINDOW_SECONDS: "3600"

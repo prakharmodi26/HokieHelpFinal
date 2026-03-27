@@ -10,8 +10,8 @@ def test_from_env_defaults():
     with patch.dict(os.environ, env, clear=False):
         cfg = ChatbotConfig.from_env()
     assert cfg.llm_api_key == "sk-test-key"
-    assert cfg.llm_base_url == "https://llm-api.arc.vt.edu/api/v1"
-    assert cfg.llm_model == "gpt-oss-120b"
+    assert cfg.llm_base_url == "http://ollama-cluster-ip:11434/v1"
+    assert cfg.llm_model == "qwen2.5:14b"
     assert cfg.qdrant_host == "qdrant"
     assert cfg.qdrant_port == 6333
     assert cfg.qdrant_collection == "hokiehelp_chunks"
