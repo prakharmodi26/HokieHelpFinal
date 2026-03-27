@@ -224,7 +224,68 @@ def clean_markdown(document: str) -> str:
     result_body = "\n".join(cleaned)
     result_body = re.sub(r"\n{4,}", "\n\n\n", result_body)
 
+    # Extract and format structured bio contact info if present
+    result_body = _format_bio_contact(result_body)
+
     return frontmatter + result_body
+
+
+def _format_bio_contact(body: str) -> str:
+    """Extract scattered contact details and consolidate into a Contact section.
+
+    Bio pages rendered from raw_markdown have email, phone, and office info
+    scattered among image markup and SVG icons. This function finds those details
+    and inserts a clean **Contact Information** block after the name/title heading.
+    """
+    # Extract email addresses (mailto: links or bare @vt.edu addresses)
+    emails = re.findall(
+        r"\[([^\]]*@[^\]]+)\]\(mailto:[^)]+\)", body
+    )
+    if not emails:
+        emails = re.findall(r"[\w.+-]+@(?:cs\.)?vt\.edu", body)
+
+    # Extract phone numbers
+    phones = re.findall(r"\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}", body)
+
+    # Extract office/room info (e.g., "2202 Kraft Drive" or "Torgersen 2160")
+    office_patterns = [
+        re.findall(r"(?:Office|Room|Rm\.?)\s*:?\s*([^\n,]+)", body, re.IGNORECASE),
+        re.findall(r"(\d+\s+[\w\s]+(?:Hall|Drive|Building|Center|Ave|Blvd)(?:\s+\w+)?)", body),
+    ]
+    offices = []
+    for matches in office_patterns:
+        offices.extend(m.strip() for m in matches if m.strip())
+
+    if not emails and not phones:
+        return body
+
+    # Build a clean contact block
+    contact_lines = ["\n\n**Contact Information:**"]
+    seen = set()
+    for email in emails:
+        if email not in seen:
+            contact_lines.append(f"- Email: {email}")
+            seen.add(email)
+    for phone in phones:
+        if phone not in seen:
+            contact_lines.append(f"- Phone: {phone}")
+            seen.add(phone)
+    for office in offices[:2]:  # Limit to avoid false positives
+        if office not in seen:
+            contact_lines.append(f"- Office: {office}")
+            seen.add(office)
+
+    contact_block = "\n".join(contact_lines) + "\n"
+
+    # Insert after the first heading (the person's name)
+    # Look for the end of the title/position block (first blank line after headings)
+    heading_match = re.search(r"^(#\s+.+\n(?:.*\S.*\n)*)", body, re.MULTILINE)
+    if heading_match:
+        insert_pos = heading_match.end()
+        return body[:insert_pos] + contact_block + body[insert_pos:]
+
+    # Fallback: prepend to body
+    return contact_block + body
 
 
 def build_department_info_doc() -> str:

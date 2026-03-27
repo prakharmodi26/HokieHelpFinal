@@ -11,6 +11,9 @@ from embedder.config import EmbedderConfig
 
 logger = logging.getLogger(__name__)
 
+# Maximum size of a single chunk JSON file (20 MB)
+MAX_CHUNK_FILE_SIZE_BYTES = 20 * 1024 * 1024
+
 
 class EmbedderStorage:
     """Reads chunk JSON files from MinIO."""
@@ -33,10 +36,18 @@ class EmbedderStorage:
         ]
 
     def download_chunks(self, key: str) -> List[dict]:
-        """Download and parse a chunk JSON file. Returns list of chunk dicts."""
+        """Download and parse a chunk JSON file. Returns list of chunk dicts.
+
+        Raises ValueError if the file exceeds MAX_CHUNK_FILE_SIZE_BYTES.
+        """
         response = self._client.get_object(self._bucket, key)
         try:
-            return json.loads(response.read().decode("utf-8"))
+            data = response.read()
+            if len(data) > MAX_CHUNK_FILE_SIZE_BYTES:
+                raise ValueError(
+                    f"Chunk file {key} is {len(data)} bytes, exceeds limit of {MAX_CHUNK_FILE_SIZE_BYTES}"
+                )
+            return json.loads(data.decode("utf-8"))
         finally:
             response.close()
             response.release_conn()

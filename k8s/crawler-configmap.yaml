@@ -12,7 +12,7 @@ data:
   MINIO_SECURE: "false"
   CRAWL_SEED_URL: "https://website.cs.vt.edu"
   CRAWL_MAX_DEPTH: "4"
-  CRAWL_MAX_PAGES: "999999"
+  CRAWL_MAX_PAGES: "9999999"
   CRAWL_ALLOWED_DOMAINS: "website.cs.vt.edu"
   CRAWL_BLOCKED_PATHS: "/content/,/editor.html,/cs-root.html,/cs-source.html"
   CRAWL_REQUEST_DELAY: "0.5"

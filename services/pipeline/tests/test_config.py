@@ -8,8 +8,8 @@ class TestPipelineConfigDefaults:
     def test_defaults(self):
         cfg = PipelineConfig.build()
         assert cfg.namespace == "test"
-        assert cfg.crawl_max_depth == 2
-        assert cfg.crawl_max_pages == 500
+        assert cfg.crawl_max_depth == 4
+        assert cfg.crawl_max_pages == 9999999
         assert cfg.crawl_seed_url == "https://website.cs.vt.edu"
         assert cfg.poll_interval == 30
 

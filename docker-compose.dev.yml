@@ -12,7 +12,7 @@ services:
       MINIO_CLEANED_BUCKET: crawled-pages-cleaned
       MINIO_SECURE: "false"
       CRAWL_SEED_URL: https://website.cs.vt.edu
-      CRAWL_MAX_DEPTH: 2
-      CRAWL_MAX_PAGES: 50
+      CRAWL_MAX_DEPTH: 4
+      CRAWL_MAX_PAGES: 9999999
       CRAWL_ALLOWED_DOMAINS: website.cs.vt.edu
       CRAWL_PRUNE_THRESHOLD: "0.45"

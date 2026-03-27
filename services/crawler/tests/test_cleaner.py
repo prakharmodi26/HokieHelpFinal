@@ -345,3 +345,51 @@ def test_is_error_page_no_frontmatter():
 def test_is_error_page_partial_match_does_not_trigger():
     doc = "# Faculty Resources\n\nSome useful resources for faculty members."
     assert is_error_page(doc) is False
+
+
+# --- Bio contact extraction ---
+
+
+def test_clean_extracts_email_from_bio_page():
+    """Bio pages with mailto links get a Contact Information block."""
+    page = (
+        f"{FRONTMATTER}\n\n"
+        "# Kirk Cameron\n"
+        "Professor\n\n"
+        "Contact:\n"
+        "[cameron@cs.vt.edu](mailto:cameron@cs.vt.edu)\n\n"
+        "## Research\n"
+        "HPC and energy efficiency.\n"
+    )
+    result = clean_markdown(page)
+    assert "**Contact Information:**" in result
+    assert "Email: cameron@cs.vt.edu" in result
+    assert "HPC and energy efficiency." in result
+
+
+def test_clean_extracts_phone_from_bio_page():
+    """Phone numbers found in bio pages are extracted to contact block."""
+    page = (
+        f"{FRONTMATTER}\n\n"
+        "# Jane Doe\n"
+        "Associate Professor\n\n"
+        "Contact:\n"
+        "[doe@cs.vt.edu](mailto:doe@cs.vt.edu)\n"
+        "(540) 231-1234\n\n"
+        "## Bio\n"
+        "Teaching and research.\n"
+    )
+    result = clean_markdown(page)
+    assert "Email: doe@cs.vt.edu" in result
+    assert "Phone: (540) 231-1234" in result
+
+
+def test_clean_no_contact_block_when_no_email():
+    """Pages without email/phone don't get a contact block."""
+    page = (
+        f"{FRONTMATTER}\n\n"
+        "# About\n"
+        "The CS department was founded in 1960.\n"
+    )
+    result = clean_markdown(page)
+    assert "**Contact Information:**" not in result

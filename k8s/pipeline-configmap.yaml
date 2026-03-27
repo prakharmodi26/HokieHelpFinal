@@ -9,7 +9,7 @@ data:
   # Default crawl settings for scheduled runs
   CRAWL_SEED_URL: "https://website.cs.vt.edu"
   CRAWL_MAX_DEPTH: "4"
-  CRAWL_MAX_PAGES: "999999"
+  CRAWL_MAX_PAGES: "9999999"
   # Pipeline behavior
   PIPELINE_NAMESPACE: "test"
   PIPELINE_POLL_INTERVAL: "30"

@@ -53,8 +53,8 @@ class CrawlerConfig:
             minio_cleaned_bucket=os.environ.get("MINIO_CLEANED_BUCKET", "crawled-pages-cleaned"),
             minio_secure=os.environ.get("MINIO_SECURE", "false").lower() == "true",
             seed_url=os.environ.get("CRAWL_SEED_URL", "https://website.cs.vt.edu"),
-            max_depth=int(os.environ.get("CRAWL_MAX_DEPTH", "2")),
-            max_pages=int(os.environ.get("CRAWL_MAX_PAGES", "500")),
+            max_depth=int(os.environ.get("CRAWL_MAX_DEPTH", "4")),
+            max_pages=int(os.environ.get("CRAWL_MAX_PAGES", "9999999")),
             allowed_domains=_domains(
                 "CRAWL_ALLOWED_DOMAINS",
                 "website.cs.vt.edu",

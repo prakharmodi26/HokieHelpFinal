@@ -13,6 +13,9 @@ from chunker.models import ChunkRecord
 
 logger = logging.getLogger(__name__)
 
+# Maximum size of a single markdown document (10 MB)
+MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024
+
 
 class ChunkerStorage:
     """Reads cleaned markdown from MinIO; writes chunk JSON to MinIO."""
@@ -46,10 +49,18 @@ class ChunkerStorage:
         ]
 
     def download_document(self, key: str) -> str:
-        """Download a markdown document from the cleaned bucket."""
+        """Download a markdown document from the cleaned bucket.
+
+        Raises ValueError if the document exceeds MAX_DOCUMENT_SIZE_BYTES.
+        """
         response = self._client.get_object(self._cleaned_bucket, key)
         try:
-            return response.read().decode("utf-8")
+            data = response.read()
+            if len(data) > MAX_DOCUMENT_SIZE_BYTES:
+                raise ValueError(
+                    f"Document {key} is {len(data)} bytes, exceeds limit of {MAX_DOCUMENT_SIZE_BYTES}"
+                )
+            return data.decode("utf-8")
         finally:
             response.close()
             response.release_conn()

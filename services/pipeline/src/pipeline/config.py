@@ -38,12 +38,12 @@ class PipelineConfig:
             crawl_max_depth=(
                 max_depth
                 if max_depth is not None
-                else int(os.getenv("CRAWL_MAX_DEPTH", "2"))
+                else int(os.getenv("CRAWL_MAX_DEPTH", "4"))
             ),
             crawl_max_pages=(
                 max_pages
                 if max_pages is not None
-                else int(os.getenv("CRAWL_MAX_PAGES", "500"))
+                else int(os.getenv("CRAWL_MAX_PAGES", "9999999"))
             ),
             poll_interval=int(os.getenv("PIPELINE_POLL_INTERVAL", "30")),
             crawler_image=os.getenv(

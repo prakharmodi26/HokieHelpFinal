@@ -40,9 +40,11 @@ def cli() -> None:
     stats = asyncio.run(run_crawl(config, storage))
 
     logger.info(
-        "Crawl complete: %d pages stored, %d failed",
+        "Crawl complete: %d pages stored, %d failed, %d documents processed, %d documents failed",
         stats["pages_crawled"],
         stats["pages_failed"],
+        stats.get("documents_processed", 0),
+        stats.get("documents_failed", 0),
     )
 
     # Post-crawl: clean all raw pages and upload to cleaned bucket

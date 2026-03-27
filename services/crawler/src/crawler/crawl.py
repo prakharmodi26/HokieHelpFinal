@@ -8,12 +8,12 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse, urlunparse
 
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig
-from crawl4ai.content_filter_strategy import PruningContentFilter
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
-from crawl4ai.deep_crawling.filters import ContentTypeFilter, DomainFilter, FilterChain
+from crawl4ai.deep_crawling.filters import DomainFilter, FilterChain
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 
 from crawler.config import CrawlerConfig
+from crawler.documents import collect_document_links, download_and_process_documents
 from crawler.markdown_doc import build_markdown_document, url_to_object_key
 from crawler.metadata import PageMetadata, doc_id_for_url
 from crawler.storage import MinioStorage
@@ -33,16 +33,13 @@ def _is_blocked_path(url: str, blocked_paths: tuple[str, ...]) -> bool:
     return any(path.startswith(prefix) for prefix in blocked_paths)
 
 
-def _make_markdown_config(prune_threshold: float, request_delay: float = 0.5) -> CrawlerRunConfig:
+def _make_markdown_config(request_delay: float = 0.5) -> CrawlerRunConfig:
     return CrawlerRunConfig(
         verbose=False,
         delay_before_return_html=request_delay,
-        markdown_generator=DefaultMarkdownGenerator(
-            content_filter=PruningContentFilter(
-                threshold=prune_threshold,
-                threshold_type="fixed",
-            ),
-        ),
+        css_selector="#vt_main",
+        excluded_tags=["nav", "script", "style", "noscript", "iframe"],
+        markdown_generator=DefaultMarkdownGenerator(),
     )
 
 
@@ -58,11 +55,11 @@ def _store_result(
     title = result.metadata.get("title") if result.metadata else None
     now = datetime.now(timezone.utc)
 
-    markdown_content = result.markdown.fit_markdown or result.markdown.raw_markdown
-    if not markdown_content:
-        logger.warning("Empty markdown for %s, skipping", result.url)
+    if result.markdown is None or not result.markdown.raw_markdown:
+        logger.warning("Empty or missing markdown for %s, skipping", result.url)
         stats["pages_failed"] += 1
         return
+    markdown_content = result.markdown.raw_markdown
 
     content_hash = hashlib.sha256(markdown_content.encode()).hexdigest()
     if content_hash in seen_content_hashes:
@@ -136,7 +133,6 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
             allowed_domains=crawl_allowed,
             blocked_domains=list(config.blocked_domains),
         ),
-        ContentTypeFilter(allowed_types=["text/html"]),
     ])
 
     strategy = BFSDeepCrawlStrategy(
@@ -149,22 +145,22 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
     bfs_config = CrawlerRunConfig(
         deep_crawl_strategy=strategy,
         stream=True,
-        verbose=True,
+        verbose=False,
         delay_before_return_html=config.request_delay,
-        markdown_generator=DefaultMarkdownGenerator(
-            content_filter=PruningContentFilter(
-                threshold=config.prune_threshold,
-                threshold_type="fixed",
-            ),
-        ),
+        css_selector="#vt_main",
+        excluded_tags=["nav", "script", "style", "noscript", "iframe"],
+        markdown_generator=DefaultMarkdownGenerator(),
     )
 
-    stats = {"pages_crawled": 0, "pages_failed": 0, "pages_skipped_duplicate": 0}
+    stats = {"pages_crawled": 0, "pages_failed": 0, "pages_skipped_duplicate": 0,
+             "documents_processed": 0, "documents_failed": 0}
     # Seed from previously stored hashes to enable incremental recrawl
     seen_content_hashes: set[str] = set(storage.load_all_content_hashes().keys())
     stored_urls: set[str] = set()
     # URLs to individually fetch in phase 2 (subdomains + cs.vt.edu rewrites)
     pending_fetches: set[str] = set()
+    # Document URLs (PDF, Word) discovered during crawl
+    document_urls: set[str] = set()
 
     async with AsyncWebCrawler() as crawler:
         async for result in await crawler.arun(url=config.seed_url, config=bfs_config):
@@ -177,12 +173,19 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
                 stats["pages_failed"] += 1
                 continue
 
+            # Validate URL scheme
+            parsed_url = urlparse(result.url)
+            if parsed_url.scheme not in ("http", "https"):
+                logger.warning("Skipping non-HTTP URL: %s", result.url)
+                stats["pages_failed"] += 1
+                continue
+
             if _is_blocked_path(result.url, config.blocked_paths):
                 logger.debug("Blocked path, skipping: %s", result.url)
                 stats["pages_failed"] += 1
                 continue
 
-            final_host = urlparse(result.url).hostname
+            final_host = parsed_url.hostname
 
             # Page landed on cs.vt.edu — rewrite and queue for phase 2
             if final_host == "cs.vt.edu":
@@ -210,6 +213,9 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
             depth = result.metadata.get("depth", 0)
             _store_result(result, storage, stats, seen_content_hashes, stored_urls, depth)
 
+            # Collect document links (PDF, Word) for phase 3
+            document_urls.update(collect_document_links(result.links))
+
             # Scan external links for *.cs.vt.edu subdomains not in blocked_domains
             for link in (result.links or {}).get("external", []):
                 href = link.get("href", "")
@@ -230,7 +236,7 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
         # Phase 2: individually fetch queued URLs, following cs.vt.edu redirects
         if pending_fetches:
             logger.info("Phase 2: fetching %d queued URLs", len(pending_fetches))
-            single_config = _make_markdown_config(config.prune_threshold, config.request_delay)
+            single_config = _make_markdown_config(config.request_delay)
 
             for url in pending_fetches:
                 if url in stored_urls:
@@ -268,8 +274,22 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
 
                 _store_result(result, storage, stats, seen_content_hashes, stored_urls, depth=0)
 
+    # Phase 3: download and process documents (PDF, Word)
+    if document_urls:
+        doc_stats = await download_and_process_documents(
+            document_urls, storage, seen_content_hashes, stored_urls,
+            request_delay=config.request_delay,
+        )
+        stats["documents_processed"] = doc_stats["documents_processed"]
+        stats["documents_failed"] = doc_stats["documents_failed"]
+
     logger.info(
         "Deduplication: %d duplicate pages skipped",
         stats["pages_skipped_duplicate"],
+    )
+    logger.info(
+        "Documents: %d processed, %d failed",
+        stats["documents_processed"],
+        stats["documents_failed"],
     )
     return stats

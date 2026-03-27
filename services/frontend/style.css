@@ -514,6 +514,7 @@ body {
     padding: 6px 6px 6px 24px;
     transition: all 0.2s var(--ease);
     box-shadow: var(--shadow-sm);
+    font-family: var(--font-secondary);
 }
 
 .input-wrapper:focus-within {
