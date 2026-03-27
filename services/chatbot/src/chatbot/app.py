@@ -195,7 +195,7 @@ def ask(
     except PromptRejected as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    logger.info("NEW QUERY: %s", req.question)
+    logger.debug("NEW QUERY: %s", req.question)
     chunks = retriever.search(req.question)
     answer = llm_client.ask(req.question, chunks)
     sources = _dedup_sources(chunks)
@@ -217,7 +217,7 @@ def chat(
     except PromptRejected as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    logger.info("NEW CHAT: %s (history_turns=%d)", req.question, len(req.history))
+    logger.debug("NEW CHAT: %s (history_turns=%d)", req.question, len(req.history))
     history_dicts = [{"role": m.role, "content": m.content} for m in req.history]
     chunks = retriever.search_with_context(req.question, history_dicts)
     answer = llm_client.chat(req.question, chunks, history_dicts)
@@ -240,7 +240,7 @@ def chat_stream(
     except PromptRejected as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    logger.info("NEW STREAM CHAT: %s (history_turns=%d)", req.question, len(req.history))
+    logger.debug("NEW STREAM CHAT: %s (history_turns=%d)", req.question, len(req.history))
     history_dicts = [{"role": m.role, "content": m.content} for m in req.history]
     chunks = retriever.search_with_context(req.question, history_dicts)
     sources = _dedup_sources(chunks)

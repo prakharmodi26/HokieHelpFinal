@@ -22,10 +22,20 @@ class SessionStore:
         self._lock = threading.RLock()
 
     def get_or_create_session(self, session_id: str | None) -> str:
-        """Return existing session_id or mint a new UUID."""
+        """Return existing session_id if valid, or mint a new UUID.
+
+        Only accepts UUIDs that were previously minted by this store,
+        preventing clients from forging arbitrary session IDs.
+        """
         if session_id and session_id.strip():
-            return session_id.strip()
-        return str(uuid.uuid4())
+            sid = session_id.strip()
+            with self._lock:
+                if sid in self._sessions:
+                    return sid
+        new_id = str(uuid.uuid4())
+        with self._lock:
+            self._sessions[new_id] = deque()
+        return new_id
 
     def is_allowed(self, session_id: str) -> bool:
         """Record a request attempt and return True if within the rate limit."""

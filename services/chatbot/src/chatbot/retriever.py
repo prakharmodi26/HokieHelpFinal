@@ -155,7 +155,7 @@ class Retriever:
             result = _payload_to_result(hit.payload, hit.score)
             results.append(result)
             text_preview = (result["text"] or "[EMPTY]")[:200].replace("\n", " ")
-            logger.info(
+            logger.debug(
                 "RETRIEVER vector rank=%d  score=%.4f  chunk_id=%s  title=%s  preview=%s",
                 rank, hit.score, result["chunk_id"], result["title"][:60] if result["title"] else "",
                 text_preview,

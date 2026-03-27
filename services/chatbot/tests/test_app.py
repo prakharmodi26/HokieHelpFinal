@@ -172,11 +172,12 @@ def test_stream_endpoint(client, mock_retriever, mock_llm):
 def test_rate_limit_first_request_allowed(mock_retriever, mock_llm):
     from chatbot.session_store import SessionStore
     store = SessionStore(max_requests=5, window_seconds=3600)
+    sid = store.get_or_create_session(None)  # mint a valid session
     with patch("chatbot.app.retriever", mock_retriever), \
          patch("chatbot.app.llm_client", mock_llm), \
          patch("chatbot.app._session_store", store):
         from chatbot.app import app
-        client = TestClient(app, cookies={"hokiehelp_session": "test-session-1"})
+        client = TestClient(app, cookies={"hokiehelp_session": sid})
         mock_llm.chat_stream.return_value = iter(["Hello"])
         resp = client.post("/chat/stream", json={"question": "Hello", "history": []})
         assert resp.status_code == 200
@@ -185,11 +186,12 @@ def test_rate_limit_first_request_allowed(mock_retriever, mock_llm):
 def test_rate_limit_exceeded_returns_429(mock_retriever, mock_llm):
     from chatbot.session_store import SessionStore
     store = SessionStore(max_requests=1, window_seconds=3600)
+    sid = store.get_or_create_session(None)  # mint a valid session
     with patch("chatbot.app.retriever", mock_retriever), \
          patch("chatbot.app.llm_client", mock_llm), \
          patch("chatbot.app._session_store", store):
         from chatbot.app import app
-        client = TestClient(app, cookies={"hokiehelp_session": "test-session-limit"})
+        client = TestClient(app, cookies={"hokiehelp_session": sid})
         mock_llm.chat_stream.return_value = iter(["Hello"])
         client.post("/chat/stream", json={"question": "First", "history": []})
         resp = client.post("/chat/stream", json={"question": "Second", "history": []})
@@ -200,13 +202,15 @@ def test_rate_limit_exceeded_returns_429(mock_retriever, mock_llm):
 def test_rate_limit_different_sessions_independent(mock_retriever, mock_llm):
     from chatbot.session_store import SessionStore
     store = SessionStore(max_requests=1, window_seconds=3600)
+    sid_a = store.get_or_create_session(None)
+    sid_b = store.get_or_create_session(None)
     with patch("chatbot.app.retriever", mock_retriever), \
          patch("chatbot.app.llm_client", mock_llm), \
          patch("chatbot.app._session_store", store):
         from chatbot.app import app
         mock_llm.chat_stream.return_value = iter(["ok"])
-        c1 = TestClient(app, cookies={"hokiehelp_session": "session-A"})
-        c2 = TestClient(app, cookies={"hokiehelp_session": "session-B"})
+        c1 = TestClient(app, cookies={"hokiehelp_session": sid_a})
+        c2 = TestClient(app, cookies={"hokiehelp_session": sid_b})
         c1.post("/chat/stream", json={"question": "Q", "history": []})
         r1 = c1.post("/chat/stream", json={"question": "Q2", "history": []})
         r2 = c2.post("/chat/stream", json={"question": "Q", "history": []})

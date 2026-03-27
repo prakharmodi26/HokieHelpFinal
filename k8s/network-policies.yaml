@@ -1,0 +1,242 @@
+# =============================================================================
+# NetworkPolicy manifests for HokieHelp (namespace: test)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Default deny all ingress in the namespace
+# -----------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: test
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# -----------------------------------------------------------------------------
+# 2. DNS egress — all pods need access to kube-dns on port 53 (TCP + UDP)
+# -----------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: test
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# -----------------------------------------------------------------------------
+# 3. Frontend — allow ingress from anywhere on 8080, egress to chatbot on 8000
+# -----------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-ingress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: hokiehelp-frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-egress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: hokiehelp-frontend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-chatbot
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+# -----------------------------------------------------------------------------
+# 4. Chatbot — ingress from frontend on 8000, egress to qdrant 6333 + LLM API
+# -----------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: chatbot-ingress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: hokiehelp-chatbot
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-frontend
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: chatbot-egress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: hokiehelp-chatbot
+  policyTypes:
+    - Egress
+  egress:
+    # Egress to Qdrant (REST API)
+    - to:
+        - podSelector:
+            matchLabels:
+              app: qdrant
+      ports:
+        - protocol: TCP
+          port: 6333
+    # Egress to external LLM API (llm-api.arc.vt.edu) on HTTPS 443
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+    # Egress to Ollama/LLM on port 11434 (if running in-cluster or locally)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 11434
+---
+# -----------------------------------------------------------------------------
+# 5. Qdrant — ingress from chatbot on 6333/6334, ingress from pipeline jobs
+# -----------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: qdrant-ingress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: qdrant
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-chatbot
+      ports:
+        - protocol: TCP
+          port: 6333
+        - protocol: TCP
+          port: 6334
+    - from:
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-pipeline
+      ports:
+        - protocol: TCP
+          port: 6333
+        - protocol: TCP
+          port: 6334
+---
+# -----------------------------------------------------------------------------
+# 6. MinIO — ingress from pipeline jobs on port 9000
+# -----------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: minio-ingress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: minio
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-pipeline
+      ports:
+        - protocol: TCP
+          port: 9000
+---
+# -----------------------------------------------------------------------------
+# 7. Pipeline — egress to qdrant, minio, and external sources for crawling
+# -----------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: pipeline-egress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: hokiehelp-pipeline
+  policyTypes:
+    - Egress
+  egress:
+    # Egress to Qdrant
+    - to:
+        - podSelector:
+            matchLabels:
+              app: qdrant
+      ports:
+        - protocol: TCP
+          port: 6333
+        - protocol: TCP
+          port: 6334
+    # Egress to MinIO
+    - to:
+        - podSelector:
+            matchLabels:
+              app: minio
+      ports:
+        - protocol: TCP
+          port: 9000
+    # Egress to external websites for crawling (HTTP/HTTPS)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443

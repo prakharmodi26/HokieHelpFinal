@@ -55,7 +55,27 @@ def test_get_or_create_session_returns_new_uuid():
 
 
 def test_get_or_create_session_returns_existing():
+    """Known sessions (previously minted) are returned as-is."""
     store = SessionStore(max_requests=10, window_seconds=60)
-    existing = "my-existing-session-id"
-    sid = store.get_or_create_session(existing)
-    assert sid == existing
+    # Mint a session first
+    minted = store.get_or_create_session(None)
+    # Now present it back — should be recognized
+    sid = store.get_or_create_session(minted)
+    assert sid == minted
+
+
+def test_get_or_create_session_rejects_forged():
+    """Arbitrary session IDs not minted by the store get a new UUID."""
+    store = SessionStore(max_requests=10, window_seconds=60)
+    forged = "forged-session-id"
+    sid = store.get_or_create_session(forged)
+    assert sid != forged
+    assert len(sid) == 36  # new UUID minted
+
+
+def test_get_or_create_session_accepts_after_is_allowed():
+    """A session that was created via is_allowed() is recognized."""
+    store = SessionStore(max_requests=10, window_seconds=60)
+    store.is_allowed("real-session")
+    sid = store.get_or_create_session("real-session")
+    assert sid == "real-session"
