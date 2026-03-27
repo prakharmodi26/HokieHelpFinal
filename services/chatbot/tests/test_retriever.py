@@ -3,7 +3,10 @@ import numpy as np
 from unittest.mock import MagicMock, patch
 import pytest
 
-from chatbot.retriever import Retriever, BGE_QUERY_PREFIX, contextualize_query
+from chatbot.retriever import (
+    Retriever, BGE_QUERY_PREFIX, contextualize_query,
+    _build_follow_up_pattern, DEFAULT_FOLLOW_UP_KEYWORDS,
+)
 
 
 @pytest.fixture
@@ -94,30 +97,55 @@ def test_search_with_context_uses_enriched_query(retriever, mock_model, mock_qdr
 
 def test_contextualize_query_no_history():
     """Without history, query is returned unchanged."""
-    assert contextualize_query("Who is Sally?", []) == "Who is Sally?"
+    pattern = _build_follow_up_pattern(DEFAULT_FOLLOW_UP_KEYWORDS)
+    assert contextualize_query("Who is Sally?", [], pattern) == "Who is Sally?"
 
 
 def test_contextualize_query_with_history():
     """Follow-up question gets the last user message prepended."""
+    pattern = _build_follow_up_pattern(DEFAULT_FOLLOW_UP_KEYWORDS)
     history = [
         {"role": "user", "content": "Who is Sally Hamouda?"},
         {"role": "assistant", "content": "Sally Hamouda is a professor of CS."},
     ]
-    result = contextualize_query("What about their research?", history)
+    result = contextualize_query("What about their research?", history, pattern)
     assert "Sally Hamouda" in result
     assert "What about their research?" in result
 
 
 def test_contextualize_query_multiple_turns():
     """With several turns, only the last user message is used for context."""
+    pattern = _build_follow_up_pattern(DEFAULT_FOLLOW_UP_KEYWORDS)
     history = [
         {"role": "user", "content": "Tell me about the graduate program."},
         {"role": "assistant", "content": "The CS department offers MS and PhD."},
         {"role": "user", "content": "Who is the department head?"},
         {"role": "assistant", "content": "Dr. Cal Ribbens is the department head."},
     ]
-    result = contextualize_query("What are their research interests?", history)
+    result = contextualize_query("What are their research interests?", history, pattern)
     assert "department head" in result
     assert "What are their research interests?" in result
     # Should NOT include old context about grad program
     assert "graduate program" not in result
+
+
+def test_contextualize_query_standalone_question_not_enriched():
+    """A standalone question with no follow-up signals should NOT be enriched."""
+    pattern = _build_follow_up_pattern(DEFAULT_FOLLOW_UP_KEYWORDS)
+    history = [
+        {"role": "user", "content": "Who is Denis Gracanin?"},
+        {"role": "assistant", "content": "Denis Gracanin is an associate professor."},
+    ]
+    result = contextualize_query("Tell me about graduate degrees in virginia tech", history, pattern)
+    assert result == "Tell me about graduate degrees in virginia tech"
+    assert "Denis" not in result
+
+
+def test_contextualize_query_no_pattern_always_enriches():
+    """When no pattern is provided, always enrich (backward compat)."""
+    history = [
+        {"role": "user", "content": "Who is Sally?"},
+        {"role": "assistant", "content": "A professor."},
+    ]
+    result = contextualize_query("Tell me about graduate degrees", history, None)
+    assert "Sally" in result

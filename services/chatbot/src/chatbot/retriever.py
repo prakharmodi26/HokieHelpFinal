@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import List
+import re
+from typing import List, Sequence
 
 import torch
 from sentence_transformers import SentenceTransformer
@@ -12,14 +13,36 @@ logger = logging.getLogger(__name__)
 
 BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
+DEFAULT_FOLLOW_UP_KEYWORDS: tuple[str, ...] = (
+    "he", "she", "they", "them", "their", "his", "her", "its", "it",
+    "that", "this", "those", "these", "the same", "above", "previous",
+    "mentioned", "what about", "tell me more", "elaborate", "expand",
+    "who did", "more about", "also", "and what",
+)
 
-def contextualize_query(query: str, history: list[dict]) -> str:
+
+def _build_follow_up_pattern(keywords: Sequence[str]) -> re.Pattern:
+    """Compile a case-insensitive word-boundary regex from keyword list."""
+    escaped = [re.escape(kw) for kw in keywords if kw]
+    return re.compile(r"\b(?:" + "|".join(escaped) + r")\b", re.IGNORECASE)
+
+
+def contextualize_query(
+    query: str,
+    history: list[dict],
+    follow_up_pattern: re.Pattern | None = None,
+) -> str:
     """Enrich a follow-up question with conversation context for better retrieval.
 
-    Prepends the last user message so pronouns like "their", "he", "she"
-    resolve to the correct entity during embedding.
+    Only prepends the last user message when the current query contains a
+    follow-up signal (pronoun, referential phrase, etc.). Standalone questions
+    about a new topic are left unchanged to avoid polluting search results.
     """
     if not history:
+        return query
+
+    if follow_up_pattern and not follow_up_pattern.search(query):
+        logger.info("RETRIEVER contextualize: no follow-up signal, using raw query")
         return query
 
     # Find the last user message
@@ -91,6 +114,7 @@ class Retriever:
         hybrid_enabled: bool = True,
         keyword_search_limit: int = 10,
         rrf_k: int = 60,
+        follow_up_keywords: Sequence[str] = DEFAULT_FOLLOW_UP_KEYWORDS,
     ) -> None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         model_kwargs = {}
@@ -108,6 +132,7 @@ class Retriever:
         self._hybrid_enabled = hybrid_enabled
         self._keyword_limit = keyword_search_limit
         self._rrf_k = rrf_k
+        self._follow_up_pattern = _build_follow_up_pattern(follow_up_keywords)
         logger.info(
             "Retriever ready — model=%s  device=%s  collection=%s  top_k=%d  min_score=%.2f  hybrid=%s",
             embedding_model, device, collection, top_k, min_score, hybrid_enabled,
@@ -231,6 +256,6 @@ class Retriever:
 
     def search_with_context(self, query: str, history: list[dict]) -> list[dict]:
         """Search with conversation-aware query enrichment."""
-        enriched = contextualize_query(query, history)
+        enriched = contextualize_query(query, history, self._follow_up_pattern)
         logger.info("RETRIEVER contextualized query=%r -> %r", query, enriched[:120])
         return self.search(enriched)

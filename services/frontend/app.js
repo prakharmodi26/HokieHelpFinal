@@ -208,11 +208,10 @@
                 }
             }
 
-            typingEl.classList.add("hidden");
-
             var reader = resp.body.getReader();
             var decoder = new TextDecoder();
             var buffer = "";
+            var receivedFirstToken = false;
 
             while (true) {
                 var result = await reader.read();
@@ -234,8 +233,12 @@
                     }
 
                     if (event.type === "token") {
+                        if (!receivedFirstToken) {
+                            receivedFirstToken = true;
+                            typingEl.classList.add("hidden");
+                        }
                         fullAnswer += event.content;
-                        assistantBubble.innerHTML = renderMarkdownLight(fullAnswer);
+                        assistantBubble.innerHTML = renderMarkdownLight(fullAnswer); // existing pattern — content is escaped by renderMarkdownLight
                         scrollToBottom();
                     } else if (event.type === "sources") {
                         if (event.sources && event.sources.length > 0) {

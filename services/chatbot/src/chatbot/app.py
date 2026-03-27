@@ -109,6 +109,7 @@ def startup() -> None:
         hybrid_enabled=cfg.hybrid_enabled,
         keyword_search_limit=cfg.keyword_search_limit,
         rrf_k=cfg.rrf_k,
+        follow_up_keywords=cfg.follow_up_keywords,
     )
     llm_client = LLMClient(
         api_key=cfg.llm_api_key,
