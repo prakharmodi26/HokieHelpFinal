@@ -164,7 +164,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app: hokiehelp-pipeline
+              managed-by: hokiehelp-pipeline
       ports:
         - protocol: TCP
           port: 6333
@@ -189,7 +189,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app: hokiehelp-pipeline
+              managed-by: hokiehelp-pipeline
       ports:
         - protocol: TCP
           port: 9000
@@ -205,7 +205,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: hokiehelp-pipeline
+      managed-by: hokiehelp-pipeline
   policyTypes:
     - Egress
   egress:
