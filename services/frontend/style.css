@@ -467,7 +467,7 @@ body {
 .typing-dots span {
     width: 7px;
     height: 7px;
-    background: var(--maroon);
+    background: var(--orange);
     border-radius: 50%;
     animation: typingPulse 1.4s infinite ease-in-out;
     opacity: 0.4;
