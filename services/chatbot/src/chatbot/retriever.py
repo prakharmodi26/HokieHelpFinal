@@ -143,12 +143,16 @@ class Retriever:
         logger.info("RETRIEVER vector query=%r  prefixed=%r", query, text[:120])
         vector = self._model.encode(text, show_progress_bar=False).tolist()
 
-        response = self._client.query_points(
-            collection_name=self._collection,
-            query=vector,
-            limit=self._top_k,
-            with_payload=True,
-        )
+        try:
+            response = self._client.query_points(
+                collection_name=self._collection,
+                query=vector,
+                limit=self._top_k,
+                with_payload=True,
+            )
+        except Exception as exc:
+            logger.error("Qdrant vector search failed: %s", exc)
+            return []
 
         results = []
         for rank, hit in enumerate(response.points, 1):

@@ -148,7 +148,7 @@
             var s = sources[i];
             var a = document.createElement("a");
             a.className = "source-link";
-            a.href = s.url;
+            a.href = sanitizeUrl(s.url);
             a.target = "_blank";
             a.rel = "noopener";
             a.textContent = s.title || s.url;

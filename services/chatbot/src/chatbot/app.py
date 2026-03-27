@@ -246,10 +246,14 @@ def chat_stream(
     sources = _dedup_sources(chunks)
 
     def generate():
-        for token in llm_client.chat_stream(req.question, chunks, history_dicts):
-            yield f'data: {json.dumps({"type": "token", "content": token})}\n\n'
-        yield f'data: {json.dumps({"type": "sources", "sources": [s.model_dump() for s in sources]})}\n\n'
-        yield f'data: {json.dumps({"type": "done"})}\n\n'
+        try:
+            for token in llm_client.chat_stream(req.question, chunks, history_dicts):
+                yield f'data: {json.dumps({"type": "token", "content": token})}\n\n'
+            yield f'data: {json.dumps({"type": "sources", "sources": [s.model_dump() for s in sources]})}\n\n'
+            yield f'data: {json.dumps({"type": "done"})}\n\n'
+        except Exception as exc:
+            logger.error("Stream generation error: %s", exc)
+            yield f'data: {json.dumps({"type": "error", "content": "An error occurred while generating the response."})}\n\n'
 
     headers = {
         "Set-Cookie": (

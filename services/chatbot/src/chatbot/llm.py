@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Generator
 
-from openai import OpenAI
+from openai import OpenAI, APIError, APITimeoutError, APIConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -122,11 +122,15 @@ class LLMClient:
             len(messages), len(history), len(chunks),
         )
 
-        response = self._client.chat.completions.create(
-            model=self._model,
-            messages=messages,
-            temperature=0.3,
-        )
+        try:
+            response = self._client.chat.completions.create(
+                model=self._model,
+                messages=messages,
+                temperature=0.3,
+            )
+        except (APIError, APITimeoutError, APIConnectionError) as exc:
+            logger.error("LLM API error: %s", exc)
+            raise RuntimeError("The language model is temporarily unavailable. Please try again.") from exc
 
         answer = response.choices[0].message.content
         usage = response.usage
@@ -153,14 +157,22 @@ class LLMClient:
             len(messages), len(history), len(chunks),
         )
 
-        stream = self._client.chat.completions.create(
-            model=self._model,
-            messages=messages,
-            temperature=0.3,
-            stream=True,
-        )
+        try:
+            stream = self._client.chat.completions.create(
+                model=self._model,
+                messages=messages,
+                temperature=0.3,
+                stream=True,
+            )
+        except (APIError, APITimeoutError, APIConnectionError) as exc:
+            logger.error("LLM stream API error: %s", exc)
+            raise RuntimeError("The language model is temporarily unavailable. Please try again.") from exc
 
-        for chunk in stream:
-            delta = chunk.choices[0].delta
-            if delta.content:
-                yield delta.content
+        try:
+            for chunk in stream:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    yield delta.content
+        except (APIError, APITimeoutError, APIConnectionError) as exc:
+            logger.error("LLM stream interrupted: %s", exc)
+            return
