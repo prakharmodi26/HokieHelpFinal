@@ -18,18 +18,12 @@ spec:
         app: minio
     spec:
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
         fsGroup: 1000
       containers:
         - name: minio
-          image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+          image: minio/minio:latest
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false
-            capabilities:
-              drop: ["ALL"]
           args: ["server", "/data", "--console-address", ":9001"]
           ports:
             - containerPort: 9000

@@ -18,17 +18,12 @@ spec:
         app: qdrant
     spec:
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
         fsGroup: 1000
       containers:
         - name: qdrant
-          image: qdrant/qdrant:v1.12.1
+          image: qdrant/qdrant:latest
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false
-            capabilities:
-              drop: ["ALL"]
           ports:
             - containerPort: 6333
               name: rest
