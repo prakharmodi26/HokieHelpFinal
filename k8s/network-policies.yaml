@@ -129,10 +129,11 @@ spec:
       ports:
         - protocol: TCP
           port: 443
-    # Egress to Ollama/LLM on port 11434 (if running in-cluster or locally)
+    # Egress to in-cluster Ollama on port 11434
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - podSelector:
+            matchLabels:
+              workload.user.cattle.io/workloadselector: apps.deployment-test-ollama
       ports:
         - protocol: TCP
           port: 11434
@@ -195,7 +196,30 @@ spec:
           port: 9000
 ---
 # -----------------------------------------------------------------------------
-# 7. Pipeline — egress to qdrant, minio, and external sources for crawling
+# 7. Ollama — ingress from chatbot on port 11434
+# -----------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ollama-ingress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: apps.deployment-test-ollama
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-chatbot
+      ports:
+        - protocol: TCP
+          port: 11434
+---
+# -----------------------------------------------------------------------------
+# 8. Pipeline — egress to qdrant, minio, and external sources for crawling
 # -----------------------------------------------------------------------------
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

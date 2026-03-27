@@ -1,10 +1,11 @@
-"""LLM client for VT ARC's OpenAI-compatible API."""
+"""LLM client using Ollama's native HTTP API."""
 from __future__ import annotations
 
+import json
 import logging
 from typing import Generator
 
-from openai import OpenAI, APIError, APITimeoutError, APIConnectionError
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -54,14 +55,13 @@ def build_messages(
     history: list[dict],
     max_history_messages: int = MAX_HISTORY_MESSAGES,
 ) -> list[dict]:
-    """Build the OpenAI messages array for a RAG conversation.
+    """Build the messages array for a RAG conversation.
 
     Structure:
       [0]   system  — base prompt + retrieved context (or "no context" notice)
       [1..N] user/assistant — conversation history (last max_history_messages)
       [N+1] user — current question
     """
-    # --- System message: base prompt + RAG context ---
     system_content = SYSTEM_PROMPT
     if chunks:
         context_parts = []
@@ -84,25 +84,26 @@ def build_messages(
 
     messages: list[dict] = [{"role": "system", "content": system_content}]
 
-    # --- Conversation history as proper alternating messages ---
     trimmed = history[-max_history_messages:] if history else []
     for msg in trimmed:
         messages.append({"role": msg["role"], "content": msg["content"]})
 
-    # --- Current question ---
     messages.append({"role": "user", "content": question})
-
     return messages
 
 
 class LLMClient:
-    """Calls VT ARC's OpenAI-compatible LLM API."""
+    """Calls Ollama's native /api/chat endpoint directly via httpx."""
 
     def __init__(self, api_key: str, base_url: str, model: str, max_history_messages: int = 20) -> None:
-        self._client = OpenAI(api_key=api_key, base_url=base_url, timeout=120.0)
+        # base_url is e.g. http://ollama-cluster-ip:11434/v1 — strip /v1 suffix for native API
+        self._ollama_url = base_url.rstrip("/").removesuffix("/v1")
         self._model = model
         self._max_history = max_history_messages
-        logger.info("LLM client ready — model=%s  base_url=%s  max_history=%d", model, base_url, max_history_messages)
+        logger.info(
+            "LLM client ready — model=%s  ollama_url=%s  max_history=%d",
+            model, self._ollama_url, max_history_messages,
+        )
 
     def ask(self, question: str, chunks: list[dict]) -> str:
         """Simple RAG query (no history). Delegates to chat()."""
@@ -114,33 +115,27 @@ class LLMClient:
         chunks: list[dict],
         history: list[dict],
     ) -> str:
-        """Send a RAG conversation to the LLM and return the answer."""
+        """Send a RAG conversation to Ollama and return the full answer."""
         messages = build_messages(question, chunks, history, max_history_messages=self._max_history)
-
         logger.info(
             "LLM REQUEST — messages=%d  history_turns=%d  chunks=%d",
             len(messages), len(history), len(chunks),
         )
-
         try:
-            response = self._client.chat.completions.create(
-                model=self._model,
-                messages=messages,
-                temperature=0.3,
-            )
-        except (APIError, APITimeoutError, APIConnectionError) as exc:
+            with httpx.Client(timeout=120.0) as client:
+                resp = client.post(
+                    f"{self._ollama_url}/api/chat",
+                    json={"model": self._model, "messages": messages, "stream": False,
+                          "options": {"temperature": 0.3}},
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                answer = data["message"]["content"]
+        except Exception as exc:
             logger.error("LLM API error: %s", exc)
             raise RuntimeError("The language model is temporarily unavailable. Please try again.") from exc
 
-        answer = response.choices[0].message.content
-        usage = response.usage
-        logger.info(
-            "LLM RESPONSE — answer_len=%d  prompt_tokens=%s  completion_tokens=%s  model=%s",
-            len(answer),
-            getattr(usage, "prompt_tokens", "?") if usage else "?",
-            getattr(usage, "completion_tokens", "?") if usage else "?",
-            response.model if hasattr(response, "model") else "?",
-        )
+        logger.info("LLM RESPONSE — answer_len=%d", len(answer))
         return answer
 
     def chat_stream(
@@ -149,30 +144,33 @@ class LLMClient:
         chunks: list[dict],
         history: list[dict],
     ) -> Generator[str, None, None]:
-        """Stream a RAG conversation response, yielding content tokens."""
+        """Stream a RAG conversation response via Ollama, yielding content tokens."""
         messages = build_messages(question, chunks, history, max_history_messages=self._max_history)
-
         logger.info(
             "LLM STREAM REQUEST — messages=%d  history_turns=%d  chunks=%d",
             len(messages), len(history), len(chunks),
         )
-
         try:
-            stream = self._client.chat.completions.create(
-                model=self._model,
-                messages=messages,
-                temperature=0.3,
-                stream=True,
-            )
-        except (APIError, APITimeoutError, APIConnectionError) as exc:
-            logger.error("LLM stream API error: %s", exc)
+            with httpx.Client(timeout=httpx.Timeout(connect=10.0, read=120.0, write=10.0, pool=10.0)) as client:
+                with client.stream(
+                    "POST",
+                    f"{self._ollama_url}/api/chat",
+                    json={"model": self._model, "messages": messages, "stream": True,
+                          "options": {"temperature": 0.3}},
+                ) as resp:
+                    resp.raise_for_status()
+                    for line in resp.iter_lines():
+                        if not line:
+                            continue
+                        try:
+                            chunk = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        content = chunk.get("message", {}).get("content", "")
+                        if content:
+                            yield content
+                        if chunk.get("done"):
+                            break
+        except Exception as exc:
+            logger.error("LLM stream error: %s", exc)
             raise RuntimeError("The language model is temporarily unavailable. Please try again.") from exc
-
-        try:
-            for chunk in stream:
-                delta = chunk.choices[0].delta
-                if delta.content:
-                    yield delta.content
-        except (APIError, APITimeoutError, APIConnectionError) as exc:
-            logger.error("LLM stream interrupted: %s", exc)
-            return
