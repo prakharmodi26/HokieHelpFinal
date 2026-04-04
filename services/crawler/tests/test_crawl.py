@@ -389,3 +389,40 @@ def test_blocked_path_allows_seminar_page():
 
 def test_blocked_path_empty_blocks_nothing():
     assert _is_blocked_path("https://website.cs.vt.edu/content/anything", ()) is False
+
+
+from crawler.crawl import _is_allowed_host
+
+
+def test_is_allowed_host_exact_match():
+    assert _is_allowed_host("cs.vt.edu", ("cs.vt.edu",)) is True
+
+
+def test_is_allowed_host_subdomain():
+    assert _is_allowed_host("website.cs.vt.edu", ("cs.vt.edu",)) is True
+
+
+def test_is_allowed_host_deep_subdomain():
+    assert _is_allowed_host("students.cs.vt.edu", ("cs.vt.edu",)) is True
+
+
+def test_is_allowed_host_sub_sub_subdomain():
+    # students.website.cs.vt.edu ends with .cs.vt.edu — must be accepted
+    assert _is_allowed_host("students.website.cs.vt.edu", ("cs.vt.edu",)) is True
+
+
+def test_is_allowed_host_unrelated_domain():
+    assert _is_allowed_host("eng.vt.edu", ("cs.vt.edu",)) is False
+
+
+def test_is_allowed_host_partial_suffix_no_match():
+    # "notcs.vt.edu" must NOT match "cs.vt.edu"
+    assert _is_allowed_host("notcs.vt.edu", ("cs.vt.edu",)) is False
+
+
+def test_is_allowed_host_none_returns_false():
+    assert _is_allowed_host(None, ("cs.vt.edu",)) is False
+
+
+def test_is_allowed_host_empty_domains_returns_false():
+    assert _is_allowed_host("cs.vt.edu", ()) is False

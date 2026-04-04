@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from datetime import datetime, timezone
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
@@ -21,10 +21,18 @@ from crawler.storage import MinioStorage
 logger = logging.getLogger(__name__)
 
 
-def _rewrite_to_website(url: str) -> str:
-    """Rewrite a cs.vt.edu URL to website.cs.vt.edu."""
-    parsed = urlparse(url)
-    return urlunparse(parsed._replace(netloc="website.cs.vt.edu", scheme="https"))
+def _is_allowed_host(host: str | None, allowed_domains: tuple[str, ...]) -> bool:
+    """Return True if host exactly matches or is a subdomain of any allowed domain.
+
+    Works at any nesting depth: students.website.cs.vt.edu matches cs.vt.edu
+    because the string ends with '.cs.vt.edu'.
+    """
+    if not host:
+        return False
+    for domain in allowed_domains:
+        if host == domain or host.endswith("." + domain):
+            return True
+    return False
 
 
 def _is_blocked_path(url: str, blocked_paths: tuple[str, ...]) -> bool:
