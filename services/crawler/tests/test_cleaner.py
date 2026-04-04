@@ -393,3 +393,22 @@ def test_clean_no_contact_block_when_no_email():
     )
     result = clean_markdown(page)
     assert "**Contact Information:**" not in result
+
+
+def test_clean_markdown_removes_cs_vt_edu_breadcrumb_link():
+    """Bare [Computer Science](https://cs.vt.edu) breadcrumb is stripped."""
+    from crawler.cleaner import clean_markdown
+    doc = "---\nurl: 'https://cs.vt.edu/about'\n---\n\n[Computer Science](https://cs.vt.edu)\n\n# About\n\nContent here."
+    result = clean_markdown(doc)
+    assert "[Computer Science](https://cs.vt.edu)" not in result
+    assert "# About" in result
+    assert "Content here." in result
+
+
+def test_clean_markdown_still_removes_website_cs_vt_edu_breadcrumb_link():
+    """Original website.cs.vt.edu breadcrumb link is still stripped."""
+    from crawler.cleaner import clean_markdown
+    doc = "---\nurl: 'https://website.cs.vt.edu/about'\n---\n\n[Computer Science](https://website.cs.vt.edu)\n\n# About\n\nContent here."
+    result = clean_markdown(doc)
+    assert "[Computer Science](https://website.cs.vt.edu)" not in result
+    assert "# About" in result

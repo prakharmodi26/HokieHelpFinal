@@ -193,7 +193,7 @@ def clean_markdown(document: str) -> str:
         if any(link in line for link in _VT_FOOTER_LINKS):
             continue
         if re.match(
-            r"^\s*\[?\s*Computer Science\s*\]?\s*\(https://website\.cs\.vt\.edu/?\)\s*$",
+            r"^\s*\[?\s*Computer Science\s*\]?\s*\(https://(?:website\.)?cs\.vt\.edu/?\)\s*$",
             line,
         ):
             continue

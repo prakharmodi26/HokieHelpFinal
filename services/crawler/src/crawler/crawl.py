@@ -45,7 +45,6 @@ def _make_markdown_config(request_delay: float = 0.5) -> CrawlerRunConfig:
     return CrawlerRunConfig(
         verbose=False,
         delay_before_return_html=request_delay,
-        css_selector="#vt_main",
         excluded_tags=["nav", "script", "style", "noscript", "iframe"],
         markdown_generator=DefaultMarkdownGenerator(),
     )
@@ -155,7 +154,6 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
         stream=True,
         verbose=False,
         delay_before_return_html=config.request_delay,
-        css_selector="#vt_main",
         excluded_tags=["nav", "script", "style", "noscript", "iframe"],
         markdown_generator=DefaultMarkdownGenerator(),
     )
