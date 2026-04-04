@@ -13,3 +13,4 @@ discovery_report.txt
 discovery_progress.log
 .DS_Store
 TEMP_LOGOS/
+.worktrees/
