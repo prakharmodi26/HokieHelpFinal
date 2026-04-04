@@ -123,21 +123,17 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
     Returns a stats dict with pages_crawled, pages_failed, pages_skipped_duplicate counts.
 
     Two-phase strategy:
-    1. BFS crawl of website.cs.vt.edu. Any cs.vt.edu redirect results are rewritten
-       to website.cs.vt.edu and queued for phase 2. External links to *.cs.vt.edu
-       subdomains are also queued.
-    2. Individual fetches for queued URLs. If they redirect to cs.vt.edu/path, the
-       path is rewritten to website.cs.vt.edu/path and fetched again.
+    1. BFS crawl seeded from config.seed_url. DomainFilter allows all config.allowed_domains
+       (and their subdomains at any nesting depth). Results on any allowed host are stored
+       directly — no URL rewriting.
+    2. External links to allowed subdomains found during phase 1 that BFS did not follow
+       (include_external=False) are individually fetched.
+    3. Documents (PDF, Word) linked from any crawled page are downloaded regardless of
+       the document host — the trust anchor is the cs.vt.edu page that linked them.
     """
-    # Phase 1: BFS crawl of website.cs.vt.edu
-    # Include cs.vt.edu in filter so redirect chains aren't cut mid-hop.
-    crawl_allowed = list(config.allowed_domains)
-    if "website.cs.vt.edu" in crawl_allowed and "cs.vt.edu" not in crawl_allowed:
-        crawl_allowed.append("cs.vt.edu")
-
     filter_chain = FilterChain([
         DomainFilter(
-            allowed_domains=crawl_allowed,
+            allowed_domains=list(config.allowed_domains),
             blocked_domains=list(config.blocked_domains),
         ),
     ])
@@ -160,12 +156,10 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
 
     stats = {"pages_crawled": 0, "pages_failed": 0, "pages_skipped_duplicate": 0,
              "documents_processed": 0, "documents_failed": 0}
-    # Seed from previously stored hashes to enable incremental recrawl
     seen_content_hashes: set[str] = set(storage.load_all_content_hashes().keys())
     stored_urls: set[str] = set()
-    # URLs to individually fetch in phase 2 (subdomains + cs.vt.edu rewrites)
+    # URLs to individually fetch in phase 2 (external subdomain links not followed by BFS)
     pending_fetches: set[str] = set()
-    # Document URLs (PDF, Word) discovered during crawl
     document_urls: set[str] = set()
 
     async with AsyncWebCrawler() as crawler:
@@ -179,7 +173,6 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
                 stats["pages_failed"] += 1
                 continue
 
-            # Validate URL scheme
             parsed_url = urlparse(result.url)
             if parsed_url.scheme not in ("http", "https"):
                 logger.warning("Skipping non-HTTP URL: %s", result.url)
@@ -193,23 +186,9 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
 
             final_host = parsed_url.hostname
 
-            # Page landed on cs.vt.edu — rewrite and queue for phase 2
-            if final_host == "cs.vt.edu":
-                rewritten = _rewrite_to_website(result.url)
-                if rewritten not in stored_urls:
-                    logger.info(
-                        "Redirect to cs.vt.edu detected: %s → queuing %s",
-                        result.url,
-                        rewritten,
-                    )
-                    pending_fetches.add(rewritten)
-                stats["pages_failed"] += 1
-                continue
-
-            # Other non-allowed domain — skip
-            if final_host not in config.allowed_domains:
+            if not _is_allowed_host(final_host, config.allowed_domains):
                 logger.info(
-                    "Skipping %s — final domain %s not in allowed_domains",
+                    "Skipping %s — host %s not in allowed domains",
                     result.url,
                     final_host,
                 )
@@ -219,10 +198,11 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
             depth = result.metadata.get("depth", 0)
             _store_result(result, storage, stats, seen_content_hashes, stored_urls, depth)
 
-            # Collect document links (PDF, Word) for phase 3
+            # Collect document links from this page — any host is valid, the
+            # cs.vt.edu page that linked it is the trust anchor.
             document_urls.update(collect_document_links(result.links))
 
-            # Scan external links for *.cs.vt.edu subdomains not in blocked_domains
+            # Queue external allowed-domain links the BFS won't follow (include_external=False)
             for link in (result.links or {}).get("external", []):
                 href = link.get("href", "")
                 if not href:
@@ -230,8 +210,7 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
                 parsed = urlparse(href)
                 host = parsed.hostname or ""
                 if (
-                    host.endswith(".cs.vt.edu")
-                    and host != "website.cs.vt.edu"
+                    _is_allowed_host(host, config.allowed_domains)
                     and host not in config.blocked_domains
                     and href not in pending_fetches
                     and href not in stored_urls
@@ -239,7 +218,7 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
                     logger.info("Queuing external cs.vt.edu link for phase 2: %s", href)
                     pending_fetches.add(href)
 
-        # Phase 2: individually fetch queued URLs, following cs.vt.edu redirects
+        # Phase 2: individually fetch queued external subdomain URLs
         if pending_fetches:
             logger.info("Phase 2: fetching %d queued URLs", len(pending_fetches))
             single_config = _make_markdown_config(config.request_delay)
@@ -254,33 +233,24 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
 
                 result = await crawler.arun(url=url, config=single_config)
                 if not result.success:
-                    logger.warning("Phase 2 failed: %s — %s", url, getattr(result, "error_message", ""))
+                    logger.warning(
+                        "Phase 2 failed: %s — %s", url, getattr(result, "error_message", "")
+                    )
                     stats["pages_failed"] += 1
                     continue
 
                 final_host = urlparse(result.url).hostname
 
-                # Redirect landed on cs.vt.edu — rewrite and fetch the website equivalent
-                if final_host == "cs.vt.edu":
-                    rewritten = _rewrite_to_website(result.url)
-                    if rewritten in stored_urls:
-                        continue
-                    logger.info("Phase 2 rewrite: %s → %s", result.url, rewritten)
-                    result = await crawler.arun(url=rewritten, config=single_config)
-                    if not result.success:
-                        logger.warning("Phase 2 rewrite fetch failed: %s", rewritten)
-                        stats["pages_failed"] += 1
-                        continue
-                    final_host = urlparse(result.url).hostname
-
-                if final_host not in config.allowed_domains:
-                    logger.info("Phase 2 skipping %s — domain %s not allowed", result.url, final_host)
+                if not _is_allowed_host(final_host, config.allowed_domains):
+                    logger.info(
+                        "Phase 2 skipping %s — host %s not allowed", result.url, final_host
+                    )
                     stats["pages_failed"] += 1
                     continue
 
                 _store_result(result, storage, stats, seen_content_hashes, stored_urls, depth=0)
 
-    # Phase 3: download and process documents (PDF, Word)
+    # Phase 3: download and process documents
     if document_urls:
         doc_stats = await download_and_process_documents(
             document_urls, storage, seen_content_hashes, stored_urls,

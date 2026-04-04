@@ -158,13 +158,79 @@ async def test_run_crawl_deduplicates_identical_content(crawler_config):
 
 
 @pytest.mark.asyncio
-async def test_run_crawl_rewrites_cs_vt_edu_redirect_and_fetches(crawler_config):
-    """When BFS lands on cs.vt.edu, the path is rewritten to website.cs.vt.edu and re-fetched."""
+async def test_run_crawl_accepts_any_cs_vt_edu_subdomain(crawler_config):
+    """BFS results from any *.cs.vt.edu subdomain are stored directly — no rewrite."""
+    mock_storage = _make_mock_storage()
+    results = [
+        _make_crawl_result("https://cs.vt.edu/about", "About", "# About CS", depth=0),
+        _make_crawl_result("https://website.cs.vt.edu/people", "People", "# People", depth=1),
+        _make_crawl_result("https://students.cs.vt.edu/portal", "Portal", "# Portal", depth=1),
+        _make_crawl_result("https://wiki.cs.vt.edu/courses", "Courses", "# Courses", depth=1),
+    ]
+
+    mock_crawler_instance = AsyncMock()
+
+    async def fake_arun(*args, **kwargs):
+        async def _gen():
+            for r in results:
+                yield r
+        return _gen()
+
+    mock_crawler_instance.arun = fake_arun
+    mock_crawler_instance.__aenter__ = AsyncMock(return_value=mock_crawler_instance)
+    mock_crawler_instance.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("crawler.crawl.AsyncWebCrawler", return_value=mock_crawler_instance):
+        stats = await run_crawl(crawler_config, mock_storage)
+
+    assert mock_storage.upload_document.call_count == 4
+    assert stats["pages_crawled"] == 4
+    assert stats["pages_failed"] == 0
+
+
+@pytest.mark.asyncio
+async def test_run_crawl_skips_non_cs_vt_edu_domains(crawler_config):
+    """Pages on non-cs.vt.edu domains are skipped."""
+    mock_storage = _make_mock_storage()
+    results = [
+        _make_crawl_result("https://eng.vt.edu/page", "Eng", "# Eng", depth=0),
+        _make_crawl_result("https://cs.vt.edu", "CS", "# CS VT", depth=0),
+    ]
+
+    mock_crawler_instance = AsyncMock()
+
+    async def fake_arun(*args, **kwargs):
+        async def _gen():
+            for r in results:
+                yield r
+        return _gen()
+
+    mock_crawler_instance.arun = fake_arun
+    mock_crawler_instance.__aenter__ = AsyncMock(return_value=mock_crawler_instance)
+    mock_crawler_instance.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("crawler.crawl.AsyncWebCrawler", return_value=mock_crawler_instance):
+        stats = await run_crawl(crawler_config, mock_storage)
+
+    assert stats["pages_crawled"] == 1   # only cs.vt.edu
+    assert stats["pages_failed"] == 1    # eng.vt.edu skipped
+
+
+@pytest.mark.asyncio
+async def test_run_crawl_queues_cs_subdomain_external_links_phase2(crawler_config):
+    """External *.cs.vt.edu links that BFS doesn't follow are queued and fetched in phase 2."""
     mock_storage = _make_mock_storage()
 
-    bfs_cs_result = _make_crawl_result("https://cs.vt.edu/about", "About", "# About CS", depth=1)
-    ok_result = _make_crawl_result("https://website.cs.vt.edu/people", "People", "# People", depth=1)
-    phase2_result = _make_crawl_result("https://website.cs.vt.edu/about", "About VT", "# About VT CS", depth=0)
+    bfs_result = _make_crawl_result(
+        "https://cs.vt.edu",
+        "Home",
+        "# Home",
+        depth=0,
+        links={"external": [{"href": "https://research.cs.vt.edu/labs", "text": "Labs"}]},
+    )
+    phase2_result = _make_crawl_result(
+        "https://research.cs.vt.edu/labs", "Labs", "# Labs", depth=0
+    )
 
     mock_crawler_instance = AsyncMock()
     call_count = {"n": 0}
@@ -173,8 +239,7 @@ async def test_run_crawl_rewrites_cs_vt_edu_redirect_and_fetches(crawler_config)
         call_count["n"] += 1
         if call_count["n"] == 1:
             async def _gen():
-                yield bfs_cs_result
-                yield ok_result
+                yield bfs_result
             return _gen()
         else:
             return phase2_result
@@ -188,47 +253,47 @@ async def test_run_crawl_rewrites_cs_vt_edu_redirect_and_fetches(crawler_config)
 
     assert mock_storage.upload_document.call_count == 2
     assert stats["pages_crawled"] == 2
-    assert stats["pages_failed"] == 1
 
 
 @pytest.mark.asyncio
-async def test_run_crawl_queues_cs_subdomain_external_links(crawler_config):
-    """External links to *.cs.vt.edu subdomains are queued and fetched in phase 2."""
+async def test_run_crawl_collects_external_host_documents(crawler_config):
+    """Documents linked from a cs.vt.edu page are collected even if hosted elsewhere."""
     mock_storage = _make_mock_storage()
 
     bfs_result = _make_crawl_result(
-        "https://website.cs.vt.edu",
-        "Home",
-        "# Home",
+        "https://cs.vt.edu/research",
+        "Research",
+        "# Research",
         depth=0,
-        links={"external": [{"href": "https://people.cs.vt.edu", "text": "People"}]},
+        links={
+            "internal": [],
+            "external": [{"href": "https://arxiv.org/pdf/2301.00001.pdf", "text": "Paper"}],
+        },
     )
-    subdomain_result = _make_crawl_result("https://cs.vt.edu/people", "People", "# People CS", depth=0)
-    rewritten_result = _make_crawl_result("https://website.cs.vt.edu/people", "People VT", "# People VT", depth=0)
 
     mock_crawler_instance = AsyncMock()
-    call_count = {"n": 0}
 
-    async def fake_arun(url, config):
-        call_count["n"] += 1
-        if call_count["n"] == 1:
-            async def _gen():
-                yield bfs_result
-            return _gen()
-        elif call_count["n"] == 2:
-            return subdomain_result
-        else:
-            return rewritten_result
+    async def fake_arun(*args, **kwargs):
+        async def _gen():
+            yield bfs_result
+        return _gen()
 
     mock_crawler_instance.arun = fake_arun
     mock_crawler_instance.__aenter__ = AsyncMock(return_value=mock_crawler_instance)
     mock_crawler_instance.__aexit__ = AsyncMock(return_value=False)
 
-    with patch("crawler.crawl.AsyncWebCrawler", return_value=mock_crawler_instance):
-        stats = await run_crawl(crawler_config, mock_storage)
+    collected_doc_urls: list[set] = []
 
-    assert mock_storage.upload_document.call_count == 2
-    assert stats["pages_crawled"] == 2
+    async def fake_download(doc_urls, *args, **kwargs):
+        collected_doc_urls.append(set(doc_urls))
+        return {"documents_processed": 0, "documents_failed": 0}
+
+    with patch("crawler.crawl.AsyncWebCrawler", return_value=mock_crawler_instance), \
+         patch("crawler.crawl.download_and_process_documents", side_effect=fake_download):
+        await run_crawl(crawler_config, mock_storage)
+
+    assert len(collected_doc_urls) == 1
+    assert "https://arxiv.org/pdf/2301.00001.pdf" in collected_doc_urls[0]
 
 
 # --- New metadata and recrawl tests ---
