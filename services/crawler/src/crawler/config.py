@@ -52,18 +52,17 @@ class CrawlerConfig:
             minio_bucket=os.environ.get("MINIO_BUCKET", "crawled-pages"),
             minio_cleaned_bucket=os.environ.get("MINIO_CLEANED_BUCKET", "crawled-pages-cleaned"),
             minio_secure=os.environ.get("MINIO_SECURE", "false").lower() == "true",
-            seed_url=os.environ.get("CRAWL_SEED_URL", "https://website.cs.vt.edu"),
+            seed_url=os.environ.get("CRAWL_SEED_URL", "https://cs.vt.edu"),
             max_depth=int(os.environ.get("CRAWL_MAX_DEPTH", "4")),
             max_pages=int(os.environ.get("CRAWL_MAX_PAGES", "9999999")),
             allowed_domains=_domains(
                 "CRAWL_ALLOWED_DOMAINS",
-                "website.cs.vt.edu",
+                "cs.vt.edu",
             ),
             blocked_domains=_domains(
                 "CRAWL_BLOCKED_DOMAINS",
                 "git.cs.vt.edu,gitlab.cs.vt.edu,mail.cs.vt.edu,webmail.cs.vt.edu,"
-                "portal.cs.vt.edu,api.cs.vt.edu,forum.cs.vt.edu,login.cs.vt.edu,"
-                "students.cs.vt.edu,wordpress.cs.vt.edu,wiki.cs.vt.edu",
+                "portal.cs.vt.edu,api.cs.vt.edu,forum.cs.vt.edu,login.cs.vt.edu",
             ),
             blocked_paths=_domains(
                 "CRAWL_BLOCKED_PATHS",

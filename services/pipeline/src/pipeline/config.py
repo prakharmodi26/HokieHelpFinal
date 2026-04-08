@@ -33,7 +33,7 @@ class PipelineConfig:
             namespace=os.getenv("PIPELINE_NAMESPACE", "test"),
             crawl_seed_url=(
                 seed_url
-                or os.getenv("CRAWL_SEED_URL", "https://website.cs.vt.edu")
+                or os.getenv("CRAWL_SEED_URL", "https://cs.vt.edu")
             ),
             crawl_max_depth=(
                 max_depth

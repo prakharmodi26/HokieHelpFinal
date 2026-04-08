@@ -17,12 +17,12 @@ def test_config_from_env_defaults(monkeypatch):
     assert config.minio_bucket == "crawled-pages"
     assert config.minio_cleaned_bucket == "crawled-pages-cleaned"
     assert config.minio_secure is False
-    assert config.seed_url == "https://website.cs.vt.edu"
+    assert config.seed_url == "https://cs.vt.edu"
     assert config.max_depth == 4
     assert config.max_pages == 9999999
-    assert config.allowed_domains == ("website.cs.vt.edu",)
+    assert config.allowed_domains == ("cs.vt.edu",)
     assert "git.cs.vt.edu" in config.blocked_domains
-    assert "students.cs.vt.edu" in config.blocked_domains
+    assert "students.cs.vt.edu" not in config.blocked_domains
     assert config.prune_threshold == 0.45
 
 
