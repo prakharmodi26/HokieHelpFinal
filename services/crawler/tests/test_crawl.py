@@ -217,32 +217,28 @@ async def test_run_crawl_skips_non_cs_vt_edu_domains(crawler_config):
 
 
 @pytest.mark.asyncio
-async def test_run_crawl_queues_cs_subdomain_external_links_phase2(crawler_config):
-    """External *.cs.vt.edu links that BFS doesn't follow are queued and fetched in phase 2."""
+async def test_run_crawl_bfs_uses_include_external_true(crawler_config):
+    """BFS strategy is configured with include_external=True so cross-subdomain links are followed."""
     mock_storage = _make_mock_storage()
 
-    bfs_result = _make_crawl_result(
-        "https://cs.vt.edu",
-        "Home",
-        "# Home",
-        depth=0,
-        links={"external": [{"href": "https://research.cs.vt.edu/labs", "text": "Labs"}]},
-    )
-    phase2_result = _make_crawl_result(
-        "https://research.cs.vt.edu/labs", "Labs", "# Labs", depth=0
-    )
+    results = [
+        _make_crawl_result("https://website.cs.vt.edu", "Home", "# Home", depth=0),
+        _make_crawl_result("https://students.cs.vt.edu/grad", "Grad", "# Grad", depth=1),
+    ]
 
     mock_crawler_instance = AsyncMock()
-    call_count = {"n": 0}
+    captured_configs = []
 
-    async def fake_arun(url, config):
-        call_count["n"] += 1
-        if call_count["n"] == 1:
-            async def _gen():
-                yield bfs_result
-            return _gen()
-        else:
-            return phase2_result
+    async def fake_arun(*args, **kwargs):
+        # arun is called as arun(url=..., config=...) — capture the config
+        cfg = kwargs.get("config")
+        if cfg is None and len(args) > 1:
+            cfg = args[1]
+        captured_configs.append(cfg)
+        async def _gen():
+            for r in results:
+                yield r
+        return _gen()
 
     mock_crawler_instance.arun = fake_arun
     mock_crawler_instance.__aenter__ = AsyncMock(return_value=mock_crawler_instance)
@@ -251,8 +247,13 @@ async def test_run_crawl_queues_cs_subdomain_external_links_phase2(crawler_confi
     with patch("crawler.crawl.AsyncWebCrawler", return_value=mock_crawler_instance):
         stats = await run_crawl(crawler_config, mock_storage)
 
-    assert mock_storage.upload_document.call_count == 2
+    # Both pages stored — BFS follows cross-subdomain links
     assert stats["pages_crawled"] == 2
+    # Verify include_external=True on the BFS config
+    assert len(captured_configs) == 1
+    bfs_cfg = captured_configs[0]
+    assert bfs_cfg is not None, "BFS config was not captured"
+    assert bfs_cfg.deep_crawl_strategy.include_external is True
 
 
 @pytest.mark.asyncio

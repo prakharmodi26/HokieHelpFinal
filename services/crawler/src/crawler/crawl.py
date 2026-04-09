@@ -41,15 +41,6 @@ def _is_blocked_path(url: str, blocked_paths: tuple[str, ...]) -> bool:
     return any(path.startswith(prefix) for prefix in blocked_paths)
 
 
-def _make_markdown_config(request_delay: float = 0.5) -> CrawlerRunConfig:
-    return CrawlerRunConfig(
-        verbose=False,
-        delay_before_return_html=request_delay,
-        excluded_tags=["nav", "script", "style", "noscript", "iframe"],
-        markdown_generator=DefaultMarkdownGenerator(),
-    )
-
-
 def _store_result(
     result,
     storage: MinioStorage,
@@ -122,14 +113,14 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
 
     Returns a stats dict with pages_crawled, pages_failed, pages_skipped_duplicate counts.
 
-    Two-phase strategy:
-    1. BFS crawl seeded from config.seed_url. DomainFilter allows all config.allowed_domains
-       (and their subdomains at any nesting depth). Results on any allowed host are stored
-       directly — no URL rewriting.
-    2. External links to allowed subdomains found during phase 1 that BFS did not follow
-       (include_external=False) are individually fetched.
-    3. Documents (PDF, Word) linked from any crawled page are downloaded regardless of
-       the document host — the trust anchor is the cs.vt.edu page that linked them.
+    BFS crawl with include_external=True seeded from config.seed_url. DomainFilter
+    restricts BFS to config.allowed_domains and their subdomains at any nesting depth,
+    so cross-subdomain links (e.g. website.cs.vt.edu → students.cs.vt.edu) are followed
+    automatically while links to unrelated domains (google.com, etc.) are skipped by
+    the filter before fetching.
+
+    Documents (PDF, Word) linked from any crawled page are downloaded regardless of the
+    document host — the trust anchor is the cs.vt.edu page that linked them.
     """
     filter_chain = FilterChain([
         DomainFilter(
@@ -140,7 +131,7 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
 
     strategy = BFSDeepCrawlStrategy(
         max_depth=config.max_depth,
-        include_external=False,
+        include_external=True,
         max_pages=config.max_pages,
         filter_chain=filter_chain,
     )
@@ -158,8 +149,6 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
              "documents_processed": 0, "documents_failed": 0}
     seen_content_hashes: set[str] = set(storage.load_all_content_hashes().keys())
     stored_urls: set[str] = set()
-    # URLs to individually fetch in phase 2 (external subdomain links not followed by BFS)
-    pending_fetches: set[str] = set()
     document_urls: set[str] = set()
 
     async with AsyncWebCrawler() as crawler:
@@ -202,55 +191,7 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
             # cs.vt.edu page that linked it is the trust anchor.
             document_urls.update(collect_document_links(result.links))
 
-            # Queue external allowed-domain links the BFS won't follow (include_external=False)
-            for link in (result.links or {}).get("external", []):
-                href = link.get("href", "")
-                if not href:
-                    continue
-                parsed = urlparse(href)
-                host = parsed.hostname or ""
-                if (
-                    _is_allowed_host(host, config.allowed_domains)
-                    and host not in config.blocked_domains
-                    and href not in pending_fetches
-                    and href not in stored_urls
-                ):
-                    logger.info("Queuing external cs.vt.edu link for phase 2: %s", href)
-                    pending_fetches.add(href)
-
-        # Phase 2: individually fetch queued external subdomain URLs
-        if pending_fetches:
-            logger.info("Phase 2: fetching %d queued URLs", len(pending_fetches))
-            single_config = _make_markdown_config(config.request_delay)
-
-            for url in pending_fetches:
-                if url in stored_urls:
-                    continue
-
-                if _is_blocked_path(url, config.blocked_paths):
-                    logger.debug("Blocked path (phase 2), skipping: %s", url)
-                    continue
-
-                result = await crawler.arun(url=url, config=single_config)
-                if not result.success:
-                    logger.warning(
-                        "Phase 2 failed: %s — %s", url, getattr(result, "error_message", "")
-                    )
-                    stats["pages_failed"] += 1
-                    continue
-
-                final_host = urlparse(result.url).hostname
-
-                if not _is_allowed_host(final_host, config.allowed_domains):
-                    logger.info(
-                        "Phase 2 skipping %s — host %s not allowed", result.url, final_host
-                    )
-                    stats["pages_failed"] += 1
-                    continue
-
-                _store_result(result, storage, stats, seen_content_hashes, stored_urls, depth=0)
-
-    # Phase 3: download and process documents
+    # Download and process documents (PDFs, Word docs) from any host
     if document_urls:
         doc_stats = await download_and_process_documents(
             document_urls, storage, seen_content_hashes, stored_urls,
