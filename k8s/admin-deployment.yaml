@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hokiehelp-admin
+  namespace: test
+  labels:
+    app: hokiehelp-admin
+spec:
+  selector:
+    app: hokiehelp-admin
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hokiehelp-admin
+  namespace: test
+  labels:
+    app: hokiehelp-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hokiehelp-admin
+  template:
+    metadata:
+      labels:
+        app: hokiehelp-admin
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: admin
+          image: ghcr.io/prakharmodi26/hokiehelp-admin:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: admin-config
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: secret-key
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: admin-data

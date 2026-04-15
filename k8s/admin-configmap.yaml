@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: admin-config
+  namespace: test
+  labels:
+    app: hokiehelp-admin
+data:
+  ADMIN_PORT: "8080"
+  ADMIN_DATA_DIR: "/data"
+  MINIO_ENDPOINT: "minio:9000"
+  MINIO_BUCKET: "crawled-pages"
+  MINIO_CLEANED_BUCKET: "crawled-pages-cleaned"
+  MINIO_CHUNKS_BUCKET: "chunks"
+  MINIO_SECURE: "false"
+  QDRANT_HOST: "qdrant"
+  QDRANT_PORT: "6333"
+  QDRANT_COLLECTION: "hokiehelp_chunks"
+  EMBEDDER_URL: "http://hokiehelp-embedder:8080"
+  CHATBOT_URL: "http://hokiehelp-chatbot:8000"
+  OLLAMA_URL: "http://ollama:11434"
+  CRAWL_SEED_URL: "https://cs.vt.edu"
+  CRAWL_MAX_DEPTH: "4"
+  CRAWL_MAX_PAGES: "9999999"
+  CRAWL_SCHEDULE: "0 3 * * 0"
