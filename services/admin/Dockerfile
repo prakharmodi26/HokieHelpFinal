@@ -19,4 +19,5 @@ COPY admin/pyproject.toml admin/
 COPY admin/src/ admin/src/
 RUN pip install --no-cache-dir ./admin
 
+EXPOSE 8080
 CMD ["uvicorn", "admin.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080"]
