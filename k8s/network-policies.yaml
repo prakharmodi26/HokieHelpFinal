@@ -219,7 +219,7 @@ spec:
           port: 11434
 ---
 # -----------------------------------------------------------------------------
-# 8. Pipeline — egress to qdrant, minio, and external sources for crawling
+# 9. Pipeline child jobs — egress to qdrant, minio, and external sources for crawling
 # -----------------------------------------------------------------------------
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -264,3 +264,135 @@ spec:
           port: 80
         - protocol: TCP
           port: 443
+---
+# Admin — egress to internal services + external internet (crawler runs inside this pod)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: admin-egress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: hokiehelp-admin
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: minio
+      ports:
+        - protocol: TCP
+          port: 9000
+    - to:
+        - podSelector:
+            matchLabels:
+              app: qdrant
+      ports:
+        - protocol: TCP
+          port: 6333
+        - protocol: TCP
+          port: 6334
+    - to:
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-embedder
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-chatbot
+      ports:
+        - protocol: TCP
+          port: 8000
+    - to:
+        - podSelector:
+            matchLabels:
+              workload.user.cattle.io/workloadselector: apps.deployment-test-ollama
+      ports:
+        - protocol: TCP
+          port: 11434
+    # External internet for crawler subprocess (crawls cs.vt.edu)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+---
+# Embedder service — ingress from admin
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: embedder-service-ingress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: hokiehelp-embedder
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-admin
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+# Embedder service — egress to MinIO and Qdrant
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: embedder-service-egress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: hokiehelp-embedder
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: minio
+      ports:
+        - protocol: TCP
+          port: 9000
+    - to:
+        - podSelector:
+            matchLabels:
+              app: qdrant
+      ports:
+        - protocol: TCP
+          port: 6333
+        - protocol: TCP
+          port: 6334
+---
+# Admin — ingress for kubectl port-forward (no external ingress)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: admin-ingress
+  namespace: test
+spec:
+  podSelector:
+    matchLabels:
+      app: hokiehelp-admin
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
