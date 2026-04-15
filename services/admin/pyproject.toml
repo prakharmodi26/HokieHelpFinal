@@ -25,5 +25,8 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+admin = ["static/*", "static/**/*"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -166,6 +166,12 @@ spec:
         - podSelector:
             matchLabels:
               managed-by: hokiehelp-pipeline
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-admin
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-embedder
       ports:
         - protocol: TCP
           port: 6333
@@ -191,6 +197,12 @@ spec:
         - podSelector:
             matchLabels:
               managed-by: hokiehelp-pipeline
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-admin
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-embedder
       ports:
         - protocol: TCP
           port: 9000

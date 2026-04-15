@@ -34,7 +34,7 @@ _DEFAULTS = {
     "schedule.enabled": "false",
 }
 
-async def create_app() -> FastAPI:
+def create_app() -> FastAPI:
     config = AdminConfig.from_env()
     data_dir = Path(config.data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -42,13 +42,6 @@ async def create_app() -> FastAPI:
     log_dir.mkdir(parents=True, exist_ok=True)
 
     store = Store(str(data_dir / "admin.db"))
-    await store.init()
-
-    defaults = {**_DEFAULTS, "schedule.cron": config.default_schedule}
-    for k, v in defaults.items():
-        if await store.get_setting(k) is None:
-            await store.set_setting(k, v)
-
     runner = PipelineRunner(store, config, log_dir=str(log_dir))
 
     async def _scheduled_crawl() -> None:
@@ -62,6 +55,11 @@ async def create_app() -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
+        await store.init()
+        defaults = {**_DEFAULTS, "schedule.cron": config.default_schedule}
+        for k, v in defaults.items():
+            if await store.get_setting(k) is None:
+                await store.set_setting(k, v)
         cron = await store.get_setting("schedule.cron", config.default_schedule)
         enabled = (await store.get_setting("schedule.enabled", "false")) == "true"
         scheduler.start()

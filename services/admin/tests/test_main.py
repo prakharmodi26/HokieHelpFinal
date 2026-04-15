@@ -10,9 +10,10 @@ async def client(tmp_path, monkeypatch):
     monkeypatch.setenv("EMBEDDER_URL", "http://embedder:8080")
     monkeypatch.setenv("ADMIN_DATA_DIR", str(tmp_path))
     from admin.main import create_app
-    app = await create_app()
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-        yield c
+    app = create_app()
+    async with app.router.lifespan_context(app):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+            yield c
 
 async def test_pipeline_status_idle(client):
     resp = await client.get("/api/pipeline/status")

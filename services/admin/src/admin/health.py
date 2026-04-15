@@ -1,5 +1,5 @@
 from __future__ import annotations
-import logging, time
+import asyncio, logging, time
 from typing import Any
 import httpx
 from minio import Minio
@@ -19,10 +19,16 @@ async def check_http_service(name: str, url: str) -> dict[str, Any]:
         return {"name": name, "healthy": False, "error": str(exc),
                 "latency_ms": round((time.monotonic() - start) * 1000)}
 
-def get_minio_stats(config: AdminConfig) -> dict[str, Any]:
+def _minio_stats_sync(config: AdminConfig) -> dict[str, Any]:
     try:
+        import urllib3
+        http_client = urllib3.PoolManager(
+            timeout=urllib3.Timeout(connect=3.0, read=5.0),
+            retries=urllib3.Retry(total=0, connect=0, read=0),
+        )
         client = Minio(config.minio_endpoint, access_key=config.minio_access_key,
-                       secret_key=config.minio_secret_key, secure=config.minio_secure)
+                       secret_key=config.minio_secret_key, secure=config.minio_secure,
+                       http_client=http_client)
         buckets = client.list_buckets()
         bucket_stats = []
         for bucket in buckets:
@@ -35,27 +41,48 @@ def get_minio_stats(config: AdminConfig) -> dict[str, Any]:
         logger.warning("MinIO health check failed: %s", exc)
         return {"healthy": False, "error": str(exc), "buckets": []}
 
-def get_qdrant_stats(config: AdminConfig) -> dict[str, Any]:
+def _qdrant_stats_sync(config: AdminConfig) -> dict[str, Any]:
     try:
         client = QdrantClient(host=config.qdrant_host, port=config.qdrant_port, timeout=5)
         collections = client.get_collections().collections
         result = []
         for col in collections:
             info = client.get_collection(col.name)
-            result.append({"name": col.name, "vectors_count": info.vectors_count or 0,
-                           "indexed_vectors_count": info.indexed_vectors_count or 0,
-                           "status": info.status.value if info.status else "unknown"})
+            points = getattr(info, "points_count", None) or 0
+            indexed = getattr(info, "indexed_vectors_count", None) or 0
+            vectors = getattr(info, "vectors_count", None) or points
+            status = info.status.value if getattr(info, "status", None) and hasattr(info.status, "value") else str(getattr(info, "status", "unknown"))
+            result.append({"name": col.name, "vectors_count": vectors,
+                           "indexed_vectors_count": indexed,
+                           "points_count": points,
+                           "status": status})
         return {"healthy": True, "collections": result}
     except Exception as exc:
         logger.warning("Qdrant health check failed: %s", exc)
         return {"healthy": False, "error": str(exc), "collections": []}
 
+async def get_minio_stats(config: AdminConfig) -> dict[str, Any]:
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(_minio_stats_sync, config), timeout=15.0)
+    except asyncio.TimeoutError:
+        return {"healthy": False, "error": "timeout", "buckets": []}
+
+async def get_qdrant_stats(config: AdminConfig) -> dict[str, Any]:
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(_qdrant_stats_sync, config), timeout=10.0)
+    except asyncio.TimeoutError:
+        return {"healthy": False, "error": "timeout", "collections": []}
+
 async def get_full_health(config: AdminConfig) -> dict[str, Any]:
-    embedder = await check_http_service("embedder", f"{config.embedder_url}/health")
-    chatbot = await check_http_service("chatbot", f"{config.chatbot_url}/health")
-    ollama = await check_http_service("ollama", f"{config.ollama_url}/api/tags")
+    embedder, chatbot, ollama, storage, vectors = await asyncio.gather(
+        check_http_service("embedder", f"{config.embedder_url}/health"),
+        check_http_service("chatbot", f"{config.chatbot_url}/health"),
+        check_http_service("ollama", f"{config.ollama_url}/api/tags"),
+        get_minio_stats(config),
+        get_qdrant_stats(config),
+    )
     return {
         "services": {"embedder": embedder, "chatbot": chatbot, "ollama": ollama},
-        "storage": get_minio_stats(config),
-        "vectors": get_qdrant_stats(config),
+        "storage": storage,
+        "vectors": vectors,
     }
