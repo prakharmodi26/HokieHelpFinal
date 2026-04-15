@@ -47,7 +47,7 @@ async def create_app() -> FastAPI:
 
     return app
 
-async def _run(run_id: str, storage, embedder, indexer, config) -> None:
+async def _run(run_id: str, storage: EmbedderStorage, embedder: Embedder, indexer: QdrantIndexer, config: EmbedderConfig) -> None:
     loop = asyncio.get_event_loop()
     try:
         stats = await loop.run_in_executor(None, run_embedding, storage, embedder, indexer, config)
