@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hokiehelp-embedder
+  namespace: test
+  labels:
+    app: hokiehelp-embedder
+spec:
+  selector:
+    app: hokiehelp-embedder
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hokiehelp-embedder
+  namespace: test
+  labels:
+    app: hokiehelp-embedder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hokiehelp-embedder
+  template:
+    metadata:
+      labels:
+        app: hokiehelp-embedder
+    spec:
+      containers:
+        - name: embedder
+          image: ghcr.io/prakharmodi26/hokiehelp-embedder:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: embedder-config
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: secret-key
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "500m"
+              nvidia.com/gpu: "1"
+            limits:
+              memory: "8Gi"
+              cpu: "2000m"
+              nvidia.com/gpu: "1"
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
