@@ -5,10 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HokieHelp Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <style>
     [x-cloak] { display: none !important; }
     .log-entry { white-space: pre-wrap; word-break: break-all; }
+    .md-body h1{font-size:1.5rem;font-weight:700;margin:1rem 0 .5rem}
+    .md-body h2{font-size:1.25rem;font-weight:600;margin:.875rem 0 .4rem}
+    .md-body h3{font-size:1.1rem;font-weight:600;margin:.75rem 0 .35rem}
+    .md-body p{margin:.5rem 0;line-height:1.6}
+    .md-body ul,.md-body ol{margin:.5rem 0 .5rem 1.5rem}
+    .md-body li{margin:.2rem 0}
+    .md-body code{background:#1f2937;padding:.1rem .35rem;border-radius:.25rem;font-size:.8rem}
+    .md-body pre{background:#111827;padding:1rem;border-radius:.5rem;overflow-x:auto;margin:.75rem 0}
+    .md-body pre code{background:none;padding:0}
+    .md-body a{color:#f97316;text-decoration:underline}
+    .md-body blockquote{border-left:3px solid #4b5563;padding-left:1rem;color:#9ca3af;margin:.5rem 0}
+    .md-body hr{border-color:#374151;margin:1rem 0}
+    .md-body table{width:100%;border-collapse:collapse;margin:.75rem 0}
+    .md-body th,.md-body td{border:1px solid #374151;padding:.4rem .75rem;text-align:left}
+    .md-body th{background:#1f2937}
   </style>
 </head>
 <body class="h-full bg-gray-950 text-gray-100" x-data="app()" x-init="init()" x-cloak>
@@ -36,6 +52,231 @@
       </div>
       <div class="px-5 py-3 border-t border-gray-700 flex justify-end">
         <button @click="logModal.open = false" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-sm rounded transition-colors">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service Logs Modal -->
+  <div
+    x-show="serviceLogsModal.open"
+    x-transition.opacity
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+    @keydown.escape.window="serviceLogsModal.open = false"
+  >
+    <div class="bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl mx-4 flex flex-col" style="height:80vh">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-700 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <h3 class="text-base font-semibold">Logs —</h3>
+          <span class="text-orange-400 font-mono text-sm capitalize" x-text="serviceLogsModal.service"></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <select x-model.number="serviceLogsModal.lines" @change="fetchServiceLogsModal()" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs">
+            <option :value="100">100 lines</option>
+            <option :value="200">200 lines</option>
+            <option :value="500">500 lines</option>
+            <option :value="1000">1000 lines</option>
+          </select>
+          <button @click="fetchServiceLogsModal()" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded transition-colors">Refresh</button>
+          <button @click="serviceLogsModal.open = false" class="text-gray-400 hover:text-gray-100 transition-colors ml-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4 bg-black rounded-b-lg">
+        <div x-show="serviceLogsModal.loading" class="text-gray-500 text-sm text-center py-8">Loading...</div>
+        <div x-show="serviceLogsModal.error && !serviceLogsModal.loading" class="text-red-400 text-sm p-2" x-text="serviceLogsModal.error"></div>
+        <pre x-show="!serviceLogsModal.loading" class="text-xs font-mono text-gray-300 whitespace-pre-wrap break-all leading-relaxed" x-text="serviceLogsModal.content || '(no logs)'"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Markdown / File Preview Modal -->
+  <div
+    x-show="filePreview.open"
+    x-transition.opacity
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+    @keydown.escape.window="filePreview.open = false"
+  >
+    <div class="bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl mx-4 flex flex-col" style="height:85vh">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-700 flex-shrink-0">
+        <h3 class="text-sm font-mono text-gray-300 truncate" x-text="filePreview.name"></h3>
+        <div class="flex items-center gap-2">
+          <span x-show="filePreview.isMarkdown" class="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded">Markdown</span>
+          <button @click="filePreview.open = false" class="text-gray-400 hover:text-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto p-6">
+        <div x-show="filePreview.isMarkdown" class="md-body text-gray-200 text-sm leading-relaxed" x-html="filePreview.rendered"></div>
+        <pre x-show="!filePreview.isMarkdown" class="text-xs font-mono text-gray-300 whitespace-pre-wrap break-all leading-relaxed" x-text="filePreview.content"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Add/Edit Modal -->
+  <div
+    x-show="scheduleModal.open"
+    x-transition.opacity
+    class="fixed inset-0 z-50 flex items-start justify-center bg-black/80 overflow-y-auto py-8"
+    @keydown.escape.window="closeScheduleModal()"
+  >
+    <div class="bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl mx-4 flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+        <h3 class="text-lg font-semibold" x-text="scheduleModal.isEdit ? 'Edit Schedule' : 'Add Schedule'"></h3>
+        <button @click="closeScheduleModal()" class="text-gray-400 hover:text-gray-100 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-6 overflow-y-auto">
+        <!-- Name + Cron + Enabled -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1.5">Schedule Name</label>
+            <input
+              type="text"
+              x-model="scheduleModal.name"
+              placeholder="e.g. Weekly Deep Crawl"
+              class="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-orange-500 transition-colors"
+            />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1.5">Cron Expression</label>
+            <input
+              type="text"
+              x-model="scheduleModal.cron"
+              placeholder="0 3 * * 0"
+              class="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm text-gray-100 font-mono focus:outline-none focus:border-orange-500 transition-colors"
+            />
+            <p class="text-xs text-gray-500 mt-1">min hour day month weekday</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            @click="scheduleModal.enabled = !scheduleModal.enabled"
+            :class="scheduleModal.enabled ? 'bg-orange-600' : 'bg-gray-700'"
+            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+          >
+            <span
+              :class="scheduleModal.enabled ? 'translate-x-6' : 'translate-x-1'"
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+            ></span>
+          </button>
+          <span class="text-sm text-gray-300" x-text="scheduleModal.enabled ? 'Active — will fire on schedule' : 'Paused — will not fire'"></span>
+        </div>
+
+        <!-- Config overrides -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-semibold text-gray-300">Crawl Configuration</h4>
+            <button
+              @click="scheduleModal.config = { ...settings }"
+              class="text-xs text-orange-400 hover:text-orange-300 transition-colors"
+            >Reset to current defaults</button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+
+            <div class="md:col-span-2">
+              <h5 class="text-xs font-semibold text-orange-500 uppercase tracking-wider mb-2">Crawler</h5>
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Seed URL</label>
+              <input type="text" x-model="scheduleModal.config['crawl.seed_url']"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="https://cs.vt.edu" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Allowed Domains</label>
+              <input type="text" x-model="scheduleModal.config['crawl.allowed_domains']"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="cs.vt.edu" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Max Depth</label>
+              <input type="number" x-model.number="scheduleModal.config['crawl.max_depth']"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="4" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Max Pages</label>
+              <input type="number" x-model.number="scheduleModal.config['crawl.max_pages']"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="9999999" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Blocked Domains</label>
+              <input type="text" x-model="scheduleModal.config['crawl.blocked_domains']"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="git.cs.vt.edu,mail.cs.vt.edu" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Blocked Paths</label>
+              <input type="text" x-model="scheduleModal.config['crawl.blocked_paths']"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="/content/,/editor.html" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Request Delay (s)</label>
+              <input type="number" x-model.number="scheduleModal.config['crawl.request_delay']" step="0.1"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="0.5" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Prune Threshold</label>
+              <input type="number" x-model.number="scheduleModal.config['crawl.prune_threshold']" step="0.01"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="0.45" />
+            </div>
+
+            <div class="md:col-span-2 mt-1">
+              <h5 class="text-xs font-semibold text-orange-500 uppercase tracking-wider mb-2">Chunker</h5>
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Preferred Tokens</label>
+              <input type="number" x-model.number="scheduleModal.config['chunker.preferred_tokens']"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="400" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Overlap Tokens</label>
+              <input type="number" x-model.number="scheduleModal.config['chunker.overlap_tokens']"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="64" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Min Tokens</label>
+              <input type="number" x-model.number="scheduleModal.config['chunker.min_tokens']"
+                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+                placeholder="120" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div x-show="scheduleModal.error" class="bg-red-900/30 border border-red-800 rounded px-4 py-2.5 text-sm text-red-400" x-text="scheduleModal.error"></div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-gray-700 flex items-center justify-end gap-3">
+        <button @click="closeScheduleModal()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-sm rounded transition-colors">Cancel</button>
+        <button
+          @click="saveScheduleModal()"
+          :disabled="scheduleModal.saving"
+          class="px-5 py-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
+          x-text="scheduleModal.saving ? 'Saving...' : (scheduleModal.isEdit ? 'Save Changes' : 'Create Schedule')"
+        ></button>
       </div>
     </div>
   </div>
@@ -68,10 +309,10 @@
       <div class="px-4 py-3 border-t border-gray-800">
         <div class="flex items-center gap-2">
           <div
-            :class="overallHealthy ? 'bg-green-400' : 'bg-red-400'"
+            :class="overallHealthy === null ? 'bg-gray-400' : (overallHealthy ? 'bg-green-400' : 'bg-red-400')"
             class="w-2 h-2 rounded-full flex-shrink-0"
           ></div>
-          <span class="text-xs text-gray-400" x-text="overallHealthy ? 'All systems operational' : 'Degraded'"></span>
+          <span class="text-xs text-gray-400" x-text="overallHealthy === null ? 'Checking...' : (overallHealthy ? 'All systems operational' : 'Degraded')"></span>
         </div>
       </div>
     </nav>
@@ -88,10 +329,14 @@
           <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Service Health</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <template x-for="[key, svc] in Object.entries(health.services)" :key="key">
-              <div class="bg-gray-900 rounded-lg p-4 border border-gray-800 flex items-center gap-4">
+              <div
+                class="bg-gray-900 rounded-lg p-4 border border-gray-800 flex items-center gap-4 cursor-pointer hover:border-orange-600 transition-colors group"
+                @click="openServiceLogs(key)"
+                title="View logs"
+              >
                 <div :class="svc.healthy ? 'bg-green-400' : 'bg-red-400'" class="w-3 h-3 rounded-full flex-shrink-0"></div>
                 <div class="flex-1 min-w-0">
-                  <p class="font-medium capitalize" x-text="svc.name || key"></p>
+                  <p class="font-medium capitalize group-hover:text-orange-400 transition-colors" x-text="svc.name || key"></p>
                   <p class="text-xs text-gray-400" x-text="svc.healthy ? 'Healthy' : 'Unhealthy'"></p>
                 </div>
                 <div class="text-right">
@@ -100,7 +345,7 @@
               </div>
             </template>
             <template x-if="Object.keys(health.services).length === 0">
-              <div class="col-span-3 text-gray-500 text-sm">No service data available.</div>
+              <div class="col-span-3 text-gray-500 text-sm" x-text="healthLoading ? 'Loading service health...' : 'No service data available.'"></div>
             </template>
           </div>
 
@@ -109,19 +354,19 @@
             <div class="bg-gray-900 rounded-lg p-4 border border-gray-800">
               <div class="flex items-center justify-between mb-3">
                 <h2 class="font-semibold text-gray-200">MinIO Storage</h2>
-                <div :class="health.storage.healthy ? 'bg-green-400' : 'bg-red-400'" class="w-2.5 h-2.5 rounded-full"></div>
+                <div :class="healthLoading ? 'bg-gray-400' : (health.storage.healthy ? 'bg-green-400' : 'bg-red-400')" class="w-2.5 h-2.5 rounded-full"></div>
               </div>
               <p class="text-sm text-gray-400">
                 <span x-text="(health.storage.buckets || []).length"></span> bucket(s)
               </p>
               <p class="text-xs text-gray-500 mt-1">
-                Total objects: <span x-text="(health.storage.buckets || []).reduce((a, b) => a + (b.objects || 0), 0)"></span>
+                Total objects: <span x-text="storageStats.loaded ? storageStats.buckets.reduce((a, b) => a + (b.objects || 0), 0).toLocaleString() : '—'"></span>
               </p>
             </div>
             <div class="bg-gray-900 rounded-lg p-4 border border-gray-800">
               <div class="flex items-center justify-between mb-3">
                 <h2 class="font-semibold text-gray-200">Qdrant Vectors</h2>
-                <div :class="health.vectors.healthy ? 'bg-green-400' : 'bg-red-400'" class="w-2.5 h-2.5 rounded-full"></div>
+                <div :class="healthLoading ? 'bg-gray-400' : (health.vectors.healthy ? 'bg-green-400' : 'bg-red-400')" class="w-2.5 h-2.5 rounded-full"></div>
               </div>
               <p class="text-sm text-gray-400">
                 <span x-text="(health.vectors.collections || []).length"></span> collection(s)
@@ -384,70 +629,88 @@
             <div class="mt-6 flex items-center gap-3">
               <button
                 @click="saveSettings()"
-                class="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md text-sm font-medium transition-colors"
+                class="px-5 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors"
               >
-                Save Settings
+                Save for this Run
               </button>
-              <span x-show="settingsSaved" x-transition.opacity class="text-green-400 text-sm">Saved!</span>
+              <span x-show="settingsSaved" x-transition.opacity class="text-green-400 text-sm">Ready — click Start Crawl to run.</span>
             </div>
           </div>
         </section>
 
         <!-- ===== SCHEDULE ===== -->
         <section x-show="currentPage === 'schedule'">
-          <h1 class="text-2xl font-bold mb-6">Schedule</h1>
-
-          <div class="bg-gray-900 rounded-lg p-6 border border-gray-800 max-w-lg">
-            <div class="space-y-5">
-              <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Cron Expression</label>
-                <input
-                  type="text"
-                  x-model="schedule.cron"
-                  class="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm text-gray-100 font-mono focus:outline-none focus:border-orange-500 transition-colors"
-                  placeholder="0 3 * * 0"
-                />
-                <p class="text-xs text-gray-500 mt-1.5">Standard cron format: minute hour day month weekday</p>
-              </div>
-
-              <div class="flex items-center gap-3">
-                <button
-                  @click="schedule.enabled = !schedule.enabled"
-                  :class="schedule.enabled ? 'bg-orange-600' : 'bg-gray-700'"
-                  class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
-                >
-                  <span
-                    :class="schedule.enabled ? 'translate-x-6' : 'translate-x-1'"
-                    class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                  ></span>
-                </button>
-                <span class="text-sm text-gray-300" x-text="schedule.enabled ? 'Enabled' : 'Disabled'"></span>
-              </div>
-
-              <button
-                @click="saveSchedule()"
-                class="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md text-sm font-medium transition-colors"
-              >
-                Save Schedule
-              </button>
-              <span x-show="scheduleSaved" x-transition.opacity class="text-green-400 text-sm ml-3">Saved!</span>
-            </div>
+          <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold">Schedules</h1>
+            <button
+              @click="openAddSchedule()"
+              class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Add Schedule
+            </button>
           </div>
 
-          <div class="mt-6 bg-gray-900 rounded-lg p-5 border border-gray-800 max-w-lg" x-show="schedule.next_runs && schedule.next_runs.length > 0">
-            <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Upcoming Runs</h2>
-            <ul class="space-y-2">
-              <template x-for="(run, idx) in schedule.next_runs" :key="idx">
-                <li class="flex items-center gap-2 text-sm text-gray-300">
-                  <div class="w-1.5 h-1.5 bg-orange-500 rounded-full flex-shrink-0"></div>
-                  <span x-text="new Date(run).toLocaleString()"></span>
-                </li>
-              </template>
-            </ul>
+          <!-- Empty state -->
+          <div x-show="schedules.length === 0" class="text-center py-20 text-gray-500 bg-gray-900 rounded-lg border border-gray-800">
+            <svg class="w-10 h-10 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <p class="font-medium mb-1">No schedules configured</p>
+            <p class="text-sm">Add a schedule to automate crawls on a recurring basis.</p>
           </div>
 
-          <div class="mt-4 text-gray-500 text-sm" x-show="!schedule.next_runs || schedule.next_runs.length === 0">
-            No upcoming runs scheduled.
+          <!-- Schedule cards -->
+          <div class="space-y-4">
+            <template x-for="sch in schedules" :key="sch.id">
+              <div class="bg-gray-900 rounded-lg p-5 border border-gray-800">
+                <div class="flex items-start justify-between gap-4 flex-wrap">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 mb-1.5 flex-wrap">
+                      <h2 class="font-semibold text-base" x-text="sch.name"></h2>
+                      <span
+                        :class="sch.enabled ? 'bg-green-400/20 text-green-400' : 'bg-gray-700 text-gray-400'"
+                        class="px-2 py-0.5 rounded-full text-xs font-medium"
+                        x-text="sch.enabled ? 'Active' : 'Paused'"
+                      ></span>
+                    </div>
+                    <p class="text-sm font-mono text-orange-400 mb-1" x-text="sch.cron"></p>
+                    <p class="text-xs text-gray-400" x-show="sch.enabled && sch.next_runs && sch.next_runs.length > 0">
+                      Next run: <span class="text-gray-300" x-text="new Date(sch.next_runs[0]).toLocaleString()"></span>
+                    </p>
+                    <p class="text-xs text-gray-500" x-show="!sch.enabled">Paused — no upcoming runs</p>
+                  </div>
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      @click="toggleScheduleEnabled(sch)"
+                      :class="sch.enabled ? 'bg-orange-600' : 'bg-gray-700'"
+                      class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none"
+                      :title="sch.enabled ? 'Pause schedule' : 'Enable schedule'"
+                    >
+                      <span
+                        :class="sch.enabled ? 'translate-x-5' : 'translate-x-1'"
+                        class="inline-block h-3 w-3 transform rounded-full bg-white transition-transform"
+                      ></span>
+                    </button>
+                    <button
+                      @click="openEditSchedule(sch)"
+                      class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-xs rounded transition-colors"
+                    >Edit</button>
+                    <button
+                      @click="deleteSchedule(sch.id)"
+                      class="px-3 py-1.5 bg-red-900/40 hover:bg-red-900/80 text-red-400 text-xs rounded transition-colors"
+                    >Delete</button>
+                  </div>
+                </div>
+                <!-- Next 3 upcoming runs -->
+                <div class="mt-3 pt-3 border-t border-gray-800" x-show="sch.enabled && sch.next_runs && sch.next_runs.length > 1">
+                  <p class="text-xs text-gray-500 mb-1.5">Upcoming:</p>
+                  <div class="flex flex-wrap gap-3">
+                    <template x-for="(run, idx) in sch.next_runs.slice(0, 3)" :key="idx">
+                      <span class="text-xs text-gray-400 font-mono" x-text="new Date(run).toLocaleString()"></span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
         </section>
 
@@ -505,9 +768,12 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             <template x-for="[key, svc] in Object.entries(health.services)" :key="key">
-              <div class="bg-gray-900 rounded-lg p-5 border border-gray-800">
+              <div
+                class="bg-gray-900 rounded-lg p-5 border border-gray-800 cursor-pointer hover:border-orange-600 transition-colors group"
+                @click="openServiceLogs(key)"
+              >
                 <div class="flex items-center justify-between mb-4">
-                  <h2 class="font-semibold capitalize text-base" x-text="svc.name || key"></h2>
+                  <h2 class="font-semibold capitalize text-base group-hover:text-orange-400 transition-colors" x-text="svc.name || key"></h2>
                   <div :class="svc.healthy ? 'bg-green-400/20 text-green-400' : 'bg-red-400/20 text-red-400'" class="px-2.5 py-1 rounded-full text-xs font-medium" x-text="svc.healthy ? 'Healthy' : 'Unhealthy'"></div>
                 </div>
                 <div class="space-y-2">
@@ -524,11 +790,12 @@
                     <span class="text-gray-300 font-mono" x-text="svc.http_status"></span>
                   </div>
                 </div>
+                <div class="mt-4 pt-3 border-t border-gray-800">
+                  <span class="text-xs text-gray-500 group-hover:text-orange-400 transition-colors">View logs →</span>
+                </div>
               </div>
             </template>
-            <div x-show="Object.keys(health.services).length === 0" class="col-span-3 text-gray-500 text-sm">
-              No service data. Refresh to load health information.
-            </div>
+            <div x-show="Object.keys(health.services).length === 0" class="col-span-3 text-gray-500 text-sm" x-text="healthLoading ? 'Loading service health...' : 'No service data. Refresh to load health information.'"></div>
           </div>
         </section>
 
@@ -537,33 +804,41 @@
           <h1 class="text-2xl font-bold mb-6">Storage</h1>
 
           <div class="flex items-center gap-2 mb-5">
-            <div :class="health.storage.healthy ? 'bg-green-400' : 'bg-red-400'" class="w-2.5 h-2.5 rounded-full"></div>
-            <span class="text-sm text-gray-400" x-text="health.storage.healthy ? 'MinIO is healthy' : 'MinIO is unreachable'"></span>
+            <div :class="healthLoading ? 'bg-gray-400' : (health.storage.healthy ? 'bg-green-400' : 'bg-red-400')" class="w-2.5 h-2.5 rounded-full"></div>
+            <span class="text-sm text-gray-400" x-text="healthLoading ? 'Checking...' : (health.storage.healthy ? 'MinIO is healthy' : 'MinIO is unreachable')"></span>
+            <button x-show="!storageStats.loading && !storageStats.loaded" @click="loadStorageStats()" class="ml-auto px-2.5 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded transition-colors">Load Stats</button>
+            <span x-show="storageStats.loading" class="ml-auto text-xs text-gray-500">Loading stats...</span>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            <template x-for="bucket in (health.storage.buckets || [])" :key="bucket.name">
-              <div class="bg-gray-900 rounded-lg p-5 border border-gray-800">
+            <template x-for="bucket in (storageStats.loaded ? storageStats.buckets : (health.storage.buckets || []))" :key="bucket.name">
+              <div
+                class="bg-gray-900 rounded-lg p-5 border border-gray-800 cursor-pointer hover:border-orange-600 transition-colors group"
+                @click="openBucket(bucket.name)"
+              >
                 <div class="flex items-start justify-between mb-4">
-                  <div>
-                    <h2 class="font-semibold font-mono text-sm text-gray-200" x-text="bucket.name"></h2>
-                    <p class="text-xs text-gray-500 mt-0.5">Bucket</p>
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+                    <h2 class="font-semibold font-mono text-sm text-gray-200 group-hover:text-orange-400 transition-colors" x-text="bucket.name"></h2>
                   </div>
                   <div class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs">MinIO</div>
                 </div>
                 <div class="space-y-2">
                   <div class="flex justify-between text-sm">
                     <span class="text-gray-400">Objects</span>
-                    <span class="text-gray-300 font-mono" x-text="(bucket.objects || 0).toLocaleString()"></span>
+                    <span class="text-gray-300 font-mono" x-text="bucket.objects != null ? bucket.objects.toLocaleString() : '—'"></span>
                   </div>
                   <div class="flex justify-between text-sm">
                     <span class="text-gray-400">Size</span>
-                    <span class="text-gray-300 font-mono" x-text="(bucket.size_mb || 0).toFixed(2) + ' MB'"></span>
+                    <span class="text-gray-300 font-mono" x-text="bucket.size_mb != null ? bucket.size_mb.toFixed(2) + ' MB' : '—'"></span>
                   </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between">
+                  <span class="text-xs text-gray-500 group-hover:text-orange-400 transition-colors">Browse files →</span>
                 </div>
               </div>
             </template>
-            <div x-show="(health.storage.buckets || []).length === 0" class="col-span-3 text-gray-500 text-sm">
+            <div x-show="!storageStats.loading && (storageStats.loaded ? storageStats.buckets : (health.storage.buckets || [])).length === 0" class="col-span-3 text-gray-500 text-sm">
               No buckets found.
             </div>
           </div>
@@ -574,8 +849,8 @@
           <h1 class="text-2xl font-bold mb-6">Vectors</h1>
 
           <div class="flex items-center gap-2 mb-5">
-            <div :class="health.vectors.healthy ? 'bg-green-400' : 'bg-red-400'" class="w-2.5 h-2.5 rounded-full"></div>
-            <span class="text-sm text-gray-400" x-text="health.vectors.healthy ? 'Qdrant is healthy' : 'Qdrant is unreachable'"></span>
+            <div :class="healthLoading ? 'bg-gray-400' : (health.vectors.healthy ? 'bg-green-400' : 'bg-red-400')" class="w-2.5 h-2.5 rounded-full"></div>
+            <span class="text-sm text-gray-400" x-text="healthLoading ? 'Checking...' : (health.vectors.healthy ? 'Qdrant is healthy' : 'Qdrant is unreachable')"></span>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -610,6 +885,193 @@
           </div>
         </section>
 
+        <!-- ===== LOGS ===== -->
+        <section x-show="currentPage === 'logs'">
+          <h1 class="text-2xl font-bold mb-6">Service Logs</h1>
+
+          <div class="flex items-center gap-3 mb-5 flex-wrap">
+            <label class="text-sm text-gray-400">Service</label>
+            <select
+              x-model="logsView.service"
+              @change="refreshLogs()"
+              class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm"
+            >
+              <template x-for="svc in (logsView.services || [])" :key="svc.service">
+                <option :value="svc.service" :disabled="svc.kind === 'unsupported'" x-text="svc.service + (svc.kind === 'unsupported' ? ' (n/a)' : '')"></option>
+              </template>
+            </select>
+
+            <label class="text-sm text-gray-400">Lines</label>
+            <select x-model.number="logsView.lines" @change="refreshLogs()" class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm">
+              <option :value="100">100</option>
+              <option :value="200">200</option>
+              <option :value="500">500</option>
+              <option :value="1000">1000</option>
+            </select>
+
+            <button @click="refreshLogs()" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-sm rounded">Refresh</button>
+            <label class="flex items-center gap-1 text-sm text-gray-400 ml-2">
+              <input type="checkbox" x-model="logsView.auto" @change="toggleAutoLogs()" />
+              Auto-refresh 5s
+            </label>
+          </div>
+
+          <div class="bg-black rounded-lg border border-gray-800 p-4 h-[70vh] overflow-y-auto">
+            <pre class="text-xs font-mono text-gray-300 whitespace-pre-wrap break-all leading-relaxed" x-text="logsView.content || 'Select a service to view logs.'"></pre>
+          </div>
+          <div x-show="logsView.error" class="mt-2 text-red-400 text-sm" x-text="logsView.error"></div>
+        </section>
+
+        <!-- ===== FILES ===== -->
+        <section x-show="currentPage === 'files'" x-init="$watch('currentPage', v => { if (v === 'files' && filesView.bucket) browseFiles(); })">
+          <h1 class="text-2xl font-bold mb-6">File Browser</h1>
+
+          <!-- Toolbar -->
+          <div class="flex items-center gap-3 mb-4 flex-wrap">
+            <!-- Bucket selector -->
+            <div class="flex items-center gap-2">
+              <label class="text-xs text-gray-400 uppercase tracking-wider">Bucket</label>
+              <select
+                x-model="filesView.bucket"
+                @change="filesView.prefix = ''; browseFiles()"
+                class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+              >
+                <template x-for="b in filesView.buckets" :key="b">
+                  <option :value="b" x-text="b"></option>
+                </template>
+              </select>
+            </div>
+
+            <div class="h-4 w-px bg-gray-700"></div>
+
+            <!-- Sort -->
+            <div class="flex items-center gap-2">
+              <label class="text-xs text-gray-400 uppercase tracking-wider">Sort</label>
+              <select
+                x-model="filesView.sortBy"
+                @change="browseFiles()"
+                class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-orange-500"
+              >
+                <option value="name">Name</option>
+                <option value="date">Date</option>
+              </select>
+              <button
+                @click="filesView.order = filesView.order === 'asc' ? 'desc' : 'asc'; browseFiles()"
+                class="px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-300 hover:text-white hover:border-gray-500 transition-colors"
+                :title="filesView.order === 'asc' ? 'Ascending' : 'Descending'"
+              >
+                <span x-text="filesView.order === 'asc' ? '↑ Asc' : '↓ Desc'"></span>
+              </button>
+            </div>
+
+            <div class="h-4 w-px bg-gray-700"></div>
+
+            <button @click="browseFiles()" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded transition-colors flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Refresh
+            </button>
+
+            <span class="ml-auto text-xs text-gray-500" x-show="filesView.total > 0" x-text="filesView.total + ' items'"></span>
+          </div>
+
+          <!-- Breadcrumb -->
+          <div class="flex items-center gap-1 mb-4 text-sm flex-wrap" x-show="filesView.bucket">
+            <template x-for="(crumb, idx) in filesViewBreadcrumbs()" :key="idx">
+              <span class="flex items-center gap-1">
+                <span x-show="idx > 0" class="text-gray-600">/</span>
+                <button
+                  @click="browseTo(crumb.prefix)"
+                  :class="idx === filesViewBreadcrumbs().length - 1
+                    ? 'text-gray-200 font-medium cursor-default'
+                    : 'text-orange-400 hover:text-orange-300 transition-colors'"
+                  x-text="crumb.label"
+                ></button>
+              </span>
+            </template>
+          </div>
+
+          <!-- Error -->
+          <div x-show="filesView.error" class="mb-4 bg-red-900/30 border border-red-800 rounded px-4 py-2.5 text-sm text-red-400" x-text="filesView.error"></div>
+
+          <!-- Loading -->
+          <div x-show="filesView.loading" class="text-center py-12 text-gray-500 text-sm">Loading...</div>
+
+          <!-- Empty state -->
+          <div
+            x-show="!filesView.loading && !filesView.error && filesView.folders.length === 0 && filesView.files.length === 0 && filesView.bucket"
+            class="text-center py-12 text-gray-500 text-sm bg-gray-900 rounded-lg border border-gray-800"
+          >
+            <svg class="w-8 h-8 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+            Empty folder
+          </div>
+
+          <!-- No bucket -->
+          <div x-show="!filesView.bucket && filesView.buckets.length === 0" class="text-center py-12 text-gray-500 text-sm">
+            No MinIO buckets found.
+          </div>
+
+          <!-- File table -->
+          <div
+            x-show="!filesView.loading && (filesView.folders.length > 0 || filesView.files.length > 0)"
+            class="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden"
+          >
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-800 text-gray-400 text-xs uppercase tracking-wider">
+                  <th class="text-left px-4 py-3">Name</th>
+                  <th class="text-left px-4 py-3 hidden md:table-cell">Size</th>
+                  <th class="text-left px-4 py-3 hidden lg:table-cell">Last Modified</th>
+                  <th class="px-4 py-3 w-16"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Folders -->
+                <template x-for="folder in filesView.folders" :key="folder.path">
+                  <tr
+                    class="border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-colors cursor-pointer"
+                    @click="browseTo(folder.path)"
+                  >
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2.5">
+                        <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+                        <span class="text-gray-200 font-medium" x-text="folder.name"></span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-gray-500 hidden md:table-cell">—</td>
+                    <td class="px-4 py-3 text-gray-500 hidden lg:table-cell">—</td>
+                    <td class="px-4 py-3 text-right">
+                      <svg class="w-4 h-4 text-gray-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </td>
+                  </tr>
+                </template>
+
+                <!-- Files -->
+                <template x-for="file in filesView.files" :key="file.path">
+                  <tr class="border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-colors">
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2.5">
+                        <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        <span class="text-gray-300 font-mono text-xs truncate max-w-xs" x-text="file.name"></span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-gray-400 text-xs font-mono hidden md:table-cell" x-text="formatBytes(file.size)"></td>
+                    <td class="px-4 py-3 text-gray-400 text-xs hidden lg:table-cell" x-text="file.last_modified ? new Date(file.last_modified).toLocaleString() : '—'"></td>
+                    <td class="px-4 py-3 text-right">
+                      <button
+                        @click.stop="openFile(file.path)"
+                        class="px-2.5 py-1 bg-gray-700 hover:bg-orange-600 text-xs rounded transition-colors text-gray-300 hover:text-white"
+                        title="Open / Download"
+                      >
+                        <svg class="w-3.5 h-3.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                      </button>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
       </div>
     </main>
   </div>
@@ -619,15 +1081,16 @@
       return {
         currentPage: 'overview',
         health: { services: {}, storage: { healthy: false, buckets: [] }, vectors: { healthy: false, collections: [] } },
+        healthLoading: true,
         pipeline: { state: 'idle', run_id: null },
         settings: {},
-        schedule: { cron: '0 3 * * 0', enabled: false, next_runs: [] },
+        schedules: [],
+        scheduleModal: { open: false, isEdit: false, id: null, name: '', cron: '0 3 * * 0', enabled: true, config: {}, error: '', saving: false },
         history: [],
         logs: [],
         logModal: { open: false, runId: null, content: '' },
         eventSource: null,
         settingsSaved: false,
-        scheduleSaved: false,
 
         navItems: [
           {
@@ -664,10 +1127,30 @@
             id: 'vectors',
             label: 'Vectors',
             icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>'
+          },
+          {
+            id: 'logs',
+            label: 'Logs',
+            icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>'
+          },
+          {
+            id: 'files',
+            label: 'Files',
+            icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>'
           }
         ],
 
+        logsView: { service: 'admin', lines: 200, services: [], content: '', error: '', auto: false, _timer: null },
+        serviceLogsModal: { open: false, service: '', content: '', error: '', loading: false, lines: 200 },
+        filePreview: { open: false, name: '', content: '', rendered: '', isMarkdown: false },
+        storageStats: { loaded: false, loading: false, buckets: [], error: '' },
+        filesView: {
+          buckets: [], bucket: '', prefix: '', sortBy: 'name', order: 'asc',
+          folders: [], files: [], total: 0, loading: false, error: '',
+        },
+
         get overallHealthy() {
+          if (this.healthLoading) return null;
           const svcs = Object.values(this.health.services);
           if (svcs.length === 0) return false;
           return svcs.every(s => s.healthy) && this.health.storage.healthy && this.health.vectors.healthy;
@@ -718,7 +1201,7 @@
         async init() {
           const [settingsRes, scheduleRes, historyRes, healthRes, pipelineRes] = await Promise.allSettled([
             fetch('/api/settings').then(r => r.ok ? r.json() : null),
-            fetch('/api/schedule').then(r => r.ok ? r.json() : null),
+            fetch('/api/schedules').then(r => r.ok ? r.json() : null),
             fetch('/api/history?limit=20').then(r => r.ok ? r.json() : null),
             fetch('/api/health').then(r => r.ok ? r.json() : null),
             fetch('/api/pipeline/status').then(r => r.ok ? r.json() : null),
@@ -728,7 +1211,7 @@
             this.settings = settingsRes.value;
           }
           if (scheduleRes.status === 'fulfilled' && scheduleRes.value) {
-            this.schedule = scheduleRes.value;
+            this.schedules = scheduleRes.value.schedules || [];
           }
           if (historyRes.status === 'fulfilled' && historyRes.value) {
             this.history = Array.isArray(historyRes.value) ? historyRes.value : [];
@@ -739,8 +1222,16 @@
           if (pipelineRes.status === 'fulfilled' && pipelineRes.value) {
             this.pipeline = pipelineRes.value;
           }
+          this.healthLoading = false;
 
           this.startSSE();
+          this.loadServicesList();
+          this.loadBuckets();
+          this.$watch('currentPage', page => {
+            if (page === 'storage' && !this.storageStats.loaded && !this.storageStats.loading) {
+              this.loadStorageStats();
+            }
+          });
 
           setInterval(async () => {
             try {
@@ -754,6 +1245,41 @@
               // silently ignore polling errors
             }
           }, 10000);
+        },
+
+        async loadServicesList() {
+          try {
+            const r = await fetch('/api/services');
+            if (!r.ok) return;
+            const data = await r.json();
+            this.logsView.services = data.services || [];
+          } catch (e) { /* ignore */ }
+        },
+
+        async refreshLogs() {
+          if (!this.logsView.service) return;
+          this.logsView.error = '';
+          try {
+            const params = new URLSearchParams({ lines: this.logsView.lines });
+            const r = await fetch(`/api/services/${this.logsView.service}/logs?` + params);
+            if (!r.ok) {
+              this.logsView.error = `HTTP ${r.status}`;
+              return;
+            }
+            const data = await r.json();
+            if (data.error) this.logsView.error = data.error;
+            this.logsView.content = data.logs || '';
+          } catch (e) {
+            this.logsView.error = String(e);
+          }
+        },
+
+        toggleAutoLogs() {
+          if (this.logsView._timer) { clearInterval(this.logsView._timer); this.logsView._timer = null; }
+          if (this.logsView.auto) {
+            this.logsView._timer = setInterval(() => this.refreshLogs(), 5000);
+            this.refreshLogs();
+          }
         },
 
         startSSE() {
@@ -805,38 +1331,222 @@
           }
         },
 
-        async saveSettings() {
+        saveSettings() {
+          // Local-only: marks overrides ready for this run, does not persist to DB.
+          // On page reload the form resets to global defaults.
+          this.settingsSaved = true;
+          setTimeout(() => { this.settingsSaved = false; }, 2500);
+        },
+
+        async loadSchedules() {
           try {
-            const res = await fetch('/api/settings', {
-              method: 'PUT',
+            const r = await fetch('/api/schedules');
+            if (r.ok) { const d = await r.json(); this.schedules = d.schedules || []; }
+          } catch (e) { /* ignore */ }
+        },
+
+        openAddSchedule() {
+          this.scheduleModal = {
+            open: true, isEdit: false, id: null,
+            name: '', cron: '0 3 * * 0', enabled: true,
+            config: { ...this.settings },
+            error: '', saving: false,
+          };
+        },
+
+        openEditSchedule(sch) {
+          this.scheduleModal = {
+            open: true, isEdit: true, id: sch.id,
+            name: sch.name, cron: sch.cron, enabled: sch.enabled,
+            config: { ...(sch.config || {}) },
+            error: '', saving: false,
+          };
+        },
+
+        closeScheduleModal() {
+          this.scheduleModal.open = false;
+        },
+
+        async saveScheduleModal() {
+          this.scheduleModal.error = '';
+          this.scheduleModal.saving = true;
+          try {
+            const body = {
+              name: this.scheduleModal.name,
+              cron: this.scheduleModal.cron,
+              enabled: this.scheduleModal.enabled,
+              config: this.scheduleModal.config,
+            };
+            const url = this.scheduleModal.isEdit
+              ? `/api/schedules/${this.scheduleModal.id}`
+              : '/api/schedules';
+            const method = this.scheduleModal.isEdit ? 'PUT' : 'POST';
+            const res = await fetch(url, {
+              method,
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(this.settings),
+              body: JSON.stringify(body),
             });
-            if (res.ok) {
-              this.settingsSaved = true;
-              setTimeout(() => { this.settingsSaved = false; }, 2500);
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              this.scheduleModal.error = err.detail || `HTTP ${res.status}`;
+            } else {
+              this.scheduleModal.open = false;
+              await this.loadSchedules();
             }
           } catch (e) {
-            console.error('Failed to save settings:', e);
+            this.scheduleModal.error = String(e);
+          } finally {
+            this.scheduleModal.saving = false;
           }
         },
 
-        async saveSchedule() {
+        async toggleScheduleEnabled(sch) {
           try {
-            const res = await fetch('/api/schedule', {
+            await fetch(`/api/schedules/${sch.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ cron: this.schedule.cron, enabled: this.schedule.enabled }),
+              body: JSON.stringify({ enabled: !sch.enabled }),
             });
-            if (res.ok) {
-              const data = await res.json();
-              this.schedule = data;
-              this.scheduleSaved = true;
-              setTimeout(() => { this.scheduleSaved = false; }, 2500);
+            await this.loadSchedules();
+          } catch (e) { /* ignore */ }
+        },
+
+        async deleteSchedule(id) {
+          if (!confirm('Delete this schedule? This cannot be undone.')) return;
+          try {
+            await fetch(`/api/schedules/${id}`, { method: 'DELETE' });
+            await this.loadSchedules();
+          } catch (e) { /* ignore */ }
+        },
+
+        async loadBuckets() {
+          try {
+            const r = await fetch('/api/storage/buckets');
+            if (!r.ok) return;
+            const d = await r.json();
+            this.filesView.buckets = d.buckets || [];
+            if (!this.filesView.bucket && this.filesView.buckets.length > 0) {
+              this.filesView.bucket = this.filesView.buckets[0];
             }
+          } catch (e) { /* ignore */ }
+        },
+
+        async loadStorageStats() {
+          if (this.storageStats.loading) return;
+          this.storageStats.loading = true;
+          this.storageStats.error = '';
+          try {
+            const r = await fetch('/api/storage/stats');
+            if (!r.ok) { this.storageStats.error = `HTTP ${r.status}`; return; }
+            const d = await r.json();
+            if (d.error) { this.storageStats.error = d.error; return; }
+            this.storageStats.buckets = d.buckets || [];
+            this.storageStats.loaded = true;
           } catch (e) {
-            console.error('Failed to save schedule:', e);
+            this.storageStats.error = String(e);
+          } finally {
+            this.storageStats.loading = false;
           }
+        },
+
+        async browseTo(prefix) {
+          this.filesView.prefix = prefix;
+          await this.browseFiles();
+        },
+
+        async browseFiles() {
+          if (!this.filesView.bucket) return;
+          this.filesView.loading = true;
+          this.filesView.error = '';
+          try {
+            const params = new URLSearchParams({
+              bucket: this.filesView.bucket,
+              prefix: this.filesView.prefix,
+              sort_by: this.filesView.sortBy,
+              order: this.filesView.order,
+            });
+            const r = await fetch('/api/storage/browse?' + params);
+            if (!r.ok) { this.filesView.error = `HTTP ${r.status}`; return; }
+            const d = await r.json();
+            if (d.error) { this.filesView.error = d.error; return; }
+            this.filesView.folders = d.folders || [];
+            this.filesView.files = d.files || [];
+            this.filesView.total = d.total || 0;
+          } catch (e) {
+            this.filesView.error = String(e);
+          } finally {
+            this.filesView.loading = false;
+          }
+        },
+
+        async openFile(key) {
+          const isMarkdown = key.toLowerCase().endsWith('.md');
+          const isText = isMarkdown || /\.(txt|log|json|yaml|yml|toml|ini|cfg|xml|html|css|js|py|sh|csv)$/i.test(key);
+          if (isText) {
+            this.filePreview = { open: true, name: key.split('/').pop(), content: '', rendered: '', isMarkdown };
+            try {
+              const params = new URLSearchParams({ bucket: this.filesView.bucket, key });
+              const r = await fetch('/api/storage/download?' + params);
+              const text = await r.text();
+              this.filePreview.content = text;
+              if (isMarkdown && typeof marked !== 'undefined') {
+                this.filePreview.rendered = marked.parse(text);
+              }
+            } catch (e) {
+              this.filePreview.content = 'Error loading file: ' + e;
+            }
+          } else {
+            const params = new URLSearchParams({ bucket: this.filesView.bucket, key });
+            window.open('/api/storage/download?' + params, '_blank');
+          }
+        },
+
+        openBucket(bucketName) {
+          this.filesView.bucket = bucketName;
+          this.filesView.prefix = '';
+          this.currentPage = 'files';
+          this.browseFiles();
+        },
+
+        async openServiceLogs(service) {
+          this.serviceLogsModal = { open: true, service, content: '', error: '', loading: true, lines: 200 };
+          await this.fetchServiceLogsModal();
+        },
+
+        async fetchServiceLogsModal() {
+          this.serviceLogsModal.loading = true;
+          this.serviceLogsModal.error = '';
+          try {
+            const params = new URLSearchParams({ lines: this.serviceLogsModal.lines });
+            const r = await fetch(`/api/services/${this.serviceLogsModal.service}/logs?${params}`);
+            if (!r.ok) { this.serviceLogsModal.error = `HTTP ${r.status}`; return; }
+            const d = await r.json();
+            if (d.error) { this.serviceLogsModal.error = d.error; this.serviceLogsModal.content = ''; }
+            else { this.serviceLogsModal.content = d.logs || '(no logs)'; }
+          } catch (e) {
+            this.serviceLogsModal.error = String(e);
+          } finally {
+            this.serviceLogsModal.loading = false;
+          }
+        },
+
+        filesViewBreadcrumbs() {
+          const parts = this.filesView.prefix.split('/').filter(Boolean);
+          const crumbs = [{ label: this.filesView.bucket, prefix: '' }];
+          let accumulated = '';
+          for (const p of parts) {
+            accumulated += p + '/';
+            crumbs.push({ label: p, prefix: accumulated });
+          }
+          return crumbs;
+        },
+
+        formatBytes(bytes) {
+          if (bytes == null) return '—';
+          if (bytes < 1024) return bytes + ' B';
+          if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+          if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+          return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
         },
 
         async viewLogs(runId) {

@@ -12,7 +12,7 @@ async def client():
             qdrant_collection="test", embedding_model="mock-model", embedding_batch_size=32)
         mock_emb.return_value.dimension = 1024
         from embedder.server import create_app
-        app = await create_app()
+        app = create_app()
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
             yield c
 

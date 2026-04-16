@@ -19,11 +19,29 @@ async def check_http_service(name: str, url: str) -> dict[str, Any]:
         return {"name": name, "healthy": False, "error": str(exc),
                 "latency_ms": round((time.monotonic() - start) * 1000)}
 
-def _minio_stats_sync(config: AdminConfig) -> dict[str, Any]:
+def _minio_health_sync(config: AdminConfig) -> dict[str, Any]:
+    """Fast connectivity check — lists buckets only, no object enumeration."""
     try:
         import urllib3
         http_client = urllib3.PoolManager(
             timeout=urllib3.Timeout(connect=3.0, read=5.0),
+            retries=urllib3.Retry(total=0, connect=0, read=0),
+        )
+        client = Minio(config.minio_endpoint, access_key=config.minio_access_key,
+                       secret_key=config.minio_secret_key, secure=config.minio_secure,
+                       http_client=http_client)
+        buckets = client.list_buckets()
+        return {"healthy": True, "buckets": [{"name": b.name} for b in buckets]}
+    except Exception as exc:
+        logger.warning("MinIO health check failed: %s", exc)
+        return {"healthy": False, "error": str(exc), "buckets": []}
+
+def _minio_stats_sync(config: AdminConfig) -> dict[str, Any]:
+    """Full stats — counts objects and sizes per bucket. Slow for large datasets."""
+    try:
+        import urllib3
+        http_client = urllib3.PoolManager(
+            timeout=urllib3.Timeout(connect=3.0, read=30.0),
             retries=urllib3.Retry(total=0, connect=0, read=0),
         )
         client = Minio(config.minio_endpoint, access_key=config.minio_access_key,
@@ -35,11 +53,11 @@ def _minio_stats_sync(config: AdminConfig) -> dict[str, Any]:
             objects = list(client.list_objects(bucket.name, recursive=True))
             total_size = sum(o.size or 0 for o in objects)
             bucket_stats.append({"name": bucket.name, "objects": len(objects),
-                                  "size_bytes": total_size, "size_mb": round(total_size / (1024*1024), 2)})
-        return {"healthy": True, "buckets": bucket_stats}
+                                  "size_bytes": total_size, "size_mb": round(total_size / (1024 * 1024), 2)})
+        return {"buckets": bucket_stats}
     except Exception as exc:
-        logger.warning("MinIO health check failed: %s", exc)
-        return {"healthy": False, "error": str(exc), "buckets": []}
+        logger.warning("MinIO stats failed: %s", exc)
+        return {"error": str(exc), "buckets": []}
 
 def _qdrant_stats_sync(config: AdminConfig) -> dict[str, Any]:
     try:
@@ -61,11 +79,17 @@ def _qdrant_stats_sync(config: AdminConfig) -> dict[str, Any]:
         logger.warning("Qdrant health check failed: %s", exc)
         return {"healthy": False, "error": str(exc), "collections": []}
 
-async def get_minio_stats(config: AdminConfig) -> dict[str, Any]:
+async def get_minio_health(config: AdminConfig) -> dict[str, Any]:
     try:
-        return await asyncio.wait_for(asyncio.to_thread(_minio_stats_sync, config), timeout=15.0)
+        return await asyncio.wait_for(asyncio.to_thread(_minio_health_sync, config), timeout=8.0)
     except asyncio.TimeoutError:
         return {"healthy": False, "error": "timeout", "buckets": []}
+
+async def get_minio_stats(config: AdminConfig) -> dict[str, Any]:
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(_minio_stats_sync, config), timeout=60.0)
+    except asyncio.TimeoutError:
+        return {"error": "timeout", "buckets": []}
 
 async def get_qdrant_stats(config: AdminConfig) -> dict[str, Any]:
     try:
@@ -78,7 +102,7 @@ async def get_full_health(config: AdminConfig) -> dict[str, Any]:
         check_http_service("embedder", f"{config.embedder_url}/health"),
         check_http_service("chatbot", f"{config.chatbot_url}/health"),
         check_http_service("ollama", f"{config.ollama_url}/api/tags"),
-        get_minio_stats(config),
+        get_minio_health(config),
         get_qdrant_stats(config),
     )
     return {

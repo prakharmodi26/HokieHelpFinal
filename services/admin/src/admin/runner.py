@@ -89,7 +89,7 @@ class PipelineRunner:
             "CRAWL_ALLOWED_DOMAINS": settings.get("crawl.allowed_domains", "cs.vt.edu"),
             "CRAWL_BLOCKED_DOMAINS": settings.get("crawl.blocked_domains", "git.cs.vt.edu,gitlab.cs.vt.edu,mail.cs.vt.edu,webmail.cs.vt.edu,portal.cs.vt.edu,api.cs.vt.edu"),
             "CRAWL_BLOCKED_PATHS": settings.get("crawl.blocked_paths", "/content/,/editor.html,/cs-root.html,/cs-source.html"),
-            "CRAWL_REQUEST_DELAY": settings.get("crawl.request_delay", "0.5"),
+            "CRAWL_REQUEST_DELAY": settings.get("crawl.request_delay", "0.1"),
             "CRAWL_PRUNE_THRESHOLD": settings.get("crawl.prune_threshold", "0.45"),
         }
 

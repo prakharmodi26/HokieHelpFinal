@@ -94,6 +94,9 @@ spec:
         - podSelector:
             matchLabels:
               app: hokiehelp-frontend
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-admin
       ports:
         - protocol: TCP
           port: 8000
@@ -226,6 +229,9 @@ spec:
         - podSelector:
             matchLabels:
               app: hokiehelp-chatbot
+        - podSelector:
+            matchLabels:
+              app: hokiehelp-admin
       ports:
         - protocol: TCP
           port: 11434
@@ -391,6 +397,28 @@ spec:
           port: 6333
         - protocol: TCP
           port: 6334
+    # DNS resolution (kube-dns)
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # HuggingFace model download (HTTPS to internet)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
 ---
 # Admin — ingress for kubectl port-forward (no external ingress)
 apiVersion: networking.k8s.io/v1

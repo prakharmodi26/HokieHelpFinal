@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
-from crawl4ai import AsyncWebCrawler, CrawlerRunConfig
+from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
 from crawl4ai.deep_crawling.filters import DomainFilter, FilterChain
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
@@ -19,6 +20,56 @@ from crawler.metadata import PageMetadata, doc_id_for_url
 from crawler.storage import MinioStorage
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class VisitEntry:
+    url: str
+    status: str
+    reason: str = ""
+    depth: int = 0
+    timestamp: str = ""
+
+
+@dataclass
+class VisitLog:
+    entries: list[VisitEntry] = field(default_factory=list)
+
+    def add(self, url: str, status: str, reason: str = "", depth: int = 0) -> None:
+        self.entries.append(VisitEntry(
+            url=url, status=status, reason=reason, depth=depth,
+            timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        ))
+
+    def render(self) -> str:
+        lines = ["# Websites Visited Log", ""]
+        for e in self.entries:
+            detail = f" — {e.reason}" if e.reason else ""
+            lines.append(f"[{e.timestamp}] [{e.status:>10}] (depth={e.depth}) {e.url}{detail}")
+        lines.append("")
+        lines.append(self._summary())
+        return "\n".join(lines)
+
+    def _summary(self) -> str:
+        total = len(self.entries)
+        status_counts: dict[str, int] = {}
+        domain_counts: dict[str, int] = {}
+        for e in self.entries:
+            status_counts[e.status] = status_counts.get(e.status, 0) + 1
+            host = urlparse(e.url).hostname or "unknown"
+            domain_counts[host] = domain_counts.get(host, 0) + 1
+        parts = [
+            "## Summary", "",
+            f"Total URLs encountered: {total}",
+            f"Total domains discovered: {len(domain_counts)}", "",
+            "### By Status", "",
+        ]
+        for status, count in sorted(status_counts.items()):
+            parts.append(f"  {status}: {count}")
+        parts.extend(["", "### By Domain", ""])
+        for domain, count in sorted(domain_counts.items(), key=lambda x: -x[1]):
+            parts.append(f"  {domain}: {count}")
+        return "\n".join(parts)
 
 
 def _is_allowed_host(host: str | None, allowed_domains: tuple[str, ...]) -> bool:
@@ -47,6 +98,7 @@ def _store_result(
     stats: dict,
     seen_content_hashes: set[str],
     stored_urls: set[str],
+    visit_log: VisitLog,
     depth: int = 0,
 ) -> None:
     """Store a successful crawl result; update stats in-place."""
@@ -56,6 +108,7 @@ def _store_result(
     if result.markdown is None or not result.markdown.raw_markdown:
         logger.warning("Empty or missing markdown for %s, skipping", result.url)
         stats["pages_failed"] += 1
+        visit_log.add(result.url, "EMPTY", "empty or missing markdown", depth)
         return
     markdown_content = result.markdown.raw_markdown
 
@@ -63,6 +116,7 @@ def _store_result(
     if content_hash in seen_content_hashes:
         logger.info("Duplicate/unchanged content for %s, skipping", result.url)
         stats["pages_skipped_duplicate"] += 1
+        visit_log.add(result.url, "DUPLICATE", "content hash already seen", depth)
         return
     seen_content_hashes.add(content_hash)
 
@@ -106,6 +160,7 @@ def _store_result(
     stored_urls.add(result.url)
     stats["pages_crawled"] += 1
     logger.info("Stored page %d: %s (depth %d)", stats["pages_crawled"], result.url, depth)
+    visit_log.add(result.url, "SAVED", f"stored as {object_key}", depth)
 
 
 async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
@@ -136,12 +191,21 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
         filter_chain=filter_chain,
     )
 
+    browser_config = BrowserConfig(
+        headless=True,
+        text_mode=True,
+        light_mode=True,
+        extra_args=["--disable-extensions", "--no-sandbox"],
+    )
+
     bfs_config = CrawlerRunConfig(
         deep_crawl_strategy=strategy,
         stream=True,
         verbose=False,
         delay_before_return_html=config.request_delay,
         excluded_tags=["nav", "script", "style", "noscript", "iframe"],
+        page_timeout=30000,
+        semaphore_count=5,
         markdown_generator=DefaultMarkdownGenerator(),
     )
 
@@ -150,27 +214,30 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
     seen_content_hashes: set[str] = set(storage.load_all_content_hashes().keys())
     stored_urls: set[str] = set()
     document_urls: set[str] = set()
+    visit_log = VisitLog()
 
-    async with AsyncWebCrawler() as crawler:
+    async with AsyncWebCrawler(config=browser_config) as crawler:
         async for result in await crawler.arun(url=config.seed_url, config=bfs_config):
+            depth = result.metadata.get("depth", 0) if result.metadata else 0
+
             if not result.success:
-                logger.warning(
-                    "Failed to crawl %s: %s",
-                    result.url,
-                    getattr(result, "error_message", "unknown error"),
-                )
+                error_msg = getattr(result, "error_message", "unknown error")
+                logger.warning("Failed to crawl %s: %s", result.url, error_msg)
                 stats["pages_failed"] += 1
+                visit_log.add(result.url, "FAILED", error_msg, depth)
                 continue
 
             parsed_url = urlparse(result.url)
             if parsed_url.scheme not in ("http", "https"):
                 logger.warning("Skipping non-HTTP URL: %s", result.url)
                 stats["pages_failed"] += 1
+                visit_log.add(result.url, "SKIPPED", "non-HTTP scheme", depth)
                 continue
 
             if _is_blocked_path(result.url, config.blocked_paths):
                 logger.debug("Blocked path, skipping: %s", result.url)
                 stats["pages_failed"] += 1
+                visit_log.add(result.url, "BLOCKED", "blocked path", depth)
                 continue
 
             final_host = parsed_url.hostname
@@ -182,13 +249,11 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
                     final_host,
                 )
                 stats["pages_failed"] += 1
+                visit_log.add(result.url, "BLOCKED", f"host {final_host} not in allowed domains", depth)
                 continue
 
-            depth = result.metadata.get("depth", 0)
-            _store_result(result, storage, stats, seen_content_hashes, stored_urls, depth)
+            _store_result(result, storage, stats, seen_content_hashes, stored_urls, visit_log, depth)
 
-            # Collect document links from this page — any host is valid, the
-            # cs.vt.edu page that linked it is the trust anchor.
             document_urls.update(collect_document_links(result.links))
 
     # Download and process documents (PDFs, Word docs) from any host
@@ -209,4 +274,4 @@ async def run_crawl(config: CrawlerConfig, storage: MinioStorage) -> dict:
         stats["documents_processed"],
         stats["documents_failed"],
     )
-    return stats
+    return stats, visit_log

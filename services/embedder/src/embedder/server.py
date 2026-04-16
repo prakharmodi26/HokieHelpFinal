@@ -2,19 +2,21 @@ from __future__ import annotations
 import asyncio, logging, uuid
 from contextlib import asynccontextmanager
 from typing import Any
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from embedder.config import EmbedderConfig
 from embedder.embedder import Embedder
 from embedder.indexer import QdrantIndexer
 from embedder.main import run_embedding
 from embedder.storage import EmbedderStorage
+from embedder import logbuffer
 
-logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logbuffer.install(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 _runs: dict[str, dict[str, Any]] = {}
 
-async def create_app() -> FastAPI:
+def create_app() -> FastAPI:
     config = EmbedderConfig.from_env()
     storage = EmbedderStorage(config)
     embedder = Embedder(config.embedding_model)
@@ -31,6 +33,10 @@ async def create_app() -> FastAPI:
     @app.get("/health")
     async def health() -> dict[str, Any]:
         return {"healthy": True, "model": config.embedding_model, "dimension": embedder.dimension}
+
+    @app.get("/logs")
+    async def logs(lines: int = 200) -> Response:
+        return Response(content=logbuffer.get_logs(lines), media_type="text/plain")
 
     @app.post("/embed/start")
     async def embed_start() -> dict[str, str]:

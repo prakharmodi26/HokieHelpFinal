@@ -6,6 +6,7 @@ import asyncio
 import dataclasses
 import logging
 import sys
+from datetime import datetime, timezone
 
 from crawler.cleaner import build_department_info_doc, clean_markdown, is_error_page
 from crawler.config import CrawlerConfig
@@ -17,6 +18,8 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+LOGS_BUCKET = "logs"
 
 
 def cli() -> None:
@@ -37,7 +40,14 @@ def cli() -> None:
     )
 
     storage = MinioStorage(config)
-    stats = asyncio.run(run_crawl(config, storage))
+    stats, visit_log = asyncio.run(run_crawl(config, storage))
+
+    # Upload visit log to logs bucket
+    storage.ensure_bucket(LOGS_BUCKET)
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S")
+    log_key = f"websites-visited-{timestamp}.md"
+    storage.upload_document(log_key, visit_log.render(), bucket=LOGS_BUCKET)
+    logger.info("Visit log uploaded to %s/%s", LOGS_BUCKET, log_key)
 
     logger.info(
         "Crawl complete: %d pages stored, %d failed, %d documents processed, %d documents failed",

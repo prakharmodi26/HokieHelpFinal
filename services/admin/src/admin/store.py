@@ -24,6 +24,12 @@ class Store:
                 """CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY, value TEXT NOT NULL)"""
             )
+            await db.execute(
+                """CREATE TABLE IF NOT EXISTS schedules (
+                id TEXT PRIMARY KEY, name TEXT NOT NULL, cron TEXT NOT NULL,
+                enabled INTEGER NOT NULL DEFAULT 0, config TEXT NOT NULL DEFAULT '{}',
+                created_at TEXT NOT NULL)"""
+            )
             await db.commit()
 
     async def create_run(self, settings: dict[str, Any]) -> str:
@@ -106,3 +112,83 @@ class Store:
         async with aiosqlite.connect(self._db_path) as db:
             async with db.execute("SELECT key, value FROM settings") as cur:
                 return {r[0]: r[1] for r in await cur.fetchall()}
+
+    @staticmethod
+    def _row_to_schedule(row: aiosqlite.Row) -> dict[str, Any]:
+        d = dict(row)
+        d["enabled"] = bool(d["enabled"])
+        try:
+            d["config"] = json.loads(d["config"]) if d.get("config") else {}
+        except json.JSONDecodeError:
+            d["config"] = {}
+        return d
+
+    async def list_schedules(self) -> list[dict[str, Any]]:
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute(
+                "SELECT * FROM schedules ORDER BY created_at ASC"
+            ) as cur:
+                return [self._row_to_schedule(r) for r in await cur.fetchall()]
+
+    async def get_schedule(self, schedule_id: str) -> dict[str, Any] | None:
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute(
+                "SELECT * FROM schedules WHERE id = ?", (schedule_id,)
+            ) as cur:
+                row = await cur.fetchone()
+                return self._row_to_schedule(row) if row else None
+
+    async def create_schedule(
+        self, name: str, cron: str, enabled: bool, config: dict[str, str]
+    ) -> dict[str, Any]:
+        sid = uuid.uuid4().hex[:8]
+        now = datetime.now(timezone.utc).isoformat()
+        async with aiosqlite.connect(self._db_path) as db:
+            await db.execute(
+                "INSERT INTO schedules (id, name, cron, enabled, config, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (sid, name, cron, 1 if enabled else 0, json.dumps(config), now),
+            )
+            await db.commit()
+        return (await self.get_schedule(sid)) or {}
+
+    async def update_schedule(
+        self,
+        schedule_id: str,
+        name: str | None = None,
+        cron: str | None = None,
+        enabled: bool | None = None,
+        config: dict[str, str] | None = None,
+    ) -> dict[str, Any] | None:
+        fields: list[str] = []
+        values: list[Any] = []
+        if name is not None:
+            fields.append("name = ?")
+            values.append(name)
+        if cron is not None:
+            fields.append("cron = ?")
+            values.append(cron)
+        if enabled is not None:
+            fields.append("enabled = ?")
+            values.append(1 if enabled else 0)
+        if config is not None:
+            fields.append("config = ?")
+            values.append(json.dumps(config))
+        if not fields:
+            return await self.get_schedule(schedule_id)
+        values.append(schedule_id)
+        async with aiosqlite.connect(self._db_path) as db:
+            await db.execute(
+                f"UPDATE schedules SET {', '.join(fields)} WHERE id = ?", values
+            )
+            await db.commit()
+        return await self.get_schedule(schedule_id)
+
+    async def delete_schedule(self, schedule_id: str) -> bool:
+        async with aiosqlite.connect(self._db_path) as db:
+            cur = await db.execute(
+                "DELETE FROM schedules WHERE id = ?", (schedule_id,)
+            )
+            await db.commit()
+            return cur.rowcount > 0

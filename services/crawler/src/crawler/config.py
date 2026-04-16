@@ -69,5 +69,5 @@ class CrawlerConfig:
                 "/content/,/editor.html,/cs-root.html,/cs-source.html",
             ),
             prune_threshold=float(os.environ.get("CRAWL_PRUNE_THRESHOLD", "0.45")),
-            request_delay=float(os.environ.get("CRAWL_REQUEST_DELAY", "0.5")),
+            request_delay=float(os.environ.get("CRAWL_REQUEST_DELAY", "0.1")),
         )
