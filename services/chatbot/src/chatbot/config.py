@@ -23,6 +23,7 @@ class ChatbotConfig:
     hybrid_enabled: bool
     keyword_search_limit: int
     rrf_k: int
+    min_rrf_score: float
     rate_limit_requests: int
     rate_limit_window_seconds: int
 
@@ -43,6 +44,7 @@ class ChatbotConfig:
             hybrid_enabled=os.environ.get("HYBRID_ENABLED", "true").lower() == "true",
             keyword_search_limit=int(os.environ.get("KEYWORD_SEARCH_LIMIT", "10")),
             rrf_k=int(os.environ.get("RRF_K", "60")),
+            min_rrf_score=float(os.environ.get("MIN_RRF_SCORE", "0.0")),
             rate_limit_requests=int(os.environ.get("RATE_LIMIT_REQUESTS", "100")),
             rate_limit_window_seconds=int(os.environ.get("RATE_LIMIT_WINDOW_SECONDS", "3600")),
         )

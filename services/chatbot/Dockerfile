@@ -1,4 +1,4 @@
-FROM ghcr.io/prakharmodi26/hokiehelp-base:latest
+FROM --platform=linux/amd64 ghcr.io/prakharmodi26/hokiehelp-base:latest
 
 LABEL org.opencontainers.image.source=https://github.com/prakharmodi26/HokieHelpFinal
 

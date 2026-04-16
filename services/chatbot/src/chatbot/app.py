@@ -111,6 +111,7 @@ def startup() -> None:
         hybrid_enabled=cfg.hybrid_enabled,
         keyword_search_limit=cfg.keyword_search_limit,
         rrf_k=cfg.rrf_k,
+        min_rrf_score=cfg.min_rrf_score,
     )
     llm_client = LLMClient(
         api_key=cfg.llm_api_key,
@@ -151,6 +152,19 @@ def _check_rate_limit(session_id: str = Depends(_get_session_id)) -> str:
             headers={"Retry-After": str(_session_store._window), "X-RateLimit-Remaining": str(remaining)},
         )
     return session_id
+
+
+def _vector_chunks(chunks: list[dict]) -> list[dict]:
+    """Return only chunks that appeared in vector search results.
+
+    Keyword-only chunks (from_vector=False) boosted retrieval via RRF but are
+    not semantically ranked — exclude them from both LLM context and sources.
+    """
+    filtered = [c for c in chunks if c.get("from_vector", True)]
+    excluded = len(chunks) - len(filtered)
+    if excluded:
+        logger.info("LLM FILTER excluded %d keyword-only chunks from context+sources", excluded)
+    return filtered
 
 
 def _dedup_sources(chunks: list[dict]) -> list[Source]:
@@ -210,10 +224,11 @@ def ask(
     try:
         chunks = retriever.search(req.question)
         logger.info("ASK retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t0)*1000)
+        llm_chunks = _vector_chunks(chunks)
         t1 = _t.monotonic()
-        answer = llm_client.ask(req.question, chunks)
+        answer = llm_client.ask(req.question, llm_chunks)
         logger.info("ASK llm answer in %.0fms (answer_len=%d)", (_t.monotonic()-t1)*1000, len(answer))
-        sources = _dedup_sources(chunks)
+        sources = _dedup_sources(llm_chunks)
         _set_session_cookie(response, session_id)
         return AskResponse(answer=answer, sources=sources)
     except Exception as exc:
@@ -250,13 +265,14 @@ def chat(
         t1 = _t.monotonic()
         chunks = retriever.search(search_query)
         logger.info("CHAT retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t1)*1000)
+        llm_chunks = _vector_chunks(chunks)
 
         # Stage 3: Generate answer using original question + chunks + history
         t2 = _t.monotonic()
-        answer = llm_client.chat(req.question, chunks, history_dicts)
+        answer = llm_client.chat(req.question, llm_chunks, history_dicts)
         logger.info("CHAT llm answer in %.0fms (answer_len=%d)", (_t.monotonic()-t2)*1000, len(answer))
 
-        sources = _dedup_sources(chunks)
+        sources = _dedup_sources(llm_chunks)
         _set_session_cookie(response, session_id)
         return AskResponse(answer=answer, sources=sources)
     except Exception as exc:
@@ -293,7 +309,8 @@ def chat_stream(
         t1 = _t.monotonic()
         chunks = retriever.search(search_query)
         logger.info("STREAM retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t1)*1000)
-        sources = _dedup_sources(chunks)
+        llm_chunks = _vector_chunks(chunks)
+        sources = _dedup_sources(llm_chunks)
     except Exception as exc:
         logger.exception("STREAM failed session=%s: %s", session_id, exc)
         raise
@@ -303,7 +320,7 @@ def chat_stream(
         t2 = _t.monotonic()
         tokens = 0
         try:
-            for token in llm_client.chat_stream(req.question, chunks, history_dicts):
+            for token in llm_client.chat_stream(req.question, llm_chunks, history_dicts):
                 tokens += 1
                 yield f'data: {json.dumps({"type": "token", "content": token})}\n\n'
             yield f'data: {json.dumps({"type": "sources", "sources": [s.model_dump() for s in sources]})}\n\n'

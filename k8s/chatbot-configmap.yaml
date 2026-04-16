@@ -12,6 +12,7 @@ data:
   EMBEDDING_MODEL: "BAAI/bge-large-en-v1.5"
   TOP_K: "5"
   MIN_SCORE: "0.53"
+  MIN_RRF_SCORE: "0.013"
   LLM_BASE_URL: "http://ollama-cluster-ip:11434/v1"
   LLM_MODEL: "qwen2.5:14b"
   RATE_LIMIT_REQUESTS: "100"
