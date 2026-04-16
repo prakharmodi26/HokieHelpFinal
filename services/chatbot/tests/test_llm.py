@@ -246,6 +246,18 @@ def test_rewrite_query_skips_when_no_history(mock_ollama_client):
     mock_ollama_client.chat.assert_not_called()
 
 
+def test_system_prompt_contains_key_instructions():
+    """System prompt includes grounding rules and formatting guidance."""
+    assert "retrieved context" in SYSTEM_PROMPT.lower()
+    assert "conversation history" in SYSTEM_PROMPT.lower()
+    # New prompt should NOT have rigid bullet-only formatting
+    assert "Use bullet points for all answers" not in SYSTEM_PROMPT
+    # New prompt should handle different answer types
+    assert "question type" in SYSTEM_PROMPT.lower() or "format" in SYSTEM_PROMPT.lower()
+    # Should NOT instruct LLM to add sources (handled structurally by app)
+    assert "Sources:" not in SYSTEM_PROMPT or "Do NOT add a Sources section" in SYSTEM_PROMPT
+
+
 def test_rewrite_query_fallback_on_error(mock_ollama_client):
     """On LLM error, rewrite_query falls back to original question."""
     mock_ollama_client.chat.side_effect = Exception("Ollama down")
