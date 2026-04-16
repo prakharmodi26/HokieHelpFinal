@@ -47,6 +47,39 @@ Example:
 
 MAX_HISTORY_MESSAGES = 20  # 10 turns; override via parameter
 
+QUERY_REWRITE_PROMPT = """\
+You are a search query rewriter for a university knowledge base. Your job is to take a follow-up question from a conversation and rewrite it as a standalone search query.
+
+Rules:
+1. Replace all pronouns (he, she, they, it, their, etc.) and references (the professor, that course, the department) with the actual entities from the conversation.
+2. Keep the query concise and search-friendly — focus on key entities and intent.
+3. If the question is already standalone with no references to the conversation, return it unchanged.
+4. Output ONLY the rewritten query. No explanation, no quotes, no prefixes, no extra text."""
+
+
+def build_rewrite_messages(question: str, history: list[dict]) -> list[dict]:
+    """Build messages for the query rewriter LLM call.
+
+    Returns a 2-message array: system prompt + user message with formatted
+    conversation history and current question.
+    """
+    history_lines = []
+    for msg in history:
+        role_label = "User" if msg["role"] == "user" else "Assistant"
+        history_lines.append(f"{role_label}: {msg['content']}")
+
+    user_content = (
+        "Conversation:\n"
+        + "\n".join(history_lines)
+        + f"\n\nCurrent question: {question}"
+        + "\n\nRewritten search query:"
+    )
+
+    return [
+        {"role": "system", "content": QUERY_REWRITE_PROMPT},
+        {"role": "user", "content": user_content},
+    ]
+
 
 def build_messages(
     question: str,
@@ -98,17 +131,48 @@ def build_messages(
 class LLMClient:
     """Calls Ollama via the official ollama-python library."""
 
-    def __init__(self, api_key: str, base_url: str, model: str, max_history_messages: int = 20) -> None:
+    def __init__(self, api_key: str, base_url: str, model: str, rewriter_model: str = "", max_history_messages: int = 20) -> None:
         # base_url comes as e.g. "http://ollama-cluster-ip:11434/v1" — strip /v1 for Ollama native
         host = base_url.rstrip("/").removesuffix("/v1")
         self._client = Client(host=host)
         self._model = model
+        self._rewriter_model = rewriter_model or model
         self._max_history = max_history_messages
-        logger.info("LLM client ready — model=%s  host=%s  max_history=%d", model, host, max_history_messages)
+        logger.info(
+            "LLM client ready — model=%s  rewriter=%s  host=%s  max_history=%d",
+            model, self._rewriter_model, host, max_history_messages,
+        )
 
     def ask(self, question: str, chunks: list[dict]) -> str:
         """Simple RAG query (no history). Delegates to chat()."""
         return self.chat(question, chunks, [])
+
+    def rewrite_query(self, question: str, history: list[dict]) -> str:
+        """Rewrite a follow-up question into a standalone search query.
+
+        Skips the LLM call when history is empty (question is already standalone).
+        Falls back to the original question on any LLM error.
+        """
+        if not history:
+            return question
+
+        messages = build_rewrite_messages(question, history)
+
+        logger.info("REWRITE REQUEST — question=%r  history_turns=%d", question[:120], len(history))
+
+        try:
+            response = self._client.chat(
+                model=self._rewriter_model,
+                messages=messages,
+                options=Options(temperature=0.0),
+            )
+        except Exception as exc:
+            logger.warning("REWRITE failed, using original query: %s", exc)
+            return question
+
+        rewritten = response.message.content.strip()
+        logger.info("REWRITE RESULT — original=%r  rewritten=%r", question[:120], rewritten[:120])
+        return rewritten
 
     def chat(
         self,

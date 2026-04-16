@@ -1,7 +1,14 @@
 """Tests for the LLM client — Ollama calls are mocked."""
 from unittest.mock import MagicMock, patch
 
-from chatbot.llm import build_messages, LLMClient, SYSTEM_PROMPT
+import pytest
+
+from chatbot.llm import build_messages, build_rewrite_messages, LLMClient, QUERY_REWRITE_PROMPT, SYSTEM_PROMPT
+
+
+@pytest.fixture
+def mock_ollama_client():
+    return MagicMock()
 
 
 def test_build_messages_with_chunks_no_history():
@@ -165,3 +172,95 @@ def test_llm_client_chat_stream():
     assert tokens == ["Sally", " is a professor."]
     call_kwargs = mock_ollama.chat.call_args.kwargs
     assert call_kwargs["stream"] is True
+
+
+def test_build_rewrite_messages_with_history():
+    """Rewrite messages include history and current question."""
+    history = [
+        {"role": "user", "content": "Who is Dr. Sally Hamouda?"},
+        {"role": "assistant", "content": "Dr. Sally Hamouda is an associate professor in CS."},
+    ]
+    messages = build_rewrite_messages("What are her research interests?", history)
+
+    assert len(messages) == 2  # system + user
+    assert messages[0]["role"] == "system"
+    assert QUERY_REWRITE_PROMPT in messages[0]["content"]
+    assert messages[1]["role"] == "user"
+    assert "Sally Hamouda" in messages[1]["content"]
+    assert "What are her research interests?" in messages[1]["content"]
+
+
+def test_build_rewrite_messages_formats_history():
+    """History is formatted as User:/Assistant: lines."""
+    history = [
+        {"role": "user", "content": "Tell me about grad programs."},
+        {"role": "assistant", "content": "VT CS offers MS and PhD degrees."},
+    ]
+    messages = build_rewrite_messages("What are the requirements?", history)
+    user_content = messages[1]["content"]
+    assert "User: Tell me about grad programs." in user_content
+    assert "Assistant: VT CS offers MS and PhD degrees." in user_content
+    assert "Current question: What are the requirements?" in user_content
+
+
+def test_rewrite_query_calls_ollama(mock_ollama_client):
+    """rewrite_query sends proper messages and returns stripped response."""
+    mock_response = MagicMock()
+    mock_response.message.content = "  Dr. Sally Hamouda research interests  "
+    mock_response.get = lambda k, d=None: {}.get(k, d)
+    mock_ollama_client.chat.return_value = mock_response
+
+    with patch("chatbot.llm.Client", return_value=mock_ollama_client):
+        client = LLMClient(
+            api_key="unused",
+            base_url="http://ollama:11434/v1",
+            model="qwen2.5:14b",
+            rewriter_model="qwen2.5:14b",
+        )
+        result = client.rewrite_query(
+            "What are her research interests?",
+            [
+                {"role": "user", "content": "Who is Dr. Sally Hamouda?"},
+                {"role": "assistant", "content": "She is a professor."},
+            ],
+        )
+
+    assert result == "Dr. Sally Hamouda research interests"
+    call_kwargs = mock_ollama_client.chat.call_args.kwargs
+    assert call_kwargs["model"] == "qwen2.5:14b"
+    assert len(call_kwargs["messages"]) == 2
+
+
+def test_rewrite_query_skips_when_no_history(mock_ollama_client):
+    """rewrite_query returns original question when history is empty."""
+    with patch("chatbot.llm.Client", return_value=mock_ollama_client):
+        client = LLMClient(
+            api_key="unused",
+            base_url="http://ollama:11434/v1",
+            model="qwen2.5:14b",
+            rewriter_model="qwen2.5:14b",
+        )
+        result = client.rewrite_query("Who is Sally Hamouda?", [])
+
+    assert result == "Who is Sally Hamouda?"
+    mock_ollama_client.chat.assert_not_called()
+
+
+def test_rewrite_query_fallback_on_error(mock_ollama_client):
+    """On LLM error, rewrite_query falls back to original question."""
+    mock_ollama_client.chat.side_effect = Exception("Ollama down")
+
+    with patch("chatbot.llm.Client", return_value=mock_ollama_client):
+        client = LLMClient(
+            api_key="unused",
+            base_url="http://ollama:11434/v1",
+            model="qwen2.5:14b",
+            rewriter_model="qwen2.5:14b",
+        )
+        result = client.rewrite_query(
+            "What about their office hours?",
+            [{"role": "user", "content": "Who is Dr. Smith?"},
+             {"role": "assistant", "content": "Dr. Smith is a professor."}],
+        )
+
+    assert result == "What about their office hours?"
