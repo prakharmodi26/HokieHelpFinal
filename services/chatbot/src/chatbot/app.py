@@ -284,15 +284,19 @@ def chat_stream(
     history_dicts = [{"role": m.role, "content": m.content} for m in req.history]
     logger.info("STREAM start session=%s history_turns=%d q=%r", session_id, len(req.history), req.question[:200])
 
-    # Stage 1: Rewrite query for retrieval
-    search_query = llm_client.rewrite_query(req.question, history_dicts)
-    logger.info("STREAM rewrite in %.0fms: %r -> %r", (_t.monotonic()-t0)*1000, req.question[:100], search_query[:100])
+    try:
+        # Stage 1: Rewrite query for retrieval
+        search_query = llm_client.rewrite_query(req.question, history_dicts)
+        logger.info("STREAM rewrite in %.0fms: %r -> %r", (_t.monotonic()-t0)*1000, req.question[:100], search_query[:100])
 
-    # Stage 2: Retrieve chunks using rewritten query
-    t1 = _t.monotonic()
-    chunks = retriever.search(search_query)
-    logger.info("STREAM retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t1)*1000)
-    sources = _dedup_sources(chunks)
+        # Stage 2: Retrieve chunks using rewritten query
+        t1 = _t.monotonic()
+        chunks = retriever.search(search_query)
+        logger.info("STREAM retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t1)*1000)
+        sources = _dedup_sources(chunks)
+    except Exception as exc:
+        logger.exception("STREAM failed session=%s: %s", session_id, exc)
+        raise
 
     def generate():
         import time as _t
