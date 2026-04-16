@@ -15,7 +15,9 @@ from chatbot.guard import PromptRejected, check_prompt
 from chatbot.retriever import Retriever
 from chatbot.llm import LLMClient
 from chatbot.session_store import SessionStore
+from chatbot import logbuffer
 
+logbuffer.install(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="HokieHelp Chatbot", version="0.1.0")
@@ -109,12 +111,12 @@ def startup() -> None:
         hybrid_enabled=cfg.hybrid_enabled,
         keyword_search_limit=cfg.keyword_search_limit,
         rrf_k=cfg.rrf_k,
-        follow_up_keywords=cfg.follow_up_keywords,
     )
     llm_client = LLMClient(
         api_key=cfg.llm_api_key,
         base_url=cfg.llm_base_url,
         model=cfg.llm_model,
+        rewriter_model=cfg.rewriter_model,
         max_history_messages=cfg.max_history_messages,
     )
     _session_store = SessionStore(
@@ -182,6 +184,11 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/logs")
+def logs(lines: int = 200) -> Response:
+    return Response(content=logbuffer.get_logs(lines), media_type="text/plain")
+
+
 @app.post("/ask", response_model=AskResponse)
 def ask(
     req: AskRequest,
@@ -194,14 +201,24 @@ def ask(
     try:
         check_prompt(req.question)
     except PromptRejected as e:
+        logger.info("ASK rejected by guard: %s (session=%s)", e, session_id)
         raise HTTPException(status_code=400, detail=str(e))
 
-    logger.debug("NEW QUERY: %s", req.question)
-    chunks = retriever.search(req.question)
-    answer = llm_client.ask(req.question, chunks)
-    sources = _dedup_sources(chunks)
-    _set_session_cookie(response, session_id)
-    return AskResponse(answer=answer, sources=sources)
+    import time as _t
+    t0 = _t.monotonic()
+    logger.info("ASK start session=%s q=%r", session_id, req.question[:200])
+    try:
+        chunks = retriever.search(req.question)
+        logger.info("ASK retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t0)*1000)
+        t1 = _t.monotonic()
+        answer = llm_client.ask(req.question, chunks)
+        logger.info("ASK llm answer in %.0fms (answer_len=%d)", (_t.monotonic()-t1)*1000, len(answer))
+        sources = _dedup_sources(chunks)
+        _set_session_cookie(response, session_id)
+        return AskResponse(answer=answer, sources=sources)
+    except Exception as exc:
+        logger.exception("ASK failed session=%s: %s", session_id, exc)
+        raise
 
 
 @app.post("/chat", response_model=AskResponse)
@@ -216,15 +233,35 @@ def chat(
     try:
         check_prompt(req.question)
     except PromptRejected as e:
+        logger.info("CHAT rejected by guard: %s (session=%s)", e, session_id)
         raise HTTPException(status_code=400, detail=str(e))
 
-    logger.debug("NEW CHAT: %s (history_turns=%d)", req.question, len(req.history))
+    import time as _t
+    t0 = _t.monotonic()
     history_dicts = [{"role": m.role, "content": m.content} for m in req.history]
-    chunks = retriever.search_with_context(req.question, history_dicts)
-    answer = llm_client.chat(req.question, chunks, history_dicts)
-    sources = _dedup_sources(chunks)
-    _set_session_cookie(response, session_id)
-    return AskResponse(answer=answer, sources=sources)
+    logger.info("CHAT start session=%s history_turns=%d q=%r", session_id, len(req.history), req.question[:200])
+
+    try:
+        # Stage 1: Rewrite query for retrieval
+        search_query = llm_client.rewrite_query(req.question, history_dicts)
+        logger.info("CHAT rewrite in %.0fms: %r -> %r", (_t.monotonic()-t0)*1000, req.question[:100], search_query[:100])
+
+        # Stage 2: Retrieve chunks using rewritten query
+        t1 = _t.monotonic()
+        chunks = retriever.search(search_query)
+        logger.info("CHAT retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t1)*1000)
+
+        # Stage 3: Generate answer using original question + chunks + history
+        t2 = _t.monotonic()
+        answer = llm_client.chat(req.question, chunks, history_dicts)
+        logger.info("CHAT llm answer in %.0fms (answer_len=%d)", (_t.monotonic()-t2)*1000, len(answer))
+
+        sources = _dedup_sources(chunks)
+        _set_session_cookie(response, session_id)
+        return AskResponse(answer=answer, sources=sources)
+    except Exception as exc:
+        logger.exception("CHAT failed session=%s: %s", session_id, exc)
+        raise
 
 
 @app.post("/chat/stream")
@@ -239,21 +276,37 @@ def chat_stream(
     try:
         check_prompt(req.question)
     except PromptRejected as e:
+        logger.info("STREAM rejected by guard: %s (session=%s)", e, session_id)
         raise HTTPException(status_code=400, detail=str(e))
 
-    logger.debug("NEW STREAM CHAT: %s (history_turns=%d)", req.question, len(req.history))
+    import time as _t
+    t0 = _t.monotonic()
     history_dicts = [{"role": m.role, "content": m.content} for m in req.history]
-    chunks = retriever.search_with_context(req.question, history_dicts)
+    logger.info("STREAM start session=%s history_turns=%d q=%r", session_id, len(req.history), req.question[:200])
+
+    # Stage 1: Rewrite query for retrieval
+    search_query = llm_client.rewrite_query(req.question, history_dicts)
+    logger.info("STREAM rewrite in %.0fms: %r -> %r", (_t.monotonic()-t0)*1000, req.question[:100], search_query[:100])
+
+    # Stage 2: Retrieve chunks using rewritten query
+    t1 = _t.monotonic()
+    chunks = retriever.search(search_query)
+    logger.info("STREAM retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t1)*1000)
     sources = _dedup_sources(chunks)
 
     def generate():
+        import time as _t
+        t2 = _t.monotonic()
+        tokens = 0
         try:
             for token in llm_client.chat_stream(req.question, chunks, history_dicts):
+                tokens += 1
                 yield f'data: {json.dumps({"type": "token", "content": token})}\n\n'
             yield f'data: {json.dumps({"type": "sources", "sources": [s.model_dump() for s in sources]})}\n\n'
             yield f'data: {json.dumps({"type": "done"})}\n\n'
+            logger.info("STREAM done session=%s tokens=%d llm_ms=%.0f", session_id, tokens, (_t.monotonic()-t2)*1000)
         except Exception as exc:
-            logger.error("Stream generation error: %s", exc)
+            logger.exception("STREAM generation error session=%s after %d tokens: %s", session_id, tokens, exc)
             yield f'data: {json.dumps({"type": "error", "content": "An error occurred while generating the response."})}\n\n'
 
     headers = {

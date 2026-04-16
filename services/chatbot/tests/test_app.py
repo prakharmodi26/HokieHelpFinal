@@ -1,5 +1,5 @@
 """Tests for the FastAPI app — retriever and LLM are mocked."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import DEFAULT, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
@@ -28,6 +28,11 @@ def mock_llm():
     llm = MagicMock()
     llm.ask.return_value = "Sally Hamouda is a professor of Computer Science at Virginia Tech."
     llm.chat.return_value = "Sally Hamouda is a professor of Computer Science at Virginia Tech."
+    llm.rewrite_query.return_value = "Sally Hamouda"  # default rewrite
+    # Mirror the real LLMClient: when history is empty, return the original
+    # question unchanged; otherwise defer to the configured return_value so
+    # tests can customize the rewritten query.
+    llm.rewrite_query.side_effect = lambda q, h: q if not h else DEFAULT
     return llm
 
 
@@ -114,8 +119,10 @@ def test_chat_history_too_many_turns(client, mock_retriever, mock_llm):
     assert resp.status_code == 422
 
 
-def test_chat_uses_history_aware_retrieval(client, mock_retriever, mock_llm):
-    """The /chat endpoint passes history to search_with_context."""
+def test_chat_rewrites_query_before_search(client, mock_retriever, mock_llm):
+    """The /chat endpoint calls rewrite_query, then searches with rewritten query."""
+    mock_llm.rewrite_query.return_value = "Dr. Smith research interests"
+
     resp = client.post("/chat", json={
         "question": "What about their research?",
         "history": [
@@ -124,11 +131,52 @@ def test_chat_uses_history_aware_retrieval(client, mock_retriever, mock_llm):
         ],
     })
     assert resp.status_code == 200
-    # Verify search_with_context was called (not plain search)
-    mock_retriever.search_with_context.assert_called_once()
-    call_args = mock_retriever.search_with_context.call_args
-    assert call_args[0][0] == "What about their research?"
-    assert len(call_args[0][1]) == 2  # history passed
+
+    # rewrite_query was called with original question + history
+    mock_llm.rewrite_query.assert_called_once()
+    rw_args = mock_llm.rewrite_query.call_args[0]
+    assert rw_args[0] == "What about their research?"
+    assert len(rw_args[1]) == 2
+
+    # retriever.search was called with the REWRITTEN query
+    mock_retriever.search.assert_called_once_with("Dr. Smith research interests")
+
+    # LLM chat was called with ORIGINAL question (not rewritten)
+    mock_llm.chat.assert_called_once()
+    chat_args = mock_llm.chat.call_args[0]
+    assert chat_args[0] == "What about their research?"
+
+
+def test_chat_skips_rewrite_when_no_history(client, mock_retriever, mock_llm):
+    """Without history, /chat uses raw query directly (no rewrite call)."""
+    resp = client.post("/chat", json={
+        "question": "Who is Sally Hamouda?",
+        "history": [],
+    })
+    assert resp.status_code == 200
+
+    # rewrite_query still called but returns original (empty history)
+    mock_llm.rewrite_query.assert_called_once()
+    # retriever.search called with original query
+    mock_retriever.search.assert_called_once_with("Who is Sally Hamouda?")
+
+
+def test_stream_rewrites_query_before_search(client, mock_retriever, mock_llm):
+    """The /chat/stream endpoint also uses query rewriting."""
+    mock_llm.rewrite_query.return_value = "Dr. Smith office hours"
+    mock_llm.chat_stream.return_value = iter(["Office hours are Monday."])
+
+    resp = client.post("/chat/stream", json={
+        "question": "What about his office hours?",
+        "history": [
+            {"role": "user", "content": "Who is Dr. Smith?"},
+            {"role": "assistant", "content": "Dr. Smith is a professor."},
+        ],
+    })
+    assert resp.status_code == 200
+
+    mock_llm.rewrite_query.assert_called_once()
+    mock_retriever.search.assert_called_once_with("Dr. Smith office hours")
 
 
 def test_chat_llm_receives_proper_history(client, mock_retriever, mock_llm):
