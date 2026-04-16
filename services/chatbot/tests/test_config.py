@@ -70,3 +70,23 @@ def test_rate_limit_from_env():
         cfg = ChatbotConfig.from_env()
     assert cfg.rate_limit_requests == 50
     assert cfg.rate_limit_window_seconds == 1800
+
+
+def test_rewriter_model_defaults_to_llm_model():
+    """When REWRITER_MODEL is unset, rewriter_model should equal llm_model."""
+    env = {"LLM_API_KEY": "sk-test-key"}
+    with patch.dict(os.environ, env, clear=True):
+        os.environ["LLM_API_KEY"] = "sk-test-key"
+        cfg = ChatbotConfig.from_env()
+    assert cfg.rewriter_model == cfg.llm_model
+
+
+def test_rewriter_model_override():
+    """When REWRITER_MODEL is set, rewriter_model should use that value."""
+    env = {
+        "LLM_API_KEY": "sk-test-key",
+        "REWRITER_MODEL": "qwen2.5:7b",
+    }
+    with patch.dict(os.environ, env, clear=False):
+        cfg = ChatbotConfig.from_env()
+    assert cfg.rewriter_model == "qwen2.5:7b"
