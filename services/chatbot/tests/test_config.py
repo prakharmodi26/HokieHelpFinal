@@ -18,8 +18,6 @@ def test_from_env_defaults():
     assert cfg.embedding_model == "BAAI/bge-large-en-v1.5"
     assert cfg.top_k == 5
     assert cfg.max_history_messages == 20
-    assert "their" in cfg.follow_up_keywords
-    assert "what about" in cfg.follow_up_keywords
 
 
 def test_from_env_overrides():

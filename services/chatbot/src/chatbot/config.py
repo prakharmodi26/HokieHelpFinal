@@ -25,7 +25,6 @@ class ChatbotConfig:
     rrf_k: int
     rate_limit_requests: int
     rate_limit_window_seconds: int
-    follow_up_keywords: tuple[str, ...]
 
     @classmethod
     def from_env(cls) -> ChatbotConfig:
@@ -46,14 +45,4 @@ class ChatbotConfig:
             rrf_k=int(os.environ.get("RRF_K", "60")),
             rate_limit_requests=int(os.environ.get("RATE_LIMIT_REQUESTS", "100")),
             rate_limit_window_seconds=int(os.environ.get("RATE_LIMIT_WINDOW_SECONDS", "3600")),
-            follow_up_keywords=tuple(
-                kw.strip()
-                for kw in os.environ.get(
-                    "FOLLOW_UP_KEYWORDS",
-                    "he,she,they,them,their,his,her,its,it,that,this,those,these,"
-                    "the same,above,previous,mentioned,what about,tell me more,"
-                    "elaborate,expand,who did,more about,also,and what",
-                ).split(",")
-                if kw.strip()
-            ),
         )
