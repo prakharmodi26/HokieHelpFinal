@@ -64,31 +64,70 @@ General rules:
 MAX_HISTORY_MESSAGES = 20  # 10 turns; override via parameter
 
 QUERY_REWRITE_PROMPT = """\
-You are a search query rewriter for a university knowledge base. Your job is to take a follow-up question from a conversation and rewrite it as a standalone search query.
+You are a search query rewriter for a university knowledge base.
 
-Rules:
-1. Replace all pronouns (he, she, they, it, their, etc.) and references (the professor, that course, the department) with the actual entities from the conversation.
-2. Keep the query concise and search-friendly — focus on key entities and intent.
-3. If the question is already standalone with no references to the conversation, return it unchanged.
-4. Output ONLY the rewritten query. No explanation, no quotes, no prefixes, no extra text."""
+Your ONLY job: if the current question contains pronouns or references that require the conversation history to understand, replace those with the actual entities. Otherwise return the question unchanged.
+
+## Decision rule — apply this in order:
+
+STEP 1: Check if the question contains any of these follow-up signals:
+  - Pronouns: he, she, they, them, it, his, her, their, its, who, that, this, those, these
+  - Referential phrases: "tell me more", "what about", "elaborate", "the professor", "the same", "mentioned above"
+
+STEP 2:
+  - If NO follow-up signals found → the question is standalone. Return it EXACTLY as written. Do NOT add anything from the conversation.
+  - If follow-up signals found → replace only the pronoun/reference with the specific entity from the conversation history. Keep everything else unchanged.
+
+## Critical rules:
+- NEVER inject names, people, or topics from history into a question that does not reference them.
+- A question asking about a NEW topic (even if history exists) must be returned unchanged.
+- Output ONLY the rewritten query — no explanation, no quotes, no prefixes.
+
+## Examples:
+
+History: [User: "Who is Prakhar Modi?", Assistant: "I don't have info on that."]
+Question: "Who is the head of the CS department?"
+→ "Who is the head of the CS department?"  ← standalone, return unchanged
+
+History: [User: "Who is Denis Gracanin?", Assistant: "He is an associate professor."]
+Question: "What are his research interests?"
+→ "Denis Gracanin research interests"  ← resolved pronoun
+
+History: [User: "Tell me about the MS program.", Assistant: "The MS program requires..."]
+Question: "What are the admission requirements?"
+→ "What are the admission requirements?"  ← standalone, return unchanged
+
+History: [User: "Who is Sally Hamouda?", Assistant: "She is a professor."]
+Question: "What courses does she teach?"
+→ "Sally Hamouda courses taught"  ← resolved pronoun"""
+
+# Max history turns sent to rewriter — only recent context needed for pronoun resolution.
+# Full history goes to the answerer; rewriter only needs the last exchange.
+REWRITE_HISTORY_WINDOW = 4  # last 4 messages = 2 exchanges
 
 
 def build_rewrite_messages(question: str, history: list[dict]) -> list[dict]:
     """Build messages for the query rewriter LLM call.
 
-    Returns a 2-message array: system prompt + user message with formatted
-    conversation history and current question.
+    Only uses the last REWRITE_HISTORY_WINDOW messages — the rewriter only needs
+    the immediately preceding exchange to resolve pronouns. Sending full history
+    causes the model to inject irrelevant context from old turns.
+
+    Returns a 2-message array: system prompt + user message.
     """
+    # Cap to recent exchanges only — reduces hallucination from distant history
+    recent = history[-REWRITE_HISTORY_WINDOW:] if history else []
+
     history_lines = []
-    for msg in history:
+    for msg in recent:
         role_label = "User" if msg["role"] == "user" else "Assistant"
         history_lines.append(f"{role_label}: {msg['content']}")
 
     user_content = (
-        "Conversation:\n"
+        "Recent conversation:\n"
         + "\n".join(history_lines)
         + f"\n\nCurrent question: {question}"
-        + "\n\nRewritten search query:"
+        + "\n\nApply the decision rule. Output only the rewritten query:"
     )
 
     return [
