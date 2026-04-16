@@ -291,6 +291,22 @@ body {
     border: 1.5px solid var(--border);
 }
 
+.message.assistant h2,
+.message.assistant h3 {
+    color: var(--purple);
+    font-weight: 700;
+    margin: 14px 0 4px 0;
+    line-height: 1.3;
+}
+
+.message.assistant h2 {
+    font-size: 1.05em;
+}
+
+.message.assistant h3 {
+    font-size: 1em;
+}
+
 .message.assistant strong {
     color: var(--maroon);
     font-weight: 700;

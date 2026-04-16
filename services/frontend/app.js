@@ -30,6 +30,9 @@
 
     function renderMarkdownLight(text) {
         var html = escapeHtml(text);
+        // Headings — must run before inline transforms and newline conversion
+        html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+        html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
         html = html.replace(/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g, function (_, label, url) {
             return '<strong><a href="' + sanitizeUrl(url) + '" target="_blank" rel="noopener">' + label + '</a></strong>';
         });
