@@ -60,8 +60,7 @@ Internal dashboard for managing the ingestion pipeline. Supports:
 - Storage browser (MinIO)
 - Health monitoring across all services
 
-### Pipeline
-Kubernetes job orchestrator. Runs crawler → chunker → embedder sequentially, monitoring each stage via the K8s API before advancing.
+
 
 ---
 
