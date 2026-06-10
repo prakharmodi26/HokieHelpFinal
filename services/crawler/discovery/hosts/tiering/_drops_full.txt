@@ -1,0 +1,176 @@
+am.wuvt.vt.edu	WUVT radio AM stream subdomain, not content duplicate of wuvt.vt.edu
+anvil.sv.vt.edu	sv.vt.edu cluster, TLS cert invalid, defunct infra dead host
+aoir.archives.cddc.vt.edu	AoIR/CDDC archive host returns 404; socket-close on www — defunct dead/unreachable; was an old internet-research archive
+apps.cals.vt.edu	Parked page: "Nothing Here / nothing of interest" —
+april16documentarchive.vt.edu	Original April 16 archive GONE; now a parked "Discovery Compass" e-discovery login (Servient, 2004-08) TLS cert mismatch on apex; dead/repurposed host
+arc01.cntrlsrvs.w2k.vt.edu	Control-services / w2k infra host, not public content —
+arc01.gis.vt.edu	Numbered ArcGIS server node, machine endpoint —
+arc03.cc.vt.edu	Numbered ArcGIS/compute infra node, no readable site —
+arc03.cntrlsrvs.w2k.vt.edu	Control-services / w2k infra host, not public content —
+arcgis-dev.gis.vt.edu	Dev ArcGIS instance, staging mirror —
+archive.aoe.vt.edu	Returns HTTP 404 at root — dead/empty archive host no content served
+assets.cms.vt.edu	CMS asset/CDN host, no readable text —
+author.cms.vt.edu	CMS authoring endpoint, not public content —
+author.ensemble.vt.edu	Ensemble media authoring/admin endpoint —
+author.ensemble.vt.edu (dup-check)	(already listed) Ensemble authoring endpoint —
+autodiscover.vtc.vt.edu	Exchange/Outlook autodiscover service, no content —
+autodiscover.w2k-dev.vt.edu	Autodiscover dev infra service, no content —
+bams04.bams.vt.edu	Numbered server host under bams, infra/dup likely server node
+birdseye.cntrlsrvs.w2k.vt.edu	Control-services / w2k infra host —
+birdseye.cntrlsrvs.w2k.vt.edu (dup-check)	(already listed) control-services infra —
+birdseye.gis.vt.edu	Default Microsoft IIS landing page, no content —
+cannondale.cns.ipv6.vt.edu	Named ipv6 network/CNS infra host, no public content —
+cannondale.cns.vt.edu	CNS network-services server host, infra not content
+cbs2024.biol.vt.edu	Chronobiology Summer School 2024, past event year-stamped, applications closed
+cddc.vt.edu	Center for Digital Discourse & Culture, defunct (502) dead old archive cluster
+ceage.wp.prod.es.cloud.vt.edu	WordPress backend origin for ceage duplicate of ceage.vt.edu
+cgprapps.cee.vt.edu	CGPR web-app management shell, login-gated, no public content —
+charcoal2.cnre.vt.edu	CNRE numbered server host, infra not content
+charon.cs.vt.edu	CS named server host, infra not content
+cms-pprd.hosting.vt.edu	CMS pre-prod hosting backend, staging mirror —
+cmsa-pprd-01.db.vt.edu	Database server (pre-prod), not a website —
+cmsa-pprd-02.db.vt.edu	Database server (pre-prod), not a website —
+cmsa-pprd-03.db.vt.edu	Database server (pre-prod), not a website —
+cmsa-prod-01.db.vt.edu	Database server (prod), not a website —
+cmsa-prod-02.db.vt.edu	Database server (prod), not a website —
+cmsa-prod-03.db.vt.edu	Database server (prod), not a website —
+cmsa-prod.db.vt.edu	Database server (prod), not a website —
+cmsw-prod.hosting.vt.edu	CMS prod hosting backend node, not a public site —
+code.vt.edu	GitLab instance, auth required, no public content login wall
+communitygardenext.wp.prod.es.cloud.vt.edu	WordPress backend origin, staging duplicate/staging
+confluence.research.vt.edu	Redirects to Confluence wiki, returns HTTP 403 (login-gated) —
+content.alerts.vt.edu	Empty placeholder shell, no content (verified) dead shell
+couchdb.apps.wuvt.vt.edu	CouchDB database for WUVT radio, internal, TLS-mismatch api (internal DB)
+cvc.hr.vt.edu	301 redirect alias into hr.vt.edu employee-giving page (verified) duplicate/redirect
+dashboard.arc.vt.edu	Grafana dashboard (load error), monitoring, no public content —
+dhomeka.lib.vt.edu	Archived Omeka digital-humanities exhibits (Lost Communities, VA Speedways); no longer updated exhibits — owner drops; Omeka
+distleech.apps.wuvt.vt.edu	Internal WUVT app service, TLS cert mismatch, not public —
+docktodoorvtti.wp.prod.es.cloud.vt.edu	WordPress backend origin, staging duplicate/staging
+docs-sandbox.crash.cgit.vt.edu	Sandbox/test docs mirror, dev environment —
+eathertoncee.wp.prod.es.cloud.vt.edu	WordPress backend origin for eatherton duplicate/staging
+ensemble.cms.vt.edu	Ensemble media admin, returns HTTP 403 —
+ensemble.vt.edu	Ensemble media platform, returns HTTP 401 auth —
+eportfolios.vt.edu	ePortfolio hosting platform, per-user auth content user portfolios, not dept content
+etd.vt.edu	Redirects off-host to library ETD guide no on-host content
+events.music.vt.edu	Login-only ticketing shell, no public event text (verified) login wall
+exhibits.lib.vt.edu	Digital exhibits host; 302s to lib.vt.edu exhibits index — exhibits dropped by owner policy exhibit gateway
+expo.sec.vt.edu	Redirects to sec.vt.edu/expo duplicate of sec.vt.edu
+gromit.dlib.vt.edu	Serves only the default nginx welcome page — parked/unconfigured server dead host
+helpdesk.vpas.vt.edu	VPAS IT helpdesk/ticketing, no public content infra/auth
+herbariumbiol.wp.prod.es.cloud.vt.edu	WordPress backend origin for herbarium duplicate/staging
+hosting.cs.vt.edu	CS web-hosting service root, no content infra
+hostmaster.cns.vt.edu	CNS DNS hostmaster infra not content
+hstest.vpas.vt.edu	Test host (hstest), staging environment —
+imagebase.lib.vt.edu	301 redirects to digitalsc.lib.vt.edu; legacy imagebase merged there duplicate/superseded host
+impala.apps.wuvt.vt.edu	Internal WUVT app service, TLS cert mismatch, not public —
+intranet.lci.vt.edu	LCI intranet, auth-only internal content private
+intranet.vtti.ad.vt.edu	VTTI AD intranet, internal/auth private infra
+intranet.vtti.vt.edu	VTTI intranet, internal/auth private
+it.biol.vt.edu	Biology IT internal support subsite infra/internal
+it.cals.vt.edu	CALS IT internal support subsite infra/internal
+it.cnre.vt.edu	CNRE IT internal support subsite infra/internal
+it.ictas.vt.edu	ICTAS IT internal support subsite infra/internal
+it.vpas.vt.edu	VPAS IT internal support subsite infra/internal
+itsu.clahs.vt.edu	CLAHS IT support unit, internal infra/internal
+kibana.insight.aws.vtti.ad.vt.edu	Kibana monitoring dashboard, internal, no public content —
+kiosk.lib.vt.edu	LibCal booking/kiosk hub (gaming, study rooms, scanning) — JS app, no readable corpus text heavy JS booking tool
+libx.cs.vt.edu	Connection refused — LibX browser-extension project defunct/dead host ECONNREFUSED
+linx.apps.wuvt.vt.edu	WUVT app, redirects to OAuth2 login —
+lts.lib.vt.edu	301 redirects off-domain to libff.questionpro.com survey external survey, not VT content
+mailman.music.vt.edu	Placeholder "hello" page, no mailing-list content —
+mcglothlin.wp.prod.es.cloud.vt.edu	WordPress backend origin (mcglothlin lab) duplicate/staging
+mcph.wp.prod.es.cloud.vt.edu	WordPress backend origin (mcph) duplicate/staging
+memalpha.lib.vt.edu	Returned empty body twice; likely an archived/empty wiki-style exhibit host unresolved — verify manually; treat as exhibit/dead
+metagrid1.sv.vt.edu	sv.vt.edu cluster numbered host, defunct infra dead
+mirror.cs.vt.edu	Linux package/OS mirror, file listings not RAG content
+mugshot.vtti.vt.edu	VTTI internal photo/ID tool, no public content infra/internal
+my.vt.edu	Student info system "Coming Soon" placeholder no content yet
+netbox.vtti.vt.edu	NetBox IPAM infra tool, no public content infra
+network.software.vt.edu	Software-distribution/network infra subsite infra
+ntpstats.cns.vt.edu	CNS NTP server stats infra page not content
+oit.soe.vt.edu	School of Education IT support, internal infra/internal
+omeka.lib.vt.edu	301 redirects to digitalsc.lib.vt.edu; duplicate of special collections host duplicate/superseded host
+opentext.lib.vt.edu	301 redirects off-domain to pressbooks.pub/thermo (external host) not a vt.edu page; out of scope
+people.cs.vt.edu	Redirect-only page, no on-host content redirect
+pharos.lib.vt.edu	Pharos Print Center — secure print-management login gateway, not library content login-walled; CAS auth
+pinesnakefishwild.wp.prod.es.cloud.vt.edu	WordPress backend origin, staging duplicate/staging
+portal.vtdev.vt.edu	vtdev portal, dev environment —
+pprd.my.vt.edu	Pre-prod environment of my.vt.edu staging
+pprd.summit.cloud.vt.edu	Pre-prod environment of summit cloud staging
+records.facilities.vt.edu	Facilities records system, internal/auth infra
+register.classroomav.vt.edu	Classroom A/V access registration app, login-gated transactional —
+register.cpe.vt.edu	Continuing-ed registration app, transactional, error state —
+registry.gitlab.vtti.vt.edu	GitLab container registry, machine endpoint —
+remote.4help.vt.edu	Remote-support tool endpoint, no content infra
+rocksatx.aoe.vt.edu	AOE student rocket project, returns 403/stale likely defunct event site
+safetyimpact.beam.vt.edu	301 mirror to safetyimpact.bme.vt.edu which 404s (verified) duplicate of dead host
+safetyimpact.bme.vt.edu	Returns 404 Not Found (verified) dead
+schedule.music.vt.edu	Music scheduling tool, no public content infra/tool
+schedule.performingarts.vt.edu	Performing arts scheduling tool infra/tool
+search.vt.edu	University search results endpoint not content
+secure-archive.gis.vt.edu	"secure-archive" GIS data host returns 403 — login-walled data repository auth-walled; no public readable text
+secure-dev-02.nis.vt.edu	Dev infra node (NIS), staging —
+secure-dev.nis.vt.edu	Dev infra node (NIS), staging —
+secure-prod-02.bev.vt.edu	BEV secure app server node, infra infra
+secure-prod-02.nis.vt.edu	NIS secure app server node, infra infra
+secure-prod.bev.vt.edu	BEV secure app server, infra infra
+secure-test.gis.vt.edu	Test GIS host, staging mirror —
+secure-test.gis.vt.edu (dup-check)	(already listed) test GIS host —
+secure.gis.vt.edu	"prod site under construction" placeholder —
+secure.nis.vt.edu	NIS secure app server, infra/auth infra
+send.alerts.vt.edu	Redirects to getrave.com login portal, transactional (verified) login/transactional
+server1.software.vt.edu	Software-distribution server node, infra infra
+server2.software.vt.edu	Software-distribution server node, infra infra
+server3.software.vt.edu	Software-distribution server node, infra infra
+sionline.researche-editions.cddc.vt.edu	Defunct CDDC digital-editions archive dead old archive
+snoid.sv.vt.edu	sv.vt.edu cluster host, defunct infra dead
+sogo.math.vt.edu	SOGo groupware webmail, auth-only infra/auth
+static.lib.vt.edu	Static asset/CDN host (images/css/js); returns 403, no readable pages asset host, no corpus value
+swim.wp.prod.es.cloud.vt.edu	WordPress backend origin for swim duplicate of www.swim.cee.vt.edu
+tcfoverseer.cc.vt.edu	TCF overseer monitoring/infra page infra
+teammate.bams.vt.edu	BAMS internal teammate tool, no public content infra/internal
+tickets.artscenter.vt.edu	Box-office ticketing app, no RAG content transactional
+tickets.prod.vtti.vt.edu	VTTI ticketing/support tool, internal infra
+tickets.vtti.ad.vt.edu	VTTI ticketing tool, internal infra
+tickets.vtti.vt.edu	VTTI ticketing tool, internal infra
+treefruithorticulturevaes.wp.prod.es.cloud.vt.edu	WordPress backend origin, staging duplicate/staging
+version.cs.vt.edu	CS version/build endpoint, no content infra
+vis.sv.vt.edu	sv.vt.edu cluster host, defunct infra (TLS invalid) dead
+visionarium.sv.vt.edu	sv.vt.edu cluster, defunct infra (TLS invalid) dead, superseded by arc host
+vtsa.registrar.vt.edu	TLS cert mismatch, internal/misconfigured, not public content —
+vtti.ad.vt.edu	VTTI AD-domain internal root, infra internal
+webapps.es.vt.edu	Apache "It works!" default page, no content —
+webdav-prod-02.gis.vt.edu	WebDAV file-transfer endpoint, no readable site —
+webdav.gis.vt.edu	WebDAV file-transfer endpoint, no readable site —
+webdav.math.vt.edu	WebDAV file endpoint, no public content infra
+webhosting.geos.vt.edu	Geosciences webhosting root, no content infra
+weboutlook.vtti.vt.edu	Outlook webmail, auth-only infra/auth
+wiki.cs.vt.edu	CS internal wiki, auth/internal infra/internal
+wiki.vtti.ad.vt.edu	VTTI AD internal wiki infra/internal
+wiki.vtti.vt.edu	VTTI internal wiki infra/internal
+wordpress.cs.vt.edu	CS WordPress multisite admin/landing hub (infra notices, login) — no coherent corpus multisite gateway; thin/admin content
+wqdata.owml.vt.edu	OWML water-quality data portal, expired cert neglected/dead
+www.aoir.archives.cddc.vt.edu	Same AoIR/CDDC archive; connection unstable / 404 dead/unreachable
+www.april16documentarchive.vt.edu	Same parked Discovery Compass login wall; original archive defunct login-walled, not VT content
+www.assets.cms.vt.edu	CMS asset/CDN host (www alias), no readable text —
+www.bookstore.vt.edu	Bookstore e-commerce, transactional, no RAG content retail
+www.cddc.vt.edu	CDDC defunct (502/conn refused) dead old archive
+www.confluence.research.vt.edu	Same Confluence wiki, login-gated, no public content —
+www.cvc.hr.vt.edu	Redirect alias into hr.vt.edu giving page (verified) duplicate/redirect
+www.deena.hosted.cddc.vt.edu	Defunct early-2000s digital-lit archive (CDDC) dead, last update ~2004
+www.ensemble.cms.vt.edu	Ensemble media admin (www alias), no public content —
+www.exhibits.lib.vt.edu	www alias of exhibits host (302s to lib.vt.edu exhibits index); digital exhibits dropped by owner policy exhibit gateway
+www.expo.sec.vt.edu	Redirects to sec.vt.edu/expo (www alias) duplicate of sec.vt.edu
+www.feminism.researche-editions.cddc.vt.edu	Defunct CDDC digital-editions archive dead old archive
+www.gia-wps.researche-editions.cddc.vt.edu	Defunct CDDC digital-editions archive dead old archive
+www.it.cals.vt.edu	CALS IT support (www alias), internal infra/internal
+www.it.ictas.vt.edu	ICTAS IT support (www alias), internal infra/internal
+www.itsu.clahs.vt.edu	CLAHS IT support unit (www alias) infra/internal
+www.oit.soe.vt.edu	School of Ed IT support (www alias) infra/internal
+www.opentext.lib.vt.edu	www alias of opentext; redirects off-domain to pressbooks.pub external host, out of scope
+www.sslvpn.export.vt.edu	SSL VPN login gateway, no public content —
+www.surplus.vpfin.vt.edu	Surplus property/auction transactional site retail/transactional
+www.vtsa.registrar.vt.edu	TLS cert mismatch (www alias), not public content —
+www.wqdata.owml.vt.edu	OWML water-quality data portal (www alias), neglected dead, expired cert on base
+zabbix.vtti.ad.vt.edu	Zabbix monitoring login, infra infra/auth
+zabbix.vtti.vt.edu	Zabbix monitoring login, no public content infra/auth

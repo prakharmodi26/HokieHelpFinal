@@ -1,0 +1,1402 @@
+[
+[
+"catalog",
+"vtechworks.lib.vt.edu",
+"DSpace 7+ institutional repository: theses, dissertations, papers, ETDs",
+"DSpace REST /server/api; OAI-PMH /server/oai/request?verb=Identify; some JS-loaded recent items",
+"agent1"
+],
+[
+"drop",
+"imagebase.lib.vt.edu",
+"301 redirects to digitalsc.lib.vt.edu; legacy imagebase merged there",
+"duplicate/superseded host",
+"agent1"
+],
+[
+"drop",
+"omeka.lib.vt.edu",
+"301 redirects to digitalsc.lib.vt.edu; duplicate of special collections host",
+"duplicate/superseded host",
+"agent1"
+],
+[
+"catalog",
+"digitalsc.lib.vt.edu",
+"Omeka special-collections/digital archive; image+text objects with metadata",
+"Omeka; metadata-only cards; exhibits sub-paths should be dropped",
+"agent1"
+],
+[
+"drop",
+"opentext.lib.vt.edu",
+"301 redirects off-domain to pressbooks.pub/thermo (external host)",
+"not a vt.edu page; out of scope",
+"agent1"
+],
+[
+"drop",
+"exhibits.lib.vt.edu",
+"Digital exhibits host; 302s to lib.vt.edu exhibits index \u2014 exhibits dropped by owner policy",
+"exhibit gateway",
+"agent1"
+],
+[
+"drop",
+"www.opentext.lib.vt.edu",
+"www alias of opentext; redirects off-domain to pressbooks.pub",
+"external host, out of scope",
+"agent1"
+],
+[
+"catalog",
+"data.lib.vt.edu",
+"Research-data host (name); returns 403 to fetch, likely a Dataverse/data repo or data-services page",
+"403 blocked; if Dataverse use native API; verify manually",
+"agent1"
+],
+[
+"drop",
+"april16documentarchive.vt.edu",
+"Original April 16 archive GONE; now a parked \"Discovery Compass\" e-discovery login (Servient, 2004-08)",
+"TLS cert mismatch on apex; dead/repurposed host",
+"agent1"
+],
+[
+"drop",
+"www.april16documentarchive.vt.edu",
+"Same parked Discovery Compass login wall; original archive defunct",
+"login-walled, not VT content",
+"agent1"
+],
+[
+"drop",
+"dhomeka.lib.vt.edu",
+"Archived Omeka digital-humanities exhibits (Lost Communities, VA Speedways); no longer updated",
+"exhibits \u2014 owner drops; Omeka",
+"agent1"
+],
+[
+"catalog",
+"vpiworldwarone.lib.vt.edu",
+"Omeka searchable database of 1000+ VT WWI veterans (names, bios) + an exhibit",
+"catalog the veteran records; Omeka; exhibit sub-paths droppable",
+"agent1"
+],
+[
+"catalog",
+"www.vpiworldwarone.lib.vt.edu",
+"www alias of vpiworldwarone veteran database",
+"same as apex",
+"agent1"
+],
+[
+"catalog",
+"roanokevalleygreatwar.lib.vt.edu",
+"Archived Omeka searchable database of 3000+ Roanoke WWI veterans",
+"catalog records; Omeka; archived but accessible",
+"agent1"
+],
+[
+"drop",
+"pharos.lib.vt.edu",
+"Pharos Print Center \u2014 secure print-management login gateway, not library content",
+"login-walled; CAS auth",
+"agent1"
+],
+[
+"drop",
+"gromit.dlib.vt.edu",
+"Serves only the default nginx welcome page \u2014 parked/unconfigured server",
+"dead host",
+"agent1"
+],
+[
+"catalog",
+"theses.lib.vt.edu",
+"301 redirects into VTechWorks ETD collection (handle/10919/5534)",
+"metadata-only; harvest via VTechWorks DSpace/OAI",
+"agent1"
+],
+[
+"drop",
+"kiosk.lib.vt.edu",
+"LibCal booking/kiosk hub (gaming, study rooms, scanning) \u2014 JS app, no readable corpus text",
+"heavy JS booking tool",
+"agent1"
+],
+[
+"drop",
+"lts.lib.vt.edu",
+"301 redirects off-domain to libff.questionpro.com survey",
+"external survey, not VT content",
+"agent1"
+],
+[
+"drop",
+"static.lib.vt.edu",
+"Static asset/CDN host (images/css/js); returns 403, no readable pages",
+"asset host, no corpus value",
+"agent1"
+],
+[
+"drop",
+"libx.cs.vt.edu",
+"Connection refused \u2014 LibX browser-extension project defunct/dead host",
+"ECONNREFUSED",
+"agent1"
+],
+[
+"drop",
+"wordpress.cs.vt.edu",
+"CS WordPress multisite admin/landing hub (infra notices, login) \u2014 no coherent corpus",
+"multisite gateway; thin/admin content",
+"agent1"
+],
+[
+"drop",
+"archive.aoe.vt.edu",
+"Returns HTTP 404 at root \u2014 dead/empty archive host",
+"no content served",
+"agent1"
+],
+[
+"drop",
+"aoir.archives.cddc.vt.edu",
+"AoIR/CDDC archive host returns 404; socket-close on www \u2014 defunct",
+"dead/unreachable; was an old internet-research archive",
+"agent1"
+],
+[
+"drop",
+"www.aoir.archives.cddc.vt.edu",
+"Same AoIR/CDDC archive; connection unstable / 404",
+"dead/unreachable",
+"agent1"
+],
+[
+"drop",
+"secure-archive.gis.vt.edu",
+"\"secure-archive\" GIS data host returns 403 \u2014 login-walled data repository",
+"auth-walled; no public readable text",
+"agent1"
+],
+[
+"drop",
+"memalpha.lib.vt.edu",
+"Returned empty body twice; likely an archived/empty wiki-style exhibit host",
+"unresolved \u2014 verify manually; treat as exhibit/dead",
+"agent1"
+],
+[
+"drop",
+"www.exhibits.lib.vt.edu",
+"www alias of exhibits host (302s to lib.vt.edu exhibits index); digital exhibits dropped by owner policy",
+"exhibit gateway",
+"agent1"
+],
+[
+"drop",
+"am.wuvt.vt.edu",
+"WUVT radio AM stream subdomain, not content",
+"duplicate of wuvt.vt.edu",
+"agent2"
+],
+[
+"drop",
+"anvil.sv.vt.edu",
+"sv.vt.edu cluster, TLS cert invalid, defunct infra",
+"dead host",
+"agent2"
+],
+[
+"drop",
+"bams04.bams.vt.edu",
+"Numbered server host under bams, infra/dup",
+"likely server node",
+"agent2"
+],
+[
+"drop",
+"cannondale.cns.vt.edu",
+"CNS network-services server host, infra",
+"not content",
+"agent2"
+],
+[
+"special",
+"catalog.vt.edu",
+"Academic course catalog; empty shell on plain fetch",
+"JS/SPA \u2014 needs rendered fetch",
+"agent2"
+],
+[
+"drop",
+"cbs2024.biol.vt.edu",
+"Chronobiology Summer School 2024, past event",
+"year-stamped, applications closed",
+"agent2"
+],
+[
+"drop",
+"cddc.vt.edu",
+"Center for Digital Discourse & Culture, defunct (502)",
+"dead old archive cluster",
+"agent2"
+],
+[
+"drop",
+"ceage.wp.prod.es.cloud.vt.edu",
+"WordPress backend origin for ceage",
+"duplicate of ceage.vt.edu",
+"agent2"
+],
+[
+"drop",
+"charcoal2.cnre.vt.edu",
+"CNRE numbered server host, infra",
+"not content",
+"agent2"
+],
+[
+"drop",
+"charon.cs.vt.edu",
+"CS named server host, infra",
+"not content",
+"agent2"
+],
+[
+"drop",
+"code.vt.edu",
+"GitLab instance, auth required, no public content",
+"login wall",
+"agent2"
+],
+[
+"special",
+"codeworkout.cs.vt.edu",
+"Interactive coding-practice app (CodeWorkout)",
+"JS app, exercises",
+"agent2"
+],
+[
+"drop",
+"communitygardenext.wp.prod.es.cloud.vt.edu",
+"WordPress backend origin, staging",
+"duplicate/staging",
+"agent2"
+],
+[
+"catalog",
+"dataverse.vtti.vt.edu",
+"VTTI Dataverse dataset repository",
+"Dataverse API, DOIs, 214 datasets",
+"agent2"
+],
+[
+"drop",
+"docktodoorvtti.wp.prod.es.cloud.vt.edu",
+"WordPress backend origin, staging",
+"duplicate/staging",
+"agent2"
+],
+[
+"drop",
+"eathertoncee.wp.prod.es.cloud.vt.edu",
+"WordPress backend origin for eatherton",
+"duplicate/staging",
+"agent2"
+],
+[
+"drop",
+"eportfolios.vt.edu",
+"ePortfolio hosting platform, per-user auth content",
+"user portfolios, not dept content",
+"agent2"
+],
+[
+"catalog",
+"eprints.cs.vt.edu",
+"CS technical-report archive (EPrints/NCSTRL)",
+"OAI-PMH 1.1/2.0, GNU EPrints",
+"agent2"
+],
+[
+"drop",
+"etd.vt.edu",
+"Redirects off-host to library ETD guide",
+"no on-host content",
+"agent2"
+],
+[
+"drop",
+"www.expo.sec.vt.edu",
+"Redirects to sec.vt.edu/expo (www alias)",
+"duplicate of sec.vt.edu",
+"agent2"
+],
+[
+"drop",
+"expo.sec.vt.edu",
+"Redirects to sec.vt.edu/expo",
+"duplicate of sec.vt.edu",
+"agent2"
+],
+[
+"special",
+"genomerxiv.cs.vt.edu",
+"Interactive genome-identification tool",
+"tool/API-driven, not a normal content site",
+"agent2"
+],
+[
+"drop",
+"helpdesk.vpas.vt.edu",
+"VPAS IT helpdesk/ticketing, no public content",
+"infra/auth",
+"agent2"
+],
+[
+"drop",
+"herbariumbiol.wp.prod.es.cloud.vt.edu",
+"WordPress backend origin for herbarium",
+"duplicate/staging",
+"agent2"
+],
+[
+"drop",
+"hosting.cs.vt.edu",
+"CS web-hosting service root, no content",
+"infra",
+"agent2"
+],
+[
+"drop",
+"hostmaster.cns.vt.edu",
+"CNS DNS hostmaster infra",
+"not content",
+"agent2"
+],
+[
+"drop",
+"intranet.lci.vt.edu",
+"LCI intranet, auth-only internal content",
+"private",
+"agent2"
+],
+[
+"drop",
+"intranet.vtti.ad.vt.edu",
+"VTTI AD intranet, internal/auth",
+"private infra",
+"agent2"
+],
+[
+"drop",
+"intranet.vtti.vt.edu",
+"VTTI intranet, internal/auth",
+"private",
+"agent2"
+],
+[
+"drop",
+"it.biol.vt.edu",
+"Biology IT internal support subsite",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"it.cals.vt.edu",
+"CALS IT internal support subsite",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"it.cnre.vt.edu",
+"CNRE IT internal support subsite",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"it.ictas.vt.edu",
+"ICTAS IT internal support subsite",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"it.vpas.vt.edu",
+"VPAS IT internal support subsite",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"itsu.clahs.vt.edu",
+"CLAHS IT support unit, internal",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"mcglothlin.wp.prod.es.cloud.vt.edu",
+"WordPress backend origin (mcglothlin lab)",
+"duplicate/staging",
+"agent2"
+],
+[
+"drop",
+"mcph.wp.prod.es.cloud.vt.edu",
+"WordPress backend origin (mcph)",
+"duplicate/staging",
+"agent2"
+],
+[
+"drop",
+"metagrid1.sv.vt.edu",
+"sv.vt.edu cluster numbered host, defunct infra",
+"dead",
+"agent2"
+],
+[
+"drop",
+"mirror.cs.vt.edu",
+"Linux package/OS mirror, file listings",
+"not RAG content",
+"agent2"
+],
+[
+"drop",
+"mugshot.vtti.vt.edu",
+"VTTI internal photo/ID tool, no public content",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"my.vt.edu",
+"Student info system \"Coming Soon\" placeholder",
+"no content yet",
+"agent2"
+],
+[
+"drop",
+"netbox.vtti.vt.edu",
+"NetBox IPAM infra tool, no public content",
+"infra",
+"agent2"
+],
+[
+"drop",
+"network.software.vt.edu",
+"Software-distribution/network infra subsite",
+"infra",
+"agent2"
+],
+[
+"drop",
+"ntpstats.cns.vt.edu",
+"CNS NTP server stats infra page",
+"not content",
+"agent2"
+],
+[
+"drop",
+"oit.soe.vt.edu",
+"School of Education IT support, internal",
+"infra/internal",
+"agent2"
+],
+[
+"special",
+"opendsa-server.cs.vt.edu",
+"OpenDSA interactive courseware/eTextbook",
+"JS app, interactive exercises",
+"agent2"
+],
+[
+"special",
+"opendsa.cs.vt.edu",
+"OpenDSA courseware (interactive)",
+"JS app; TLS cert issues",
+"agent2"
+],
+[
+"drop",
+"people.cs.vt.edu",
+"Redirect-only page, no on-host content",
+"redirect",
+"agent2"
+],
+[
+"drop",
+"pinesnakefishwild.wp.prod.es.cloud.vt.edu",
+"WordPress backend origin, staging",
+"duplicate/staging",
+"agent2"
+],
+[
+"drop",
+"pprd.my.vt.edu",
+"Pre-prod environment of my.vt.edu",
+"staging",
+"agent2"
+],
+[
+"drop",
+"pprd.summit.cloud.vt.edu",
+"Pre-prod environment of summit cloud",
+"staging",
+"agent2"
+],
+[
+"catalog",
+"pubs.ext.vt.edu",
+"Extension publications repository/portal",
+"metadata-card publications, multilingual PDFs",
+"agent2"
+],
+[
+"drop",
+"records.facilities.vt.edu",
+"Facilities records system, internal/auth",
+"infra",
+"agent2"
+],
+[
+"drop",
+"remote.4help.vt.edu",
+"Remote-support tool endpoint, no content",
+"infra",
+"agent2"
+],
+[
+"drop",
+"rocksatx.aoe.vt.edu",
+"AOE student rocket project, returns 403/stale",
+"likely defunct event site",
+"agent2"
+],
+[
+"drop",
+"schedule.music.vt.edu",
+"Music scheduling tool, no public content",
+"infra/tool",
+"agent2"
+],
+[
+"drop",
+"schedule.performingarts.vt.edu",
+"Performing arts scheduling tool",
+"infra/tool",
+"agent2"
+],
+[
+"drop",
+"search.vt.edu",
+"University search results endpoint",
+"not content",
+"agent2"
+],
+[
+"drop",
+"secure-prod-02.bev.vt.edu",
+"BEV secure app server node, infra",
+"infra",
+"agent2"
+],
+[
+"drop",
+"secure-prod-02.nis.vt.edu",
+"NIS secure app server node, infra",
+"infra",
+"agent2"
+],
+[
+"drop",
+"secure-prod.bev.vt.edu",
+"BEV secure app server, infra",
+"infra",
+"agent2"
+],
+[
+"drop",
+"secure.nis.vt.edu",
+"NIS secure app server, infra/auth",
+"infra",
+"agent2"
+],
+[
+"drop",
+"server1.software.vt.edu",
+"Software-distribution server node, infra",
+"infra",
+"agent2"
+],
+[
+"drop",
+"server2.software.vt.edu",
+"Software-distribution server node, infra",
+"infra",
+"agent2"
+],
+[
+"drop",
+"server3.software.vt.edu",
+"Software-distribution server node, infra",
+"infra",
+"agent2"
+],
+[
+"drop",
+"sionline.researche-editions.cddc.vt.edu",
+"Defunct CDDC digital-editions archive",
+"dead old archive",
+"agent2"
+],
+[
+"drop",
+"snoid.sv.vt.edu",
+"sv.vt.edu cluster host, defunct infra",
+"dead",
+"agent2"
+],
+[
+"drop",
+"sogo.math.vt.edu",
+"SOGo groupware webmail, auth-only",
+"infra/auth",
+"agent2"
+],
+[
+"drop",
+"swim.wp.prod.es.cloud.vt.edu",
+"WordPress backend origin for swim",
+"duplicate of www.swim.cee.vt.edu",
+"agent2"
+],
+[
+"drop",
+"tcfoverseer.cc.vt.edu",
+"TCF overseer monitoring/infra page",
+"infra",
+"agent2"
+],
+[
+"drop",
+"teammate.bams.vt.edu",
+"BAMS internal teammate tool, no public content",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"tickets.artscenter.vt.edu",
+"Box-office ticketing app, no RAG content",
+"transactional",
+"agent2"
+],
+[
+"drop",
+"tickets.prod.vtti.vt.edu",
+"VTTI ticketing/support tool, internal",
+"infra",
+"agent2"
+],
+[
+"drop",
+"tickets.vtti.ad.vt.edu",
+"VTTI ticketing tool, internal",
+"infra",
+"agent2"
+],
+[
+"drop",
+"tickets.vtti.vt.edu",
+"VTTI ticketing tool, internal",
+"infra",
+"agent2"
+],
+[
+"drop",
+"treefruithorticulturevaes.wp.prod.es.cloud.vt.edu",
+"WordPress backend origin, staging",
+"duplicate/staging",
+"agent2"
+],
+[
+"drop",
+"version.cs.vt.edu",
+"CS version/build endpoint, no content",
+"infra",
+"agent2"
+],
+[
+"drop",
+"vis.sv.vt.edu",
+"sv.vt.edu cluster host, defunct infra (TLS invalid)",
+"dead",
+"agent2"
+],
+[
+"drop",
+"visionarium.sv.vt.edu",
+"sv.vt.edu cluster, defunct infra (TLS invalid)",
+"dead, superseded by arc host",
+"agent2"
+],
+[
+"drop",
+"vtti.ad.vt.edu",
+"VTTI AD-domain internal root, infra",
+"internal",
+"agent2"
+],
+[
+"special",
+"web-cat.cs.vt.edu",
+"Web-CAT automated grading app",
+"JS/app, auth-gated submissions",
+"agent2"
+],
+[
+"special",
+"web-cat5.cs.vt.edu",
+"Web-CAT grading app (v5 instance)",
+"JS/app",
+"agent2"
+],
+[
+"drop",
+"webdav.math.vt.edu",
+"WebDAV file endpoint, no public content",
+"infra",
+"agent2"
+],
+[
+"drop",
+"webhosting.geos.vt.edu",
+"Geosciences webhosting root, no content",
+"infra",
+"agent2"
+],
+[
+"drop",
+"weboutlook.vtti.vt.edu",
+"Outlook webmail, auth-only",
+"infra/auth",
+"agent2"
+],
+[
+"drop",
+"wiki.cs.vt.edu",
+"CS internal wiki, auth/internal",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"wiki.vtti.ad.vt.edu",
+"VTTI AD internal wiki",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"wiki.vtti.vt.edu",
+"VTTI internal wiki",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"wqdata.owml.vt.edu",
+"OWML water-quality data portal, expired cert",
+"neglected/dead",
+"agent2"
+],
+[
+"drop",
+"www.bookstore.vt.edu",
+"Bookstore e-commerce, transactional, no RAG content",
+"retail",
+"agent2"
+],
+[
+"drop",
+"www.cddc.vt.edu",
+"CDDC defunct (502/conn refused)",
+"dead old archive",
+"agent2"
+],
+[
+"drop",
+"www.deena.hosted.cddc.vt.edu",
+"Defunct early-2000s digital-lit archive (CDDC)",
+"dead, last update ~2004",
+"agent2"
+],
+[
+"drop",
+"www.feminism.researche-editions.cddc.vt.edu",
+"Defunct CDDC digital-editions archive",
+"dead old archive",
+"agent2"
+],
+[
+"drop",
+"www.gia-wps.researche-editions.cddc.vt.edu",
+"Defunct CDDC digital-editions archive",
+"dead old archive",
+"agent2"
+],
+[
+"drop",
+"www.it.cals.vt.edu",
+"CALS IT support (www alias), internal",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"www.it.ictas.vt.edu",
+"ICTAS IT support (www alias), internal",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"www.itsu.clahs.vt.edu",
+"CLAHS IT support unit (www alias)",
+"infra/internal",
+"agent2"
+],
+[
+"drop",
+"www.oit.soe.vt.edu",
+"School of Ed IT support (www alias)",
+"infra/internal",
+"agent2"
+],
+[
+"catalog",
+"www.pubs.ext.vt.edu",
+"Extension publications repository (www alias)",
+"metadata-card publications",
+"agent2"
+],
+[
+"drop",
+"www.surplus.vpfin.vt.edu",
+"Surplus property/auction transactional site",
+"retail/transactional",
+"agent2"
+],
+[
+"drop",
+"www.wqdata.owml.vt.edu",
+"OWML water-quality data portal (www alias), neglected",
+"dead, expired cert on base",
+"agent2"
+],
+[
+"drop",
+"zabbix.vtti.ad.vt.edu",
+"Zabbix monitoring login, infra",
+"infra/auth",
+"agent2"
+],
+[
+"drop",
+"zabbix.vtti.vt.edu",
+"Zabbix monitoring login, no public content",
+"infra/auth",
+"agent2"
+],
+[
+"drop",
+"arc01.cntrlsrvs.w2k.vt.edu",
+"Control-services / w2k infra host, not public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"arc03.cntrlsrvs.w2k.vt.edu",
+"Control-services / w2k infra host, not public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"arc03.cc.vt.edu",
+"Numbered ArcGIS/compute infra node, no readable site",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"arc01.gis.vt.edu",
+"Numbered ArcGIS server node, machine endpoint",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"arcgis-dev.gis.vt.edu",
+"Dev ArcGIS instance, staging mirror",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"assets.cms.vt.edu",
+"CMS asset/CDN host, no readable text",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"author.cms.vt.edu",
+"CMS authoring endpoint, not public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"author.ensemble.vt.edu",
+"Ensemble media authoring/admin endpoint",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"autodiscover.vtc.vt.edu",
+"Exchange/Outlook autodiscover service, no content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"autodiscover.w2k-dev.vt.edu",
+"Autodiscover dev infra service, no content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"birdseye.cntrlsrvs.w2k.vt.edu",
+"Control-services / w2k infra host",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cannondale.cns.ipv6.vt.edu",
+"Named ipv6 network/CNS infra host, no public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cmsa-pprd-01.db.vt.edu",
+"Database server (pre-prod), not a website",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cmsa-pprd-02.db.vt.edu",
+"Database server (pre-prod), not a website",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cmsa-pprd-03.db.vt.edu",
+"Database server (pre-prod), not a website",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cmsa-prod-01.db.vt.edu",
+"Database server (prod), not a website",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cmsa-prod-02.db.vt.edu",
+"Database server (prod), not a website",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cmsa-prod-03.db.vt.edu",
+"Database server (prod), not a website",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cmsa-prod.db.vt.edu",
+"Database server (prod), not a website",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cms-pprd.hosting.vt.edu",
+"CMS pre-prod hosting backend, staging mirror",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cmsw-prod.hosting.vt.edu",
+"CMS prod hosting backend node, not a public site",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"docs-sandbox.crash.cgit.vt.edu",
+"Sandbox/test docs mirror, dev environment",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"hstest.vpas.vt.edu",
+"Test host (hstest), staging environment",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"portal.vtdev.vt.edu",
+"vtdev portal, dev environment",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"secure-dev-02.nis.vt.edu",
+"Dev infra node (NIS), staging",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"secure-dev.nis.vt.edu",
+"Dev infra node (NIS), staging",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"secure-test.gis.vt.edu",
+"Test GIS host, staging mirror",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"webdav-prod-02.gis.vt.edu",
+"WebDAV file-transfer endpoint, no readable site",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"webdav.gis.vt.edu",
+"WebDAV file-transfer endpoint, no readable site",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"www.sslvpn.export.vt.edu",
+"SSL VPN login gateway, no public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"registry.gitlab.vtti.vt.edu",
+"GitLab container registry, machine endpoint",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"kibana.insight.aws.vtti.ad.vt.edu",
+"Kibana monitoring dashboard, internal, no public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"apps.cals.vt.edu",
+"Parked page: \"Nothing Here / nothing of interest\"",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"ensemble.vt.edu",
+"Ensemble media platform, returns HTTP 401 auth",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"ensemble.cms.vt.edu",
+"Ensemble media admin, returns HTTP 403",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"author.ensemble.vt.edu (dup-check)",
+"(already listed) Ensemble authoring endpoint",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"confluence.research.vt.edu",
+"Redirects to Confluence wiki, returns HTTP 403 (login-gated)",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"www.confluence.research.vt.edu",
+"Same Confluence wiki, login-gated, no public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"couchdb.apps.wuvt.vt.edu",
+"CouchDB database for WUVT radio, internal, TLS-mismatch",
+"api (internal DB)",
+"agent3"
+],
+[
+"drop",
+"impala.apps.wuvt.vt.edu",
+"Internal WUVT app service, TLS cert mismatch, not public",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"linx.apps.wuvt.vt.edu",
+"WUVT app, redirects to OAuth2 login",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"distleech.apps.wuvt.vt.edu",
+"Internal WUVT app service, TLS cert mismatch, not public",
+"\u2014",
+"agent3"
+],
+[
+"special",
+"engapplets.vt.edu",
+"Legacy frameset + Java applets; plain fetch returns frame shell",
+"js (frameset/applets)",
+"agent3"
+],
+[
+"special",
+"www.engapplets.vt.edu",
+"Same legacy applet site (www alias), frame shell on fetch",
+"js (frameset/applets)",
+"agent3"
+],
+[
+"special",
+"engapplets.aoe.vt.edu",
+"Legacy frameset + Java applets (AOE dept); fetch returns frame shell",
+"js (frameset/applets)",
+"agent3"
+],
+[
+"special",
+"geovine.cgit.vt.edu",
+"Geovine viticulture geospatial app: interactive data layers + login forms",
+"js (map/SPA app)",
+"agent3"
+],
+[
+"drop",
+"secure.gis.vt.edu",
+"\"prod site under construction\" placeholder",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"secure-test.gis.vt.edu (dup-check)",
+"(already listed) test GIS host",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"birdseye.gis.vt.edu",
+"Default Microsoft IIS landing page, no content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"birdseye.cntrlsrvs.w2k.vt.edu (dup-check)",
+"(already listed) control-services infra",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"dashboard.arc.vt.edu",
+"Grafana dashboard (load error), monitoring, no public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"webapps.es.vt.edu",
+"Apache \"It works!\" default page, no content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"register.cpe.vt.edu",
+"Continuing-ed registration app, transactional, error state",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"register.classroomav.vt.edu",
+"Classroom A/V access registration app, login-gated transactional",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"vtsa.registrar.vt.edu",
+"TLS cert mismatch, internal/misconfigured, not public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"www.vtsa.registrar.vt.edu",
+"TLS cert mismatch (www alias), not public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"mailman.music.vt.edu",
+"Placeholder \"hello\" page, no mailing-list content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"cgprapps.cee.vt.edu",
+"CGPR web-app management shell, login-gated, no public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"www.assets.cms.vt.edu",
+"CMS asset/CDN host (www alias), no readable text",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"www.ensemble.cms.vt.edu",
+"Ensemble media admin (www alias), no public content",
+"\u2014",
+"agent3"
+],
+[
+"drop",
+"content.alerts.vt.edu",
+"Empty placeholder shell, no content (verified)",
+"dead shell",
+"agent4"
+],
+[
+"drop",
+"cvc.hr.vt.edu",
+"301 redirect alias into hr.vt.edu employee-giving page (verified)",
+"duplicate/redirect",
+"agent4"
+],
+[
+"special",
+"dining.vt.edu",
+"Menus rendered client-side, empty on plain fetch (verified)",
+"JS sub-case a",
+"agent4"
+],
+[
+"drop",
+"events.music.vt.edu",
+"Login-only ticketing shell, no public event text (verified)",
+"login wall",
+"agent4"
+],
+[
+"drop",
+"safetyimpact.beam.vt.edu",
+"301 mirror to safetyimpact.bme.vt.edu which 404s (verified)",
+"duplicate of dead host",
+"agent4"
+],
+[
+"drop",
+"safetyimpact.bme.vt.edu",
+"Returns 404 Not Found (verified)",
+"dead",
+"agent4"
+],
+[
+"drop",
+"send.alerts.vt.edu",
+"Redirects to getrave.com login portal, transactional (verified)",
+"login/transactional",
+"agent4"
+],
+[
+"drop",
+"www.cvc.hr.vt.edu",
+"Redirect alias into hr.vt.edu giving page (verified)",
+"duplicate/redirect",
+"agent4"
+],
+[
+"special",
+"www.dining.vt.edu",
+"Dining menus client-side rendered (www alias, verified shell)",
+"JS sub-case a",
+"agent4"
+]
+]

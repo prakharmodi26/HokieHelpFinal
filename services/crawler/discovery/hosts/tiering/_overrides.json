@@ -1,0 +1,10 @@
+{
+  "engapplets.vt.edu": "drop",
+  "engapplets.aoe.vt.edu": "drop",
+  "www.engapplets.vt.edu": "drop",
+  "web-cat.cs.vt.edu": "drop",
+  "web-cat5.cs.vt.edu": "drop",
+  "opendsa.cs.vt.edu": "catalog",
+  "opendsa-server.cs.vt.edu": "catalog",
+  "genomerxiv.cs.vt.edu": "catalog"
+}
