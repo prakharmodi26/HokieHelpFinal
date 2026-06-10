@@ -13,12 +13,28 @@
 2. Full-domain test run in a dedicated k8s **test pod** writing to scratch buckets.
 3. Verify completeness + content quality. **Promotion to the main buckets/collection is performed by the repo owner, not the executor** — the executor stops after Task 7.2 verification and hands off.
 
+**Two separate components — discovery (dev/ops) vs ingestion (production). READ THIS FIRST.**
+
+Subdomain enumeration and host health-checking are a **development/ops activity**, NOT part of the production crawl. They are split into two components:
+
+1. **Host-discovery tool (dev/ops, periodic — manual or a CronJob).** Enumerates `*.vt.edu` subdomains (crt.sh + optional Common Crawl), health-checks each, classifies keep/drop, and writes two committed, human-reviewable files:
+   - `services/crawler/config/host-registry.yaml` — the hosts the production crawler will seed.
+   - `services/crawler/config/host-blocklist.yaml` — host patterns/hosts the crawler must never fetch (auth, mail, git, APIs, staging, transactional apps, dead hosts).
+   This tool does the 3,000+-host enumeration **once per refresh**, not once per crawl.
+
+2. **Production ingestion (the crawl).** Reads `host-registry.yaml`, seeds each host's root URL, and crawls at the **page level only** — deciding per page whether it can be fetched. It applies `host-blocklist.yaml` + robots.txt as a host/page filter. **It performs NO subdomain enumeration.** A re-crawl naturally re-seeds host roots and re-follows links, so it picks up new and restructured pages automatically.
+
+**How new things are handled without production doing subdomain checks:**
+- **New / moved pages on known hosts** → every crawl re-seeds host roots + BFS-follows links; the frontier's content-hash dedup re-ingests only changed content; the embedder already deletes stale chunks. Fully automatic.
+- **New subdomains** → enter scope when the dev/ops discovery tool is re-run (refreshing the registry). Between refreshes, any *vt.edu* page reached via a link is still crawled at the page level (that's link-following, not enumeration) unless blocklisted — so links give organic in-between discovery.
+- Optionally schedule both as k8s CronJobs: discovery weekly/monthly (registry refresh), pipeline crawl on its own cadence (page refresh).
+
 **On crawl depth and full-domain coverage (read before setting `CRAWL_MAX_DEPTH`):**
-In this design, breadth/coverage does **not** come from deep BFS — it comes from **discovery** (Phase 2): crt.sh subdomain enumeration + per-host `AsyncUrlSeeder` (sitemap.xml + Common Crawl URL index). Those enumerate URLs directly and enqueue them at depth 0, independent of `max_depth`. `max_depth` only bounds **link-following beyond the seeded set** — the backstop that catches pages missing from sitemaps/CC (many VT sites have no sitemap, e.g. cs.vt.edu). So:
-- **Default `CRAWL_MAX_DEPTH = 10`** — high enough to act as a full backstop on sitemap-less hosts, while still finite to avoid infinite crawler traps (calendars, faceted search, session URLs).
-- The real coverage levers are: complete discovery (crt.sh ∪ CC ∪ seeding), `CRAWL_MAX_URLS_PER_HOST = -1` (unlimited) in production, and trap guards (`filter_nonsense_urls=True` in the seeder, `CRAWL_BLOCKED_PATHS`, and query-string normalization in `metadata._normalise_url`).
-- Bounded validation runs override this to `CRAWL_MAX_DEPTH=2` for speed; the full k8s run uses `10`.
-- If a verification run shows missed pages on a specific sitemap-less host, raise depth for that run rather than globally — depth is the safety net, not the primary mechanism.
+Most VT hosts have **no sitemap** (e.g. cs.vt.edu), so coverage's real backbone is **seed each host's homepage → follow links (BFS)**, augmented by Common Crawl's historical URL list and a sitemap when one exists. Therefore depth is genuinely load-bearing here, not just a safety net:
+- **Default `CRAWL_MAX_DEPTH = 10`** — deep enough to fully traverse a sitemap-less host from its homepage, while finite to avoid infinite crawler traps (calendars, faceted search, session URLs).
+- Coverage levers: a complete, curated `host-registry.yaml`; always seeding every registry host's **root URL** (not only sitemap/CC URLs); `CRAWL_MAX_URLS_PER_HOST = -1` (unlimited) in production; and trap guards (`filter_nonsense_urls=True` in the seeder, `CRAWL_BLOCKED_PATHS`, query-string normalization in `metadata._normalise_url`).
+- Bounded validation runs override depth to `2` for speed; the full k8s run uses `10`.
+- If a verification run shows missed pages on a specific host, raise depth for that run rather than globally.
 
 **Scope decisions locked:**
 - Hosts: all `*.vt.edu` (full ingest) **+ one-hop external** pages, stored **separately** in `crawled-pages-external` for later review, never auto-fed to RAG.
@@ -64,9 +80,15 @@ New and modified files, by responsibility. All paths are under the repo root `/U
 - `scope.py` — URL classification (vt / external-within-hops / document) + hop-history computation. Pure logic.
 - `frontier.py` — durable resumable SQLite frontier (enqueue/lease/mark + hop history + content_hash dedup).
 - `discovery/__init__.py`
-- `discovery/subdomains.py` — crt.sh (+ optional CC) subdomain enumeration.
-- `discovery/liveness.py` — DNS + HTTP liveness filter for hosts.
-- `discovery/seeder.py` — Crawl4AI `AsyncUrlSeeder` wrapper + robots/sitemap fallback.
+- `discovery/subdomains.py` — crt.sh (+ optional CC) subdomain enumeration. **Dev/ops only.**
+- `discovery/liveness.py` — DNS + HTTP liveness filter for hosts. **Dev/ops only.**
+- `discovery/healthcheck.py` — per-host health probe + keep/drop classification → builds the registry + blocklist. **Dev/ops only.**
+- `discovery/hostfilter.py` — loads `host-blocklist.yaml`, exposes `is_blocked(host)`. **Consumed by BOTH** the dev/ops tool (to classify) and the production crawl (host/page-level filtering).
+- `discovery/seeder.py` — Crawl4AI `AsyncUrlSeeder` wrapper + robots/sitemap fallback (augments homepage seeds). **Dev/ops + optional production augmentation.**
+
+**New — committed config (`services/crawler/config/`):**
+- `host-registry.yaml` — curated list of hosts the production crawler seeds (produced/refreshed by the dev/ops discovery tool; human-reviewable).
+- `host-blocklist.yaml` — host patterns + explicit hosts the crawler must never fetch.
 - `extract.py` — generic markdown generator factory (`PruningContentFilter`) + raw/fit selection + empty-detection.
 - `render.py` — `arun_many` engine with dispatcher/rate-limiter, two-tier (fast + JS) rendering, writes results to storage via frontier.
 - `verify.py` — completeness + content-quality verification over MinIO buckets vs frontier.
@@ -76,11 +98,11 @@ New and modified files, by responsibility. All paths are under the repo root `/U
 - `metadata.py` — enrich `PageMetadata` (source_host, subdomain, scope, is_external, hop_history, discovery_source, content_type, raw/fit sizes, lang, word_count, render_tier, robots_allowed, fetched_at).
 - `markdown_doc.py` — add source_host, subdomain, page_type, is_external, last_modified to frontmatter.
 - `storage.py` — add `minio_external_bucket`; generalize bucket helpers (already mostly generic).
-- `main.py` — new orchestration: discover → frontier → render → (per-bucket) → verify summary. Keep the documents pass; drop the cs.vt.edu post-crawl regex clean for general hosts (fit_markdown replaces it).
+- `main.py` — new **production** orchestration: load `host-registry.yaml` → seed each host's root URL into the frontier → render → (per-bucket) → verify summary. Applies `host-blocklist.yaml` + robots at the page level. **No subdomain enumeration in this path.** Keep the documents pass; drop the cs.vt.edu post-crawl regex clean for general hosts (fit_markdown replaces it).
 - `pyproject.toml` — add `aiosqlite`/stdlib-sqlite note + `tldextract` for robust host parsing.
 
 **New scripts:**
-- `services/crawler/scripts/discover_vtedu.py` — standalone subdomain+seed discovery CLI → frontier DB.
+- `services/crawler/scripts/discover_vtedu.py` — **dev/ops** CLI: enumerate subdomains → health-check → classify → write/refresh `config/host-registry.yaml` + `config/host-blocklist.yaml`. Run manually or as a CronJob. Not invoked by the production crawl.
 - `services/crawler/scripts/verify_ingestion.py` — standalone verification CLI → markdown report.
 
 **Modified — downstream metadata propagation:**
@@ -824,7 +846,11 @@ git commit -m "feat(crawler): add resumable SQLite frontier with hop history"
 
 ---
 
-## Phase 2 — Discovery (subdomains + per-host URL seeding)
+## Phase 2 — Host discovery (DEV/OPS ONLY — produces the host registry + blocklist)
+
+> **This entire phase is a development/ops tool, not part of the production crawl.** Its output is two committed files (`config/host-registry.yaml`, `config/host-blocklist.yaml`) that the production crawler reads. It is run manually or as a periodic CronJob to refresh the host list when VT adds new subdomains. The production path (Phase 4 `main.py`) never calls crt.sh, liveness, or seeding — it seeds host roots from the registry and crawls at the page level.
+>
+> **A real subdomain health-check has already been run in a separate session** and written `services/crawler/discovery/hosts/` (`vtedu-subdomains.txt`, `vtedu-hosts-health.csv`, `vtedu-blocklist.yaml`, `SUMMARY.md`). Use those as the seed inputs: `config/host-blocklist.yaml` derives from `vtedu-blocklist.yaml`, and `config/host-registry.yaml` is the KEEP hosts from the health CSV (with the SUMMARY's ~40 high-value hosts forming the bounded-validation allowlist). The tasks below build the reusable tool that regenerates these on future refreshes.
 
 Cheap URL discovery before paying full-render cost. Parsers are unit-tested offline with fixtures; one live smoke test is gated behind a marker.
 
@@ -1158,7 +1184,9 @@ git add services/crawler/src/crawler/discovery/seeder.py services/crawler/tests/
 git commit -m "feat(crawler): per-host URL seeding via Crawl4AI AsyncUrlSeeder"
 ```
 
-### Task 2.4: Discovery orchestrator script (subdomains → liveness → seed → frontier)
+### Task 2.4: Discovery orchestrator (subdomains → liveness → seed)
+
+> **Dev/ops only.** The `populate_frontier` helper below is used by the discovery tool to enumerate and (in the dev/ops smoke run) build a frontier directly. In production, the frontier is seeded from `host-registry.yaml` host roots instead (Task 2.5). On a real refresh, `discover_vtedu.py` also writes the registry + blocklist files from the health CSV produced in the separate health-check session.
 
 **Files:**
 - Create: `services/crawler/src/crawler/discovery/run.py`
@@ -1302,6 +1330,207 @@ Expected: prints a stats dict with `hosts_discovered` in the thousands, `hosts_l
 ```bash
 git add services/crawler/src/crawler/discovery/run.py services/crawler/scripts/discover_vtedu.py services/crawler/tests/test_discovery_run.py
 git commit -m "feat(crawler): discovery orchestrator + CLI populating the frontier"
+```
+
+### Task 2.5: Host registry + blocklist (the production seam)
+
+This is the boundary between dev/ops discovery and the production crawl. The registry/blocklist are committed YAML; production reads them and seeds host roots — no enumeration.
+
+**Files:**
+- Create: `services/crawler/src/crawler/discovery/hostfilter.py`
+- Create: `services/crawler/src/crawler/registry.py`
+- Create: `services/crawler/config/host-registry.yaml` (from the health-check session output)
+- Create: `services/crawler/config/host-blocklist.yaml` (from the health-check session output)
+- Test: `services/crawler/tests/test_hostfilter.py`, `services/crawler/tests/test_registry.py`
+
+- [ ] **Step 1: Write the failing tests**
+
+```python
+# services/crawler/tests/test_hostfilter.py
+from crawler.discovery.hostfilter import HostFilter
+
+
+def test_blocks_by_pattern_and_explicit_host():
+    hf = HostFilter(patterns=[r"^login\.", r"^mail\."], hosts=["banweb.banner.vt.edu"])
+    assert hf.is_blocked("login.vt.edu") is True
+    assert hf.is_blocked("mail.cs.vt.edu") is True
+    assert hf.is_blocked("banweb.banner.vt.edu") is True
+    assert hf.is_blocked("dining.vt.edu") is False
+
+
+def test_from_yaml(tmp_path):
+    p = tmp_path / "block.yaml"
+    p.write_text("patterns:\n  - '^git'\nhosts:\n  - dead.vt.edu\n")
+    hf = HostFilter.from_yaml(str(p))
+    assert hf.is_blocked("gitlab.cs.vt.edu") is True
+    assert hf.is_blocked("dead.vt.edu") is True
+    assert hf.is_blocked("www.vt.edu") is False
+```
+
+```python
+# services/crawler/tests/test_registry.py
+from crawler.registry import load_registry_hosts, host_root_urls
+
+
+def test_load_registry_and_root_urls(tmp_path):
+    p = tmp_path / "reg.yaml"
+    p.write_text("hosts:\n  - dining.vt.edu\n  - registrar.vt.edu\n")
+    hosts = load_registry_hosts(str(p))
+    assert hosts == ["dining.vt.edu", "registrar.vt.edu"]
+    roots = host_root_urls(hosts)
+    assert "https://dining.vt.edu/" in roots
+    assert "https://registrar.vt.edu/" in roots
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `cd services/crawler && uv run pytest tests/test_hostfilter.py tests/test_registry.py -v`
+Expected: FAIL — modules not found.
+
+- [ ] **Step 3: Write minimal implementations**
+
+```python
+# services/crawler/src/crawler/discovery/hostfilter.py
+"""Host blocklist filter — consumed by the dev/ops classifier AND the prod crawl."""
+from __future__ import annotations
+
+import re
+
+import yaml
+
+
+class HostFilter:
+    def __init__(self, patterns: list[str], hosts: list[str]) -> None:
+        self._patterns = [re.compile(p) for p in patterns]
+        self._hosts = set(h.lower() for h in hosts)
+
+    def is_blocked(self, host: str) -> bool:
+        host = (host or "").lower()
+        if host in self._hosts:
+            return True
+        return any(p.search(host) for p in self._patterns)
+
+    @classmethod
+    def from_yaml(cls, path: str) -> "HostFilter":
+        with open(path) as fh:
+            data = yaml.safe_load(fh) or {}
+        return cls(patterns=data.get("patterns", []), hosts=data.get("hosts", []))
+```
+
+```python
+# services/crawler/src/crawler/registry.py
+"""Load the curated production host registry and derive seed root URLs."""
+from __future__ import annotations
+
+import yaml
+
+
+def load_registry_hosts(path: str) -> list[str]:
+    with open(path) as fh:
+        data = yaml.safe_load(fh) or {}
+    return list(data.get("hosts", []))
+
+
+def host_root_urls(hosts: list[str]) -> list[str]:
+    return [f"https://{h}/" for h in hosts]
+```
+
+- [ ] **Step 4: Add `pyyaml` dependency** — append `"pyyaml>=6.0",` to `services/crawler/pyproject.toml` dependencies; `uv sync`.
+
+- [ ] **Step 5: Create the config files from the health-check session output**
+
+Build `services/crawler/config/host-blocklist.yaml` from `services/crawler/discovery/hosts/vtedu-blocklist.yaml`, and `services/crawler/config/host-registry.yaml` as the KEEP hosts from `vtedu-hosts-health.csv`:
+
+```bash
+cd services/crawler
+mkdir -p config
+cp discovery/hosts/vtedu-blocklist.yaml config/host-blocklist.yaml
+# registry = keep hosts (classification column == keep) from the health CSV:
+python3 - <<'PY'
+import csv, yaml
+keep = []
+with open("discovery/hosts/vtedu-hosts-health.csv") as fh:
+    for row in csv.DictReader(fh):
+        if row.get("classification") == "keep":
+            keep.append(row["host"])
+with open("config/host-registry.yaml", "w") as out:
+    yaml.safe_dump({"hosts": sorted(set(keep))}, out, default_flow_style=False)
+print(f"registry hosts: {len(set(keep))}")
+PY
+```
+
+- [ ] **Step 6: Run tests to verify they pass**
+
+Run: `cd services/crawler && uv run pytest tests/test_hostfilter.py tests/test_registry.py -v`
+Expected: PASS (5 passed).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add services/crawler/src/crawler/discovery/hostfilter.py services/crawler/src/crawler/registry.py services/crawler/config/host-registry.yaml services/crawler/config/host-blocklist.yaml services/crawler/pyproject.toml services/crawler/uv.lock services/crawler/tests/test_hostfilter.py services/crawler/tests/test_registry.py
+git commit -m "feat(crawler): host registry + blocklist (dev/ops → production seam)"
+```
+
+### Task 2.6: Wire the blocklist into scope classification
+
+The crawl engine must drop blocklisted hosts at the page level (links to `login.vt.edu`, etc., are never enqueued). Thread a `HostFilter` into `classify_url`.
+
+**Files:**
+- Modify: `services/crawler/src/crawler/scope.py`
+- Test: `services/crawler/tests/test_scope.py` (append)
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+# services/crawler/tests/test_scope.py  (append)
+from crawler.scope import classify_url, Scope
+
+
+class _Blocker:
+    def is_blocked(self, host):
+        return host == "login.vt.edu"
+
+
+def test_classify_blocklisted_host_is_out_of_scope():
+    scope, _ = classify_url(
+        "https://login.vt.edu/auth", parent_hops=["https://vt.edu/"],
+        external_hops=1, host_filter=_Blocker(),
+    )
+    assert scope is Scope.OUT_OF_SCOPE
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `cd services/crawler && uv run pytest tests/test_scope.py -k blocklisted -v`
+Expected: FAIL — `classify_url() got an unexpected keyword argument 'host_filter'`.
+
+- [ ] **Step 3: Write minimal implementation**
+
+In `scope.py`, add an optional `host_filter` param to `classify_url` and short-circuit:
+
+```python
+def classify_url(url, parent_hops, external_hops, host_filter=None):
+    hops = list(parent_hops) + [url]
+    scheme = urlparse(url).scheme
+    if scheme not in ("http", "https"):
+        return Scope.OUT_OF_SCOPE, hops
+    if host_filter is not None and host_filter.is_blocked(_host(url)):
+        return Scope.OUT_OF_SCOPE, hops
+    # ... rest unchanged ...
+```
+
+Update the engine call sites (`engine.process_result` and `discovery/run.populate_frontier`) to pass the loaded `HostFilter`.
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `cd services/crawler && uv run pytest tests/test_scope.py -v`
+Expected: PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add services/crawler/src/crawler/scope.py services/crawler/tests/test_scope.py
+git commit -m "feat(crawler): drop blocklisted hosts during scope classification"
 ```
 
 ---
@@ -1995,6 +2224,8 @@ In `services/crawler/src/crawler/config.py`:
     minio_external_bucket: str = "crawled-pages-external"
     external_hops: int = 1
     frontier_db_path: str = "/data/frontier.db"
+    host_registry_path: str = "config/host-registry.yaml"
+    host_blocklist_path: str = "config/host-blocklist.yaml"
     discovery_source: str = "sitemap+cc"
     max_hosts: int | None = None
     max_urls_per_host: int = -1
@@ -2009,6 +2240,8 @@ In `services/crawler/src/crawler/config.py`:
             minio_external_bucket=os.environ.get("MINIO_EXTERNAL_BUCKET", "crawled-pages-external"),
             external_hops=int(os.environ.get("CRAWL_EXTERNAL_HOPS", "1")),
             frontier_db_path=os.environ.get("FRONTIER_DB_PATH", "/data/frontier.db"),
+            host_registry_path=os.environ.get("HOST_REGISTRY_PATH", "config/host-registry.yaml"),
+            host_blocklist_path=os.environ.get("HOST_BLOCKLIST_PATH", "config/host-blocklist.yaml"),
             discovery_source=os.environ.get("CRAWL_DISCOVERY_SOURCE", "sitemap+cc"),
             max_hosts=(int(os.environ["CRAWL_MAX_HOSTS"]) if os.environ.get("CRAWL_MAX_HOSTS") else None),
             max_urls_per_host=int(os.environ.get("CRAWL_MAX_URLS_PER_HOST", "-1")),
@@ -2097,10 +2330,12 @@ import sys
 from datetime import datetime, timezone
 
 from crawler.config import CrawlerConfig
-from crawler.discovery.run import populate_frontier
+from crawler.discovery.hostfilter import HostFilter
 from crawler.documents import download_and_process_documents
 from crawler.engine import run_engine
 from crawler.frontier import Frontier
+from crawler.registry import host_root_urls, load_registry_hosts
+from crawler.scope import classify_url
 from crawler.storage import MinioStorage
 
 logging.basicConfig(level=logging.INFO,
@@ -2110,7 +2345,7 @@ LOGS_BUCKET = "logs"
 
 
 def cli() -> None:
-    logger.info("Starting HokieHelp crawler (vt.edu full-domain)")
+    logger.info("Starting HokieHelp crawler (vt.edu full-domain, registry-driven)")
     try:
         config = CrawlerConfig.from_env()
     except ValueError as exc:
@@ -2122,27 +2357,39 @@ def cli() -> None:
                    config.minio_external_bucket, LOGS_BUCKET):
         storage.ensure_bucket(bucket)
 
-    # 1) Discovery — populate frontier unless resuming an existing one with work left.
-    frontier = Frontier(config.frontier_db_path)
-    if frontier.count_by_status().get("pending", 0) == 0 and \
-       frontier.count_by_status().get("done", 0) == 0:
-        logger.info("Empty frontier — running discovery")
-        asyncio.run(populate_frontier(
-            config.frontier_db_path, max_hosts=config.max_hosts,
-            max_urls_per_host=config.max_urls_per_host,
-            external_hops=config.external_hops,
-        ))
-        frontier = Frontier(config.frontier_db_path)
-    else:
-        logger.info("Resuming existing frontier: %s", frontier.count_by_status())
+    host_filter = HostFilter.from_yaml(config.host_blocklist_path)
 
-    # 2) Render engine — VT pages → main bucket; external → external bucket.
+    # 1) Seed the frontier from the committed host REGISTRY (no enumeration here).
+    #    Resumable: if the frontier already has work, skip seeding and continue.
+    frontier = Frontier(config.frontier_db_path)
+    counts = frontier.count_by_status()
+    if counts.get("pending", 0) == 0 and counts.get("done", 0) == 0:
+        hosts = load_registry_hosts(config.host_registry_path)
+        if config.max_hosts is not None:
+            hosts = hosts[:config.max_hosts]
+        seeded = 0
+        for url in host_root_urls(hosts):
+            if host_filter.is_blocked(url.split("//", 1)[-1].split("/", 1)[0]):
+                continue
+            scope, hops = classify_url(url, parent_hops=[],
+                                       external_hops=config.external_hops,
+                                       host_filter=host_filter)
+            if frontier.enqueue(url, scope=scope.value, depth=0,
+                                hop_history=hops, discovery_source="registry"):
+                seeded += 1
+        logger.info("Seeded %d host roots from registry %s",
+                    seeded, config.host_registry_path)
+    else:
+        logger.info("Resuming existing frontier: %s", counts)
+
+    # 2) Render engine — BFS from host roots; VT pages → main bucket, external → external bucket.
     stats = asyncio.run(run_engine(
         frontier, storage, main_bucket=config.minio_bucket,
         external_bucket=config.minio_external_bucket,
         external_hops=config.external_hops, max_depth=config.max_depth,
         batch_size=config.batch_size, memory_pct=config.memory_threshold_percent,
         max_sessions=config.max_sessions, threshold=config.prune_content_threshold,
+        host_filter=host_filter,
     ))
     logger.info("Render complete: %s",
                 {k: v for k, v in stats.items() if k != "document_urls"})
@@ -2188,7 +2435,9 @@ if __name__ == "__main__":
     cli()
 ```
 
-> `download_and_process_documents` currently always writes to the default (main) bucket. For documents to reach the chunker, pass the cleaned bucket. Update its `storage.upload_document(object_key, document)` / `upload_metadata` calls to `bucket=storage._cleaned_or_default` — simplest: add a `target_bucket` parameter to `download_and_process_documents` and thread `config.minio_cleaned_bucket` through. Make that change here and update its unit test in `tests/test_documents.py` to pass/assert the bucket.
+> **Two threading changes this task depends on:**
+> 1. `run_engine` and `process_result` (Phase 3) gain a `host_filter` parameter that is forwarded to `classify_url(..., host_filter=host_filter)` so blocklisted hosts are never enqueued during BFS expansion. Add `host_filter=None` to both signatures and pass it through; update the Phase 3 tests to construct a permissive filter (or `None`).
+> 2. `download_and_process_documents` currently always writes to the default (main) bucket. For documents to reach the chunker, add a `target_bucket` parameter and thread `config.minio_cleaned_bucket` through its `upload_document`/`upload_metadata` calls; update `tests/test_documents.py` to assert the bucket.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -2898,20 +3147,91 @@ git commit -m "feat(k8s): full-domain crawler test Job against scratch buckets"
 
 > **STOP — executor hands off here.** Promotion to the **main** buckets and the main Qdrant collection is performed by the repo owner, not the executor. For reference, promotion means: re-run the standard pipeline (crawler→chunker→embedder) against the default (main) configmap values, then validate retrieval with `k8s/retriever-job.yaml` (the retriever tester already logs full metadata; confirm the new `source_host`/`subdomain`/`page_type` payload fields appear and are filterable). Do not run this step automatically — present the verification report from Step 5 and wait for the owner to promote.
 
+### Task 7.3: Recurring updates — registry refresh + periodic re-crawl (handles new VT subdomains/pages)
+
+Keeps the corpus current as VT adds subdomains, pages, and restructures sites — without production ever doing subdomain enumeration.
+
+**Files:**
+- Create: `k8s/discovery-cronjob.yaml` (dev/ops registry refresh)
+- Create: `k8s/crawl-cronjob.yaml` (periodic re-crawl)
+
+- [ ] **Step 1: Discovery refresh CronJob** — runs the dev/ops tool monthly to regenerate the registry/blocklist. It writes proposed files to a PVC/bucket for **human review**, not straight to the committed registry (new subdomains should be eyeballed before crawling, per the owner's inspect-first preference).
+
+```yaml
+# k8s/discovery-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hokiehelp-discovery-refresh
+  namespace: test
+spec:
+  schedule: "0 6 1 * *"        # 06:00 on the 1st of each month
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: discovery
+              image: hokiehelp-crawler:vtedu-test
+              command: ["python", "scripts/discover_vtedu.py", "--refresh", "--out", "/data/registry-proposed"]
+              volumeMounts: [{ name: frontier, mountPath: /data }]
+          volumes:
+            - name: frontier
+              persistentVolumeClaim: { claimName: crawler-frontier }
+```
+
+- [ ] **Step 2: Re-crawl CronJob** — re-runs the pipeline on a cadence. Because the crawler is registry-driven + content-hash-deduped and the embedder deletes stale chunks, a re-crawl ingests only new/changed pages and prunes removed ones. Point it at the normal pipeline entrypoint (owner decides cadence, e.g. weekly).
+
+```yaml
+# k8s/crawl-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hokiehelp-recrawl
+  namespace: test
+spec:
+  schedule: "0 3 * * 0"        # 03:00 every Sunday
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: pipeline
+              image: hokiehelp-pipeline:latest
+              # runs crawler→chunker→embedder against MAIN buckets — owner enables when ready
+  # NOTE: left for the owner to apply; do not enable against main without sign-off.
+```
+
+- [ ] **Step 3: Commit (do not apply the re-crawl CronJob against main without owner sign-off)**
+
+```bash
+git add k8s/discovery-cronjob.yaml k8s/crawl-cronjob.yaml
+git commit -m "feat(k8s): CronJobs for registry refresh + periodic re-crawl"
+```
+
+> The `discover_vtedu.py --refresh` flag (Task 2.4/2.5) writes proposed registry/blocklist to the given dir and diffs against the committed ones, surfacing newly-appeared subdomains for review. This is the mechanism by which new VT subdomains enter the system — reviewed, then merged into `config/host-registry.yaml`.
+
 ---
 
 ## Self-Review
 
 **1. Spec coverage**
-- "Discover the whole vt.edu domain incl. subdomains" → Phase 2 (crt.sh + CC + per-host seeding) ✓
+- "Discover the whole vt.edu domain incl. subdomains" → Phase 2 (crt.sh enum + health check + registry), run as **dev/ops**, not production ✓
+- "Subdomain check is dev-only; production is page-level fetchability" → Phase 2 is the dev/ops tool; production `main.py` (Task 4.2) seeds from `host-registry.yaml` host roots and crawls page-by-page with no enumeration ✓
+- "Filter out unwanted subdomains, add to blocklist" → health check classifies keep/drop → `host-blocklist.yaml`; `HostFilter` applied at seed + during BFS (Tasks 2.5/2.6) ✓
+- "Handle new subdomains and new/updated pages automatically" → new pages via re-crawl + BFS + content-hash dedup + stale-chunk deletion; new subdomains via the monthly discovery-refresh CronJob → reviewed → merged into the registry (Task 7.3); linked vt.edu pages crawled at page level in between ✓
 - "Whatever pages and external links it has, one hop, stored separately with hop history" → `scope.py` (Phase 0), separate `crawled-pages-external` bucket + `hop_history` in metadata/frontier (Phases 0/1/3) ✓
 - "Richer metadata for better indexing/retrieval" → Phases 0.2/0.3 + Phase 5 (chunker→embedder→Qdrant payload + indexes) ✓
 - "Linked docs ingested" → documents pass routes PDF/DOCX to cleaned bucket (Task 4.2) ✓
 - "SPA/JS pages — try, defer if impossible" → JS tier (Tasks 3.2–3.4) + `DEFERRED_SITES.md` policy (Task 4.3) ✓
 - "Generic clean (no per-site regex)" → `fit_markdown`/PruningContentFilter, retire `cleaner.py` (Phase 3 + Task 4.4) ✓
 - "Connect to pipeline, verify it works" → cleaned-bucket mirror keeps chunker contract; Phase 5 propagation; Phase 7 pipeline run ✓
-- "Run on MacBook if speed good" → Task 4.3 bounded validation ✓
-- "Full ingestion test on k8s test pod, verify before main" → Task 7.2 scratch-bucket Job + gates ✓
+- "Run on MacBook if speed good" → Task 4.3 bounded validation (uses the SUMMARY allowlist) ✓
+- "Full ingestion test on k8s test pod, verify before main; promotion done by owner" → Task 7.2 scratch-bucket Job + gates; explicit STOP/hand-off before promotion ✓
 - "Confirm MD files have correct data, how much failed, get it perfect" → Phase 6 verification + failure accounting + requeue loop ✓
 
 **2. Placeholder scan** — no "TBD/implement later"; each code step has full code. Two integration seams are called out explicitly with the exact change to make (documents `target_bucket` param in Task 4.2; pipeline Job volume in Task 7.1) rather than left vague. Phase 7 is an operational runbook (commands + gates), appropriate for ops, not code.
