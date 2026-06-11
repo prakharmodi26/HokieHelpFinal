@@ -172,3 +172,111 @@ def make_dispatcher(memory_pct: float, max_sessions: int) -> MemoryAdaptiveDispa
             rate_limit_codes=[429, 503],
         ),
     )
+
+
+def _match_item(by_url: dict[str, FrontierItem], result) -> FrontierItem | None:
+    """Map a streamed result back to its leased frontier item.
+
+    Verified against the installed crawl4ai 0.8.6: CrawlResult.url is the
+    ORIGINAL requested URL (aprocess_html is called with url=url) and the
+    post-redirect final URL lives in CrawlResult.redirected_url. So result.url
+    is the primary key; redirected_url is a defensive fallback in case a code
+    path ever surfaces the final URL instead.
+    """
+    item = by_url.get(result.url)
+    if item is None:
+        item = by_url.get(getattr(result, "redirected_url", None) or "")
+    return item
+
+
+async def run_engine(
+    frontier: Frontier,
+    storage,
+    *,
+    main_bucket: str,
+    external_bucket: str,
+    external_hops: int,
+    max_depth: int,
+    batch_size: int,
+    memory_pct: float,
+    max_sessions: int,
+    threshold: float,
+    host_filter=None,
+) -> dict:
+    """Lease pending URLs in batches, render (fast tier), checkpoint, retry empties
+    on the JS tier, until the frontier has no pending rows."""
+    stats = {"pages_stored": 0, "pages_failed": 0, "needs_js": 0, "documents": 0}
+    document_urls: set[str] = set()
+    dispatcher = make_dispatcher(memory_pct, max_sessions)
+    fast_cfg = fast_run_config(threshold)
+    js_cfg = js_run_config(threshold)
+
+    # Crash recovery: any row still 'leased' at engine start was stranded by a
+    # prior run that died mid-batch (this run hasn't leased anything yet, and
+    # there are no concurrent runners in v1) — return them to the pool.
+    requeued = frontier.requeue_leased()
+    if requeued:
+        logger.info("Requeued %d leased rows stranded by a prior run", requeued)
+
+    async with AsyncWebCrawler(config=browser_config()) as crawler:
+        while True:
+            batch = frontier.lease_pending(limit=batch_size)
+            if not batch:
+                break
+            by_url = {it.url: it for it in batch}
+
+            # --- fast tier ---
+            js_retry: list[FrontierItem] = []
+            results = await crawler.arun_many(
+                urls=list(by_url.keys()), config=fast_cfg, dispatcher=dispatcher,
+            )
+            async for result in results:
+                item = _match_item(by_url, result)
+                if item is None:
+                    # Unmatchable result: its row stays leased and is recovered
+                    # by requeue_leased() on the next run.
+                    logger.warning("No leased item matches result url %s", result.url)
+                    continue
+                outcome = process_result(
+                    result, item, frontier, storage,
+                    main_bucket=main_bucket, external_bucket=external_bucket,
+                    external_hops=external_hops, max_depth=max_depth, tier="fast",
+                    host_filter=host_filter,
+                )
+                if outcome == NEEDS_JS:
+                    js_retry.append(item)
+                    stats["needs_js"] += 1
+                else:
+                    document_urls |= outcome
+
+            # --- JS tier for empties ---
+            if js_retry:
+                js_by_url = {it.url: it for it in js_retry}
+                js_results = await crawler.arun_many(
+                    urls=list(js_by_url.keys()), config=js_cfg, dispatcher=dispatcher,
+                )
+                async for result in js_results:
+                    item = _match_item(js_by_url, result)
+                    if item is None:
+                        logger.warning("No JS-retry item matches result url %s", result.url)
+                        continue
+                    outcome = process_result(
+                        result, item, frontier, storage,
+                        main_bucket=main_bucket, external_bucket=external_bucket,
+                        external_hops=external_hops, max_depth=max_depth, tier="js",
+                        host_filter=host_filter,
+                    )
+                    # tier="js" never returns the sentinel (empties are marked
+                    # skipped), but guard anyway so a string can never pollute
+                    # the document URL set.
+                    if outcome != NEEDS_JS:
+                        document_urls |= outcome
+
+    # Frontier counts are the authoritative tally (each result was checkpointed
+    # as it streamed in); no per-result counter needed.
+    counts = frontier.count_by_status()
+    stats["pages_stored"] = counts.get("done", 0)
+    stats["pages_failed"] = counts.get("failed", 0)
+    stats["documents"] = len(document_urls)
+    stats["document_urls"] = document_urls
+    return stats

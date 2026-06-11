@@ -125,6 +125,15 @@ class Frontier:
         )
         self._conn.commit()
 
+    def requeue_leased(self) -> int:
+        """Reset rows stranded in 'leased' (by a crashed prior run) to 'pending'."""
+        cur = self._conn.execute(
+            "UPDATE frontier SET status='pending', updated_at=datetime('now') "
+            "WHERE status='leased'"
+        )
+        self._conn.commit()
+        return cur.rowcount
+
     def requeue_failed(self) -> int:
         cur = self._conn.execute(
             "UPDATE frontier SET status='pending', error=NULL WHERE status='failed'"
