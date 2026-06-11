@@ -20,8 +20,8 @@ def test_config_from_env_defaults(monkeypatch):
     assert config.seed_url == "https://cs.vt.edu"
     assert config.max_depth == 4
     assert config.max_pages == 9999999
-    assert config.allowed_domains == ("cs.vt.edu",)
-    assert "git.cs.vt.edu" in config.blocked_domains
+    assert config.allowed_domains == ("vt.edu",)
+    assert config.blocked_domains == ()
     assert "students.cs.vt.edu" not in config.blocked_domains
     assert config.prune_threshold == 0.45
 
@@ -63,3 +63,17 @@ def test_config_missing_required_var(monkeypatch):
 
     with pytest.raises(ValueError, match="MINIO_ENDPOINT"):
         CrawlerConfig.from_env()
+
+
+def test_config_vtedu_defaults(monkeypatch):
+    monkeypatch.setenv("MINIO_ENDPOINT", "localhost:9000")
+    monkeypatch.setenv("MINIO_ACCESS_KEY", "k")
+    monkeypatch.setenv("MINIO_SECRET_KEY", "s")
+    from crawler.config import CrawlerConfig
+    cfg = CrawlerConfig.from_env()
+    assert cfg.allowed_domains == ("vt.edu",)
+    assert cfg.external_hops == 1
+    assert cfg.minio_external_bucket == "crawled-pages-external"
+    assert cfg.frontier_db_path  # has a default
+    assert cfg.max_urls_per_host == -1
+    assert cfg.batch_size > 0

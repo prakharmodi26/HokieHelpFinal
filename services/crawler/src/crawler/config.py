@@ -24,6 +24,18 @@ class CrawlerConfig:
     blocked_paths: tuple[str, ...]
     prune_threshold: float
     request_delay: float  # seconds between requests to avoid rate limiting
+    minio_external_bucket: str = "crawled-pages-external"
+    external_hops: int = 1
+    frontier_db_path: str = "/data/frontier.db"
+    host_registry_path: str = "config/host-registry.yaml"
+    host_blocklist_path: str = "config/host-blocklist.yaml"
+    discovery_source: str = "sitemap+cc"
+    max_hosts: int | None = None
+    max_urls_per_host: int = -1
+    batch_size: int = 200
+    memory_threshold_percent: float = 70.0
+    max_sessions: int = 10
+    prune_content_threshold: float = 0.5
 
     @classmethod
     def from_env(cls) -> CrawlerConfig:
@@ -32,7 +44,13 @@ class CrawlerConfig:
         Required: MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY
         Optional: MINIO_BUCKET, MINIO_SECURE, CRAWL_SEED_URL,
                   CRAWL_MAX_DEPTH, CRAWL_MAX_PAGES, CRAWL_ALLOWED_DOMAINS,
-                  CRAWL_BLOCKED_DOMAINS, CRAWL_PRUNE_THRESHOLD
+                  CRAWL_BLOCKED_DOMAINS, CRAWL_PRUNE_THRESHOLD,
+                  MINIO_EXTERNAL_BUCKET, CRAWL_EXTERNAL_HOPS,
+                  FRONTIER_DB_PATH, HOST_REGISTRY_PATH, HOST_BLOCKLIST_PATH,
+                  CRAWL_DISCOVERY_SOURCE, CRAWL_MAX_HOSTS,
+                  CRAWL_MAX_URLS_PER_HOST, CRAWL_BATCH_SIZE,
+                  CRAWL_MEMORY_PCT, CRAWL_MAX_SESSIONS,
+                  CRAWL_PRUNE_CONTENT_THRESHOLD
         """
 
         def _require(name: str) -> str:
@@ -57,12 +75,11 @@ class CrawlerConfig:
             max_pages=int(os.environ.get("CRAWL_MAX_PAGES", "9999999")),
             allowed_domains=_domains(
                 "CRAWL_ALLOWED_DOMAINS",
-                "cs.vt.edu",
+                "vt.edu",
             ),
             blocked_domains=_domains(
                 "CRAWL_BLOCKED_DOMAINS",
-                "git.cs.vt.edu,gitlab.cs.vt.edu,mail.cs.vt.edu,webmail.cs.vt.edu,"
-                "portal.cs.vt.edu,api.cs.vt.edu,forum.cs.vt.edu,login.cs.vt.edu",
+                "",
             ),
             blocked_paths=_domains(
                 "CRAWL_BLOCKED_PATHS",
@@ -70,4 +87,16 @@ class CrawlerConfig:
             ),
             prune_threshold=float(os.environ.get("CRAWL_PRUNE_THRESHOLD", "0.45")),
             request_delay=float(os.environ.get("CRAWL_REQUEST_DELAY", "0.1")),
+            minio_external_bucket=os.environ.get("MINIO_EXTERNAL_BUCKET", "crawled-pages-external"),
+            external_hops=int(os.environ.get("CRAWL_EXTERNAL_HOPS", "1")),
+            frontier_db_path=os.environ.get("FRONTIER_DB_PATH", "/data/frontier.db"),
+            host_registry_path=os.environ.get("HOST_REGISTRY_PATH", "config/host-registry.yaml"),
+            host_blocklist_path=os.environ.get("HOST_BLOCKLIST_PATH", "config/host-blocklist.yaml"),
+            discovery_source=os.environ.get("CRAWL_DISCOVERY_SOURCE", "sitemap+cc"),
+            max_hosts=(int(os.environ["CRAWL_MAX_HOSTS"]) if os.environ.get("CRAWL_MAX_HOSTS") else None),
+            max_urls_per_host=int(os.environ.get("CRAWL_MAX_URLS_PER_HOST", "-1")),
+            batch_size=int(os.environ.get("CRAWL_BATCH_SIZE", "200")),
+            memory_threshold_percent=float(os.environ.get("CRAWL_MEMORY_PCT", "70.0")),
+            max_sessions=int(os.environ.get("CRAWL_MAX_SESSIONS", "10")),
+            prune_content_threshold=float(os.environ.get("CRAWL_PRUNE_CONTENT_THRESHOLD", "0.5")),
         )
