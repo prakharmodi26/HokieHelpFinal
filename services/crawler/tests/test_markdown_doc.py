@@ -117,3 +117,30 @@ def test_url_to_object_key_strips_query_and_fragment():
     """Strips query string and fragment from URL."""
     key = url_to_object_key("https://cs.vt.edu/page?foo=bar#section")
     assert key == "cs.vt.edu/page.md"
+
+
+# --- new-field tests for full-domain ingestion ---
+from datetime import datetime, timezone
+from crawler.markdown_doc import build_markdown_document
+
+
+def test_frontmatter_includes_host_and_page_type():
+    doc = build_markdown_document(
+        url="https://dining.vt.edu/menus",
+        title="Menus",
+        markdown_content="# Menus\nToday: pizza",
+        crawl_depth=1,
+        crawl_timestamp=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        doc_id="abc123",
+        content_hash="deadbeef",
+        source_host="dining.vt.edu",
+        subdomain="dining",
+        page_type="general",
+        is_external=False,
+        last_modified="Wed, 01 Jan 2026 00:00:00 GMT",
+    )
+    assert "source_host: 'dining.vt.edu'" in doc
+    assert "subdomain: 'dining'" in doc
+    assert "page_type: 'general'" in doc
+    assert "is_external: false" in doc
+    assert doc.endswith("# Menus\nToday: pizza")
