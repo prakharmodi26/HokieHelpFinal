@@ -111,3 +111,62 @@ def test_from_json_handles_null_optional_fields():
     restored = PageMetadata.from_json(meta.to_json())
     assert restored.last_modified is None
     assert restored.etag is None
+
+
+# --- new-field tests for full-domain ingestion ---
+from datetime import datetime, timezone
+
+from crawler.metadata import PageMetadata
+
+
+def _base_kwargs():
+    return dict(
+        doc_id="abc123",
+        url="https://dining.vt.edu/menus",
+        title="Menus",
+        crawl_depth=1,
+        crawl_timestamp=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        content_hash="deadbeef",
+        markdown_size_bytes=100,
+        status_code=200,
+        response_headers={"content-type": "text/html"},
+        internal_links=[],
+        external_links=[],
+        last_modified=None,
+        etag=None,
+    )
+
+
+def test_metadata_roundtrip_with_new_fields():
+    meta = PageMetadata(
+        **_base_kwargs(),
+        source_host="dining.vt.edu",
+        subdomain="dining",
+        scope="vt_page",
+        is_external=False,
+        hop_history=["https://vt.edu/", "https://dining.vt.edu/menus"],
+        discovery_source="sitemap",
+        content_type="text/html",
+        raw_markdown_size_bytes=500,
+        fit_markdown_size_bytes=100,
+        lang="en",
+        word_count=42,
+        render_tier="fast",
+        robots_allowed=True,
+        fetched_at=datetime(2026, 6, 10, tzinfo=timezone.utc),
+    )
+    restored = PageMetadata.from_json(meta.to_json())
+    assert restored.source_host == "dining.vt.edu"
+    assert restored.subdomain == "dining"
+    assert restored.hop_history[-1] == "https://dining.vt.edu/menus"
+    assert restored.render_tier == "fast"
+    assert restored.is_external is False
+
+
+def test_metadata_new_fields_default_when_absent():
+    # Old sidecars (pre-upgrade) must still deserialise.
+    meta = PageMetadata(**_base_kwargs())
+    restored = PageMetadata.from_json(meta.to_json())
+    assert restored.source_host is None
+    assert restored.hop_history == []
+    assert restored.is_external is False
