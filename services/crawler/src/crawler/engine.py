@@ -56,6 +56,8 @@ def process_result(
     max_depth: int,
     tier: str = "fast",
     host_filter=None,
+    host_counts: dict[str, int] | None = None,
+    max_urls_per_host: int = -1,
 ):
     """Store one crawl result and expand its links. Returns either a set of
     discovered document URLs, or the sentinel 'needs_js' for fast-tier empties."""
@@ -148,10 +150,18 @@ def process_result(
                 # collect_document_links below routes them to the documents pass.
                 if child_scope is Scope.DOCUMENT:
                     continue
-                frontier.enqueue(
+                child_host = (urlparse(href).hostname or "").lower()
+                if (
+                    max_urls_per_host != -1
+                    and host_counts is not None
+                    and host_counts.get(child_host, 0) >= max_urls_per_host
+                ):
+                    continue
+                if frontier.enqueue(
                     href, scope=child_scope.value, depth=item.depth + 1,
                     hop_history=child_hops, discovery_source="bfs",
-                )
+                ) and host_counts is not None:
+                    host_counts[child_host] = host_counts.get(child_host, 0) + 1
     return collect_document_links(result.links)
 
 
@@ -202,6 +212,7 @@ async def run_engine(
     max_sessions: int,
     threshold: float,
     host_filter=None,
+    max_urls_per_host: int = -1,
 ) -> dict:
     """Lease pending URLs in batches, render (fast tier), checkpoint, retry empties
     on the JS tier, until the frontier has no pending rows."""
@@ -217,6 +228,10 @@ async def run_engine(
     requeued = frontier.requeue_leased()
     if requeued:
         logger.info("Requeued %d leased rows stranded by a prior run", requeued)
+
+    # Per-host URL cap (-1 = unlimited). Counts include rows from a resumed
+    # frontier so a restart cannot blow past the cap.
+    host_counts = frontier.count_by_host() if max_urls_per_host != -1 else None
 
     async with AsyncWebCrawler(config=browser_config()) as crawler:
         while True:
@@ -241,7 +256,8 @@ async def run_engine(
                     result, item, frontier, storage,
                     main_bucket=main_bucket, external_bucket=external_bucket,
                     external_hops=external_hops, max_depth=max_depth, tier="fast",
-                    host_filter=host_filter,
+                    host_filter=host_filter, host_counts=host_counts,
+                    max_urls_per_host=max_urls_per_host,
                 )
                 if outcome == NEEDS_JS:
                     js_retry.append(item)
@@ -264,7 +280,8 @@ async def run_engine(
                         result, item, frontier, storage,
                         main_bucket=main_bucket, external_bucket=external_bucket,
                         external_hops=external_hops, max_depth=max_depth, tier="js",
-                        host_filter=host_filter,
+                        host_filter=host_filter, host_counts=host_counts,
+                        max_urls_per_host=max_urls_per_host,
                     )
                     # tier="js" never returns the sentinel (empties are marked
                     # skipped), but guard anyway so a string can never pollute

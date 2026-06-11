@@ -147,6 +147,13 @@ class Frontier:
         )
         return cur.fetchone() is not None
 
+    def count_by_host(self) -> dict[str, int]:
+        """Rows per host (any status) — used to enforce per-host URL caps."""
+        cur = self._conn.execute(
+            "SELECT host, COUNT(*) FROM frontier GROUP BY host"
+        )
+        return {row[0]: row[1] for row in cur.fetchall() if row[0]}
+
     def count_by_status(self) -> dict[str, int]:
         cur = self._conn.execute(
             "SELECT status, COUNT(*) FROM frontier GROUP BY status"

@@ -172,6 +172,7 @@ def cli() -> None:
                 max_sessions=config.max_sessions,
                 threshold=config.prune_content_threshold,
                 host_filter=host_filter,
+                max_urls_per_host=config.max_urls_per_host,
             )
         )
         logger.info(
