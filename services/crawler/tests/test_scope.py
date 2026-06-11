@@ -66,3 +66,16 @@ def test_classify_external_beyond_hop_is_rejected():
         external_hops=1,
     )
     assert scope is Scope.OUT_OF_SCOPE
+
+
+class _Blocker:
+    def is_blocked(self, host):
+        return host == "login.vt.edu"
+
+
+def test_classify_blocklisted_host_is_out_of_scope():
+    scope, _ = classify_url(
+        "https://login.vt.edu/auth", parent_hops=["https://vt.edu/"],
+        external_hops=1, host_filter=_Blocker(),
+    )
+    assert scope is Scope.OUT_OF_SCOPE

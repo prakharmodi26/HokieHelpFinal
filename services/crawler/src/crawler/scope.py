@@ -66,6 +66,7 @@ def classify_url(
     url: str,
     parent_hops: list[str],
     external_hops: int,
+    host_filter=None,
 ) -> tuple[Scope, list[str]]:
     """Classify a URL given its parent's hop chain; return (scope, new_hop_chain).
 
@@ -74,6 +75,9 @@ def classify_url(
     hops = list(parent_hops) + [url]
     scheme = urlparse(url).scheme
     if scheme not in ("http", "https"):
+        return Scope.OUT_OF_SCOPE, hops
+
+    if host_filter is not None and host_filter.is_blocked(_host(url)):
         return Scope.OUT_OF_SCOPE, hops
 
     if is_document_url(url):
