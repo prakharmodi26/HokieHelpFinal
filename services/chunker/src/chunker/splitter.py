@@ -125,5 +125,7 @@ def build_chunks(
             content_hash=_chunk_hash(text),
             crawl_timestamp=frontmatter.crawl_timestamp,
             token_count=estimate_tokens(text),
+            source_host=getattr(frontmatter, "source_host", ""),
+            subdomain=getattr(frontmatter, "subdomain", ""),
         ))
     return records

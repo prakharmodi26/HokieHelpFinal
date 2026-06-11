@@ -19,6 +19,8 @@ class ChunkRecord:
     content_hash: str      # SHA-256[:16] of this chunk's text
     crawl_timestamp: str   # ISO timestamp from frontmatter
     token_count: int       # Approximate token count (len(text) // 4); used for embedding batching
+    source_host: str = ""  # e.g. "dining.vt.edu"
+    subdomain: str = ""    # e.g. "dining"
 
     def to_dict(self) -> dict:
         return {
@@ -33,6 +35,8 @@ class ChunkRecord:
             "content_hash": self.content_hash,
             "crawl_timestamp": self.crawl_timestamp,
             "token_count": self.token_count,
+            "source_host": self.source_host,
+            "subdomain": self.subdomain,
         }
 
     @classmethod
@@ -49,4 +53,6 @@ class ChunkRecord:
             content_hash=data["content_hash"],
             crawl_timestamp=data["crawl_timestamp"],
             token_count=data.get("token_count", len(data["text"]) // 4),
+            source_host=data.get("source_host", ""),
+            subdomain=data.get("subdomain", ""),
         )

@@ -59,3 +59,26 @@ def test_from_dict_handles_missing_optional_fields():
     d["page_type"] = "general"
     restored = ChunkRecord.from_dict(d)
     assert restored.page_type == "general"
+
+
+def test_chunkrecord_roundtrip_with_host_fields():
+    rec = ChunkRecord(
+        chunk_id="d_0000", document_id="d", chunk_index=0, text="t",
+        url="https://dining.vt.edu/x", title="T", page_type="dining",
+        headings_path=["A"], content_hash="h", crawl_timestamp="ts",
+        token_count=1, source_host="dining.vt.edu", subdomain="dining",
+    )
+    back = ChunkRecord.from_dict(rec.to_dict())
+    assert back.source_host == "dining.vt.edu"
+    assert back.subdomain == "dining"
+
+
+def test_chunkrecord_from_dict_defaults_missing_host():
+    d = {
+        "chunk_id": "d_0000", "document_id": "d", "chunk_index": 0, "text": "t",
+        "url": "u", "title": "T", "page_type": "general", "headings_path": [],
+        "content_hash": "h", "crawl_timestamp": "ts", "token_count": 1,
+    }
+    rec = ChunkRecord.from_dict(d)
+    assert rec.source_host == ""
+    assert rec.subdomain == ""
