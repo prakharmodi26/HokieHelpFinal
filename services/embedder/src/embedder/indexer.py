@@ -54,6 +54,12 @@ class QdrantIndexer:
                 lowercase=True,
             ),
         )
+        for field_name in ("source_host", "subdomain", "page_type"):
+            self._client.create_payload_index(
+                collection_name=self._collection,
+                field_name=field_name,
+                field_schema=models.PayloadSchemaType.KEYWORD,
+            )
         logger.info("Created collection %s (dim=%d, cosine, text index)", self._collection, self._vector_size)
 
     def upsert_chunks(self, chunks: List[dict], embeddings: List[List[float]]) -> None:
@@ -75,6 +81,8 @@ class QdrantIndexer:
                     "crawl_timestamp": chunk.get("crawl_timestamp", ""),
                     "token_count": chunk.get("token_count", 0),
                     "text": chunk.get("text", ""),
+                    "source_host": chunk.get("source_host", ""),
+                    "subdomain": chunk.get("subdomain", ""),
                 },
             ))
         self._client.upsert(

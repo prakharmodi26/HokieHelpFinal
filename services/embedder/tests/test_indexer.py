@@ -55,7 +55,7 @@ def test_ensure_collection_creates_if_missing(mock_qdrant, indexer):
 
 
 def test_ensure_collection_creates_payload_index(mock_qdrant, indexer):
-    assert mock_qdrant.create_payload_index.call_count == 2
+    assert mock_qdrant.create_payload_index.call_count == 5
     calls = mock_qdrant.create_payload_index.call_args_list
     assert calls[0].kwargs["field_name"] == "document_id"
     assert calls[1].kwargs["field_name"] == "text"
@@ -112,3 +112,23 @@ def test_delete_stale_chunks_nothing_to_delete(indexer, mock_qdrant):
     deleted = indexer.delete_stale_chunks("abc", {"abc_0000"})
     assert deleted == 0
     mock_qdrant.delete.assert_not_called()
+
+
+def test_upsert_includes_host_fields(indexer, mock_qdrant):
+    chunks = [{
+        "chunk_id": "d_0000", "document_id": "d", "url": "https://dining.vt.edu/x",
+        "title": "T", "page_type": "dining", "headings_path": [], "chunk_index": 0,
+        "content_hash": "h", "crawl_timestamp": "ts", "token_count": 1, "text": "t",
+        "source_host": "dining.vt.edu", "subdomain": "dining",
+    }]
+    indexer.upsert_chunks(chunks, [[0.1, 0.2, 0.3]])
+    points = mock_qdrant.upsert.call_args.kwargs["points"]
+    assert points[0].payload["source_host"] == "dining.vt.edu"
+    assert points[0].payload["subdomain"] == "dining"
+
+
+def test_ensure_collection_creates_host_field_indexes(mock_qdrant, indexer):
+    calls = mock_qdrant.create_payload_index.call_args_list
+    field_names = [c.kwargs["field_name"] for c in calls]
+    for expected in ("source_host", "subdomain", "page_type"):
+        assert expected in field_names
