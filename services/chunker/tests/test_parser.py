@@ -211,3 +211,27 @@ def test_old_news_seminar_is_stale():
 def test_seminar_no_date_is_not_stale():
     """If date cannot be parsed, keep the page (fail safe)."""
     assert is_stale_time_sensitive_page(SEMINAR_URL, "### Abstract\nNo date here.") is False
+
+
+# --- richer frontmatter fields ---
+
+def test_parse_frontmatter_reads_host_and_page_type():
+    md = (
+        "---\n"
+        "doc_id: 'abc'\n"
+        "url: 'https://dining.vt.edu/menus'\n"
+        "title: 'Menus'\n"
+        "content_hash: 'h'\n"
+        "crawl_timestamp: '2026-06-10T00:00:00+00:00'\n"
+        "source_host: 'dining.vt.edu'\n"
+        "subdomain: 'dining'\n"
+        "page_type: 'dining'\n"
+        "last_modified: 'Wed, 01 Jan 2026 00:00:00 GMT'\n"
+        "---\n\n# Menus\nbody"
+    )
+    fm, body = parse_frontmatter(md)
+    assert fm.source_host == "dining.vt.edu"
+    assert fm.subdomain == "dining"
+    assert fm.page_type == "dining"
+    assert fm.last_modified.startswith("Wed")
+    assert body.strip().startswith("# Menus")

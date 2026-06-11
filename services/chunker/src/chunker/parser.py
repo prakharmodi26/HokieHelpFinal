@@ -65,6 +65,10 @@ class FrontmatterData:
     title: str
     content_hash: str
     crawl_timestamp: str
+    source_host: str = ""
+    subdomain: str = ""
+    page_type: str = "general"
+    last_modified: str = ""
 
 
 @dataclass
@@ -117,6 +121,10 @@ def parse_frontmatter(markdown: str) -> Tuple[FrontmatterData, str]:
     content_hash = fields.get("content_hash") or _derive_content_hash(body)
     title = fields.get("title", url or "Untitled")
     crawl_timestamp = fields.get("crawl_timestamp", "")
+    source_host = fields.get("source_host") or (urlparse(url).hostname or "")
+    subdomain = fields.get("subdomain", "")
+    page_type = fields.get("page_type") or infer_page_type(url)
+    last_modified = fields.get("last_modified", "")
 
     return FrontmatterData(
         doc_id=doc_id,
@@ -124,6 +132,10 @@ def parse_frontmatter(markdown: str) -> Tuple[FrontmatterData, str]:
         title=title,
         content_hash=content_hash,
         crawl_timestamp=crawl_timestamp,
+        source_host=source_host,
+        subdomain=subdomain,
+        page_type=page_type,
+        last_modified=last_modified,
     ), body
 
 
