@@ -141,9 +141,12 @@ async def download_and_process_documents(
     seen_content_hashes: set[str],
     stored_urls: set[str],
     request_delay: float = 0.5,
+    target_bucket: str | None = None,
 ) -> dict:
     """Download documents, extract text, and store as markdown in MinIO.
 
+    `target_bucket` selects the destination bucket (None = storage default);
+    production passes the cleaned bucket so documents reach the chunker.
     Returns stats dict with documents_processed and documents_failed counts.
     """
     stats = {"documents_processed": 0, "documents_failed": 0}
@@ -239,7 +242,7 @@ async def download_and_process_documents(
             )
 
             object_key = url_to_object_key(url)
-            storage.upload_document(object_key, document)
+            storage.upload_document(object_key, document, bucket=target_bucket)
 
             metadata = PageMetadata(
                 doc_id=doc_id,
@@ -256,7 +259,7 @@ async def download_and_process_documents(
                 last_modified=resp.headers.get("last-modified"),
                 etag=resp.headers.get("etag"),
             )
-            storage.upload_metadata(object_key, metadata)
+            storage.upload_metadata(object_key, metadata, bucket=target_bucket)
 
             stored_urls.add(url)
             stats["documents_processed"] += 1
