@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, MemoryAdaptiveDispatcher, RateLimiter
 
+from crawler.catalog_card import card_markdown, extract_card
 from crawler.documents import collect_document_links
 from crawler.extract import looks_empty, select_content, word_count
 from crawler.frontier import Frontier, FrontierItem
@@ -44,6 +45,57 @@ def _ensure_row(frontier: Frontier, item: FrontierItem) -> None:
     )
 
 
+def _store_catalog_card(result, item, frontier, storage, *, main_bucket, tier):
+    """Catalog-mode host: store a metadata-only card, never the page body.
+
+    Head metadata (citation_*/DC/JSON-LD/OG/title) becomes a compact card doc
+    with page_type=catalog_card. No children are enqueued and no document
+    links are harvested — catalog hosts are "know it exists" coverage; the
+    per-record depth for repositories comes from the OAI/Dataverse harvest
+    pass, not from page crawling.
+
+    Cards go to the MAIN bucket and reach the cleaned bucket through the
+    existing mirror_vt_pages pass, identical to full pages.
+    """
+    card = extract_card(getattr(result, "html", "") or "", item.url)
+    body = card_markdown(card)
+    content_hash = hashlib.sha256(body.encode()).hexdigest()
+    status_code = getattr(result, "status_code", None) or 200
+    now = datetime.now(timezone.utc)
+    headers = result.response_headers or {}
+    host = urlparse(item.url).hostname
+
+    document = build_markdown_document(
+        url=item.url, title=card.get("title"), markdown_content=body,
+        crawl_depth=item.depth, crawl_timestamp=now,
+        doc_id=doc_id_for_url(item.url), content_hash=content_hash,
+        source_host=host, subdomain=subdomain_of(item.url),
+        page_type="catalog_card", is_external=False,
+        last_modified=headers.get("last-modified"),
+    )
+    object_key = url_to_object_key(item.url)
+    storage.upload_document(object_key, document, bucket=main_bucket)
+    meta = PageMetadata(
+        doc_id=doc_id_for_url(item.url), url=item.url, title=card.get("title"),
+        crawl_depth=item.depth, crawl_timestamp=now, content_hash=content_hash,
+        markdown_size_bytes=len(body.encode()),
+        status_code=getattr(result, "status_code", None),
+        response_headers=headers or None,
+        internal_links=[], external_links=[],
+        last_modified=headers.get("last-modified"), etag=headers.get("etag"),
+        source_host=host, subdomain=subdomain_of(item.url),
+        scope=item.scope, is_external=False, hop_history=item.hop_history,
+        discovery_source=item.discovery_source,
+        content_type=headers.get("content-type"),
+        word_count=word_count(body), render_tier=tier, robots_allowed=True,
+        fetched_at=now,
+    )
+    storage.upload_metadata(object_key, meta, bucket=main_bucket)
+    _ensure_row(frontier, item)
+    frontier.mark_done(item.url, content_hash=content_hash, http_status=status_code)
+    return set()
+
+
 def process_result(
     result,
     item: FrontierItem,
@@ -58,9 +110,15 @@ def process_result(
     host_filter=None,
     host_counts: dict[str, int] | None = None,
     max_urls_per_host: int = -1,
+    mode: str = "full",
 ):
     """Store one crawl result and expand its links. Returns either a set of
-    discovered document URLs, or the sentinel 'needs_js' for fast-tier empties."""
+    discovered document URLs, or the sentinel 'needs_js' for fast-tier empties.
+
+    `mode` is the registry host mode: "full" (default — extract/clean + BFS
+    expansion) or "catalog" (metadata-only card, no expansion). "special"
+    items never reach process_result — run_engine skips them before render.
+    """
     if not result.success:
         _ensure_row(frontier, item)
         frontier.mark_failed(
@@ -69,6 +127,11 @@ def process_result(
             http_status=getattr(result, "status_code", None),
         )
         return set()
+
+    if mode == "catalog":
+        return _store_catalog_card(
+            result, item, frontier, storage, main_bucket=main_bucket, tier=tier,
+        )
 
     text, used = select_content(result.markdown)
     if looks_empty(text):
@@ -213,10 +276,22 @@ async def run_engine(
     threshold: float,
     host_filter=None,
     max_urls_per_host: int = -1,
+    modes: dict[str, str] | None = None,
 ) -> dict:
     """Lease pending URLs in batches, render (fast tier), checkpoint, retry empties
-    on the JS tier, until the frontier has no pending rows."""
+    on the JS tier, until the frontier has no pending rows.
+
+    `modes` maps registry hosts to "full" | "catalog" | "special"
+    (registry.load_modes). Hosts not in the map — including every
+    BFS-discovered host — default to "full". None (the default) preserves the
+    historical all-full behaviour.
+    """
     stats = {"pages_stored": 0, "pages_failed": 0, "needs_js": 0, "documents": 0}
+
+    def mode_of(url: str) -> str:
+        if not modes:
+            return "full"
+        return modes.get((urlparse(url).hostname or "").lower(), "full")
     document_urls: set[str] = set()
     dispatcher = make_dispatcher(memory_pct, max_sessions)
     fast_cfg = fast_run_config(threshold)
@@ -238,7 +313,24 @@ async def run_engine(
             batch = frontier.lease_pending(limit=batch_size)
             if not batch:
                 break
-            by_url = {it.url: it for it in batch}
+
+            # "special" hosts are never rendered or full-text ingested here.
+            # The only crawl-seeded special handler is courseleaf_catalog
+            # (catalog.vt.edu); Task 8.4 adds its dedicated structured course
+            # ingest pass — until then its rows are checkpointed as skipped.
+            # dining_tool hosts are excluded by load_seed_hosts and never
+            # reach the frontier at all.
+            render_batch = []
+            for it in batch:
+                if mode_of(it.url) == "special":
+                    frontier.mark_skipped(
+                        it.url, reason="special handler pass pending (Task 8.4: courseleaf)"
+                    )
+                    continue
+                render_batch.append(it)
+            if not render_batch:
+                continue
+            by_url = {it.url: it for it in render_batch}
 
             # --- fast tier ---
             js_retry: list[FrontierItem] = []
@@ -257,7 +349,7 @@ async def run_engine(
                     main_bucket=main_bucket, external_bucket=external_bucket,
                     external_hops=external_hops, max_depth=max_depth, tier="fast",
                     host_filter=host_filter, host_counts=host_counts,
-                    max_urls_per_host=max_urls_per_host,
+                    max_urls_per_host=max_urls_per_host, mode=mode_of(item.url),
                 )
                 if outcome == NEEDS_JS:
                     js_retry.append(item)
@@ -281,7 +373,7 @@ async def run_engine(
                         main_bucket=main_bucket, external_bucket=external_bucket,
                         external_hops=external_hops, max_depth=max_depth, tier="js",
                         host_filter=host_filter, host_counts=host_counts,
-                        max_urls_per_host=max_urls_per_host,
+                        max_urls_per_host=max_urls_per_host, mode=mode_of(item.url),
                     )
                     # tier="js" never returns the sentinel (empties are marked
                     # skipped), but guard anyway so a string can never pollute

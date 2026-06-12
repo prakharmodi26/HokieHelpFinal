@@ -21,6 +21,8 @@ def test_cli_runs_discover_then_engine_then_docs(monkeypatch, tmp_path):
     cfg.max_urls_per_host = 50
     cfg.request_delay = 0.1
 
+    cfg.host_registry_path = "config/host-registry.yaml"
+
     monkeypatch.setattr(cmain.CrawlerConfig, "from_env", classmethod(lambda cls: cfg))
     monkeypatch.setattr(cmain, "MinioStorage", MagicMock())
     monkeypatch.setattr(cmain, "populate_frontier", AsyncMock(return_value={"urls_enqueued": 3}))
@@ -29,7 +31,16 @@ def test_cli_runs_discover_then_engine_then_docs(monkeypatch, tmp_path):
     }))
     monkeypatch.setattr(cmain, "download_and_process_documents",
                         AsyncMock(return_value={"documents_processed": 0, "documents_failed": 0}))
+    monkeypatch.setattr(
+        cmain, "load_modes",
+        MagicMock(return_value={"vtechworks.lib.vt.edu": "catalog"}),
+    )
 
     cmain.cli()  # should not raise
     assert cmain.populate_frontier.called
     assert cmain.run_engine.called
+    # registry host modes are threaded into the engine for mode routing
+    assert cmain.load_modes.call_args[0][0] == "config/host-registry.yaml"
+    assert cmain.run_engine.call_args.kwargs["modes"] == {
+        "vtechworks.lib.vt.edu": "catalog"
+    }

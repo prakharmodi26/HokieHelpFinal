@@ -12,7 +12,7 @@ from crawler.discovery.hostfilter import HostFilter
 from crawler.documents import download_and_process_documents
 from crawler.engine import run_engine
 from crawler.frontier import Frontier
-from crawler.registry import host_root_urls, load_seed_hosts
+from crawler.registry import host_root_urls, load_modes, load_seed_hosts
 from crawler.scope import Scope, classify_url
 from crawler.seed_docs import build_department_info_doc
 from crawler.storage import MinioStorage
@@ -173,6 +173,9 @@ def cli() -> None:
                 threshold=config.prune_content_threshold,
                 host_filter=host_filter,
                 max_urls_per_host=config.max_urls_per_host,
+                # Registry host modes: full ingest vs catalog cards vs
+                # special handlers (Phase 8 mode routing).
+                modes=load_modes(config.host_registry_path),
             )
         )
         logger.info(
