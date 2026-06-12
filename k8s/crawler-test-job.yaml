@@ -9,7 +9,9 @@ metadata:
     run: fulltest
 spec:
   backoffLimit: 3
-  activeDeadlineSeconds: 86400
+  # 48h: depth-10 vt.edu-wide crawl needs room to drain the frontier. The
+  # render watchdog (CRAWL_BATCH_IDLE_TIMEOUT) prevents indefinite hangs.
+  activeDeadlineSeconds: 172800
   template:
     metadata:
       labels:
