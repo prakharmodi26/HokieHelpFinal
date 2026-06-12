@@ -90,6 +90,23 @@ FAKE_CONFIG = type("C", (), {
     "chunk_min_tokens": 120,
 })()
 
+COURSE_FM = type("FM", (), {
+    "doc_id": "cs3114",
+    "url": "https://catalog.vt.edu/course-descriptions/cs/",
+    "title": "CS 3114: Data Structures and Algorithms",
+    "content_hash": "deadbeef01234567",
+    "crawl_timestamp": "2026-03-16T03:00:00",
+    "page_type": "course",
+    "subject": "CS",
+    "course_number": "3114",
+    "course_level": "ug",
+    "credits": "3",
+    "prerequisites": "CS 2114 or CS 2505.",
+    "corequisites": "MATH 2534.",
+    "when_offered": "Fall and Spring.",
+    "cross_listings": ["CMDA 3114"],
+})()
+
 
 def test_build_chunks_returns_chunk_records():
     sections = _make_sections([200])
@@ -134,3 +151,17 @@ def test_build_chunks_metadata_fields():
 def test_build_chunks_empty_sections_returns_empty():
     chunks = build_chunks([], FAKE_FM, FAKE_CONFIG)
     assert chunks == []
+
+
+def test_build_chunks_carries_structured_metadata():
+    chunks = build_chunks(_make_sections([200]), COURSE_FM, FAKE_CONFIG)
+    c = chunks[0]
+    assert c.page_type == "course"
+    assert c.subject == "CS"
+    assert c.course_number == "3114"
+    assert c.course_level == "ug"
+    assert c.credits == "3"
+    assert c.prerequisites == "CS 2114 or CS 2505."
+    assert c.corequisites == "MATH 2534."
+    assert c.when_offered == "Fall and Spring."
+    assert c.cross_listings == ["CMDA 3114"]

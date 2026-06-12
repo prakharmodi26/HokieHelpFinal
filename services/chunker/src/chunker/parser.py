@@ -4,13 +4,32 @@ from __future__ import annotations
 import calendar
 import hashlib
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
-from typing import List, Tuple
+from typing import Any, List, Tuple
 from urllib.parse import urlparse
+
+try:
+    import yaml
+except ImportError:  # pragma: no cover - fallback keeps legacy parser usable
+    yaml = None
 
 
 _CMS_ERROR_RE = re.compile(r"^#\s+Resource at '.*?' not found", re.MULTILINE)
+
+STRUCTURED_METADATA_FIELDS = (
+    "subject",
+    "course_number",
+    "course_level",
+    "credits",
+    "prerequisites",
+    "corequisites",
+    "when_offered",
+    "cross_listings",
+    "college",
+    "program_name",
+    "degree_type",
+)
 
 
 def is_cms_error_page(body: str) -> bool:
@@ -69,6 +88,17 @@ class FrontmatterData:
     subdomain: str = ""
     page_type: str = "general"
     last_modified: str = ""
+    subject: Any = None
+    course_number: Any = None
+    course_level: Any = None
+    credits: Any = None
+    prerequisites: Any = None
+    corequisites: Any = None
+    when_offered: Any = None
+    cross_listings: Any = None
+    college: Any = None
+    program_name: Any = None
+    degree_type: Any = None
 
 
 @dataclass
@@ -80,6 +110,10 @@ class Section:
 
 def _parse_simple_yaml(block: str) -> dict:
     """Parse a minimal YAML block (key: 'value' or key: value lines only)."""
+    if yaml is not None:
+        parsed = yaml.safe_load(block) or {}
+        return parsed if isinstance(parsed, dict) else {}
+
     result: dict = {}
     for line in block.splitlines():
         if ":" not in line:
@@ -89,6 +123,23 @@ def _parse_simple_yaml(block: str) -> dict:
         val = raw_val.strip().strip("'\"")
         result[key] = val
     return result
+
+
+def _metadata_value(fields: dict, key: str) -> Any:
+    """Return a JSON-friendly frontmatter value, preserving simple lists."""
+    value = fields.get(key)
+    if value in (None, ""):
+        return None
+    if isinstance(value, list):
+        return [str(item) for item in value if item not in (None, "")]
+    return str(value)
+
+
+def _text_field(fields: dict, key: str, default: str = "") -> str:
+    value = fields.get(key)
+    if value in (None, ""):
+        return default
+    return str(value)
 
 
 def _derive_doc_id(url: str) -> str:
@@ -116,15 +167,20 @@ def parse_frontmatter(markdown: str) -> Tuple[FrontmatterData, str]:
             body = markdown[end + 3:]
             fields = _parse_simple_yaml(fm_block)
 
-    url = fields.get("url", "")
-    doc_id = fields.get("doc_id") or _derive_doc_id(url)
+    url = _text_field(fields, "url")
+    doc_id = _text_field(fields, "doc_id") or _derive_doc_id(url)
     content_hash = fields.get("content_hash") or _derive_content_hash(body)
-    title = fields.get("title", url or "Untitled")
-    crawl_timestamp = fields.get("crawl_timestamp", "")
-    source_host = fields.get("source_host") or (urlparse(url).hostname or "")
-    subdomain = fields.get("subdomain", "")
-    page_type = fields.get("page_type") or infer_page_type(url)
-    last_modified = fields.get("last_modified", "")
+    content_hash = str(content_hash)
+    title = _text_field(fields, "title", url or "Untitled")
+    crawl_timestamp = _text_field(fields, "crawl_timestamp")
+    source_host = _text_field(fields, "source_host", urlparse(url).hostname or "")
+    subdomain = _text_field(fields, "subdomain")
+    page_type = _text_field(fields, "page_type", infer_page_type(url))
+    last_modified = _text_field(fields, "last_modified")
+    structured_metadata = {
+        key: _metadata_value(fields, key)
+        for key in STRUCTURED_METADATA_FIELDS
+    }
 
     return FrontmatterData(
         doc_id=doc_id,
@@ -136,6 +192,7 @@ def parse_frontmatter(markdown: str) -> Tuple[FrontmatterData, str]:
         subdomain=subdomain,
         page_type=page_type,
         last_modified=last_modified,
+        **structured_metadata,
     ), body
 
 

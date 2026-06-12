@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 from crawler.catalog_card import harvest_catalog_records
 from crawler.config import CrawlerConfig
+from crawler.courseleaf import harvest_courseleaf_catalog
 from crawler.discovery.hostfilter import HostFilter
 from crawler.documents import download_and_process_documents
 from crawler.engine import run_engine
@@ -103,6 +104,7 @@ def _render_summary(
     doc_stats: dict,
     timestamp: str,
     harvest_stats: dict | None = None,
+    courseleaf_stats: dict | None = None,
 ) -> str:
     """Build the run-summary markdown uploaded to the logs bucket."""
     lines = [
@@ -129,6 +131,12 @@ def _render_summary(
             f"- catalog_records_harvested: {harvest_stats.get('records_harvested', 0)}",
             f"- catalog_hosts_harvested: {harvest_stats.get('hosts_harvested', 0)}",
             f"- catalog_hosts_failed: {harvest_stats.get('hosts_failed', 0)}",
+        ]
+    if courseleaf_stats is not None:
+        lines += [
+            f"- courseleaf_courses_harvested: {courseleaf_stats.get('courses_harvested', 0)}",
+            f"- courseleaf_programs_harvested: {courseleaf_stats.get('programs_harvested', 0)}",
+            f"- courseleaf_pages_failed: {courseleaf_stats.get('pages_failed', 0)}",
         ]
     lines.append("")
     return "\n".join(lines)
@@ -171,6 +179,7 @@ def cli() -> None:
                 "expected only under test mocks"
             )
 
+        modes = load_modes(config.host_registry_path)
         stats = asyncio.run(
             run_engine(
                 frontier,
@@ -187,7 +196,7 @@ def cli() -> None:
                 max_urls_per_host=config.max_urls_per_host,
                 # Registry host modes: full ingest vs catalog cards vs
                 # special handlers (Phase 8 mode routing).
-                modes=load_modes(config.host_registry_path),
+                modes=modes,
             )
         )
         logger.info(
@@ -248,6 +257,23 @@ def cli() -> None:
         except Exception as exc:
             logger.warning("Catalog record harvest failed: %s", exc)
 
+        # CourseLeaf structured ingest: current-year course/program cards are
+        # written straight to the cleaned bucket so the chunker embeds semantic
+        # cards while structured frontmatter flows to Qdrant payload.
+        courseleaf_stats = None
+        if modes.get("catalog.vt.edu") == "special":
+            try:
+                courseleaf_stats = asyncio.run(
+                    harvest_courseleaf_catalog(
+                        storage,
+                        config.minio_cleaned_bucket,
+                        threshold=config.prune_content_threshold,
+                    )
+                )
+                logger.info("CourseLeaf catalog harvest: %s", courseleaf_stats)
+            except Exception as exc:
+                logger.warning("CourseLeaf catalog harvest failed: %s", exc)
+
         # Run summary to the logs bucket.
         counts = frontier.count_by_status()
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S")
@@ -255,7 +281,8 @@ def cli() -> None:
         storage.upload_document(
             summary_key,
             _render_summary(counts, stats, mirrored, doc_stats, timestamp,
-                            harvest_stats=harvest_stats),
+                            harvest_stats=harvest_stats,
+                            courseleaf_stats=courseleaf_stats),
             bucket=LOGS_BUCKET,
         )
         logger.info("Crawl summary uploaded to %s/%s", LOGS_BUCKET, summary_key)

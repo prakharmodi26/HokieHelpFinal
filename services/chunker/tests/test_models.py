@@ -82,3 +82,36 @@ def test_chunkrecord_from_dict_defaults_missing_host():
     rec = ChunkRecord.from_dict(d)
     assert rec.source_host == ""
     assert rec.subdomain == ""
+
+
+def test_chunkrecord_roundtrip_with_structured_metadata():
+    rec = _sample_chunk(
+        page_type="course",
+        subject="CS",
+        course_number="3114",
+        course_level="ug",
+        credits="3",
+        prerequisites="CS 2114 or CS 2505.",
+        corequisites="MATH 2534.",
+        when_offered="Fall and Spring.",
+        cross_listings=["CMDA 3114"],
+    )
+    data = rec.to_dict()
+    assert data["subject"] == "CS"
+    assert data["cross_listings"] == ["CMDA 3114"]
+
+    restored = ChunkRecord.from_dict(data)
+    assert restored.subject == "CS"
+    assert restored.course_number == "3114"
+    assert restored.course_level == "ug"
+    assert restored.credits == "3"
+    assert restored.prerequisites == "CS 2114 or CS 2505."
+    assert restored.corequisites == "MATH 2534."
+    assert restored.when_offered == "Fall and Spring."
+    assert restored.cross_listings == ["CMDA 3114"]
+
+
+def test_chunkrecord_omits_empty_structured_metadata():
+    data = _sample_chunk(subject="", cross_listings=[]).to_dict()
+    assert "subject" not in data
+    assert "cross_listings" not in data

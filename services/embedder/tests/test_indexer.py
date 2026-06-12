@@ -55,7 +55,7 @@ def test_ensure_collection_creates_if_missing(mock_qdrant, indexer):
 
 
 def test_ensure_collection_creates_payload_index(mock_qdrant, indexer):
-    assert mock_qdrant.create_payload_index.call_count == 5
+    assert mock_qdrant.create_payload_index.call_count == 7
     calls = mock_qdrant.create_payload_index.call_args_list
     assert calls[0].kwargs["field_name"] == "document_id"
     assert calls[1].kwargs["field_name"] == "text"
@@ -130,5 +130,41 @@ def test_upsert_includes_host_fields(indexer, mock_qdrant):
 def test_ensure_collection_creates_host_field_indexes(mock_qdrant, indexer):
     calls = mock_qdrant.create_payload_index.call_args_list
     field_names = [c.kwargs["field_name"] for c in calls]
-    for expected in ("source_host", "subdomain", "page_type"):
+    for expected in ("source_host", "subdomain", "page_type", "subject", "course_level"):
         assert expected in field_names
+
+
+def test_upsert_includes_non_empty_structured_fields(indexer, mock_qdrant):
+    chunks = [{
+        "chunk_id": "cs3114_0000",
+        "document_id": "cs3114",
+        "url": "https://catalog.vt.edu/course-descriptions/cs/",
+        "title": "CS 3114: Data Structures and Algorithms",
+        "page_type": "course",
+        "headings_path": [],
+        "chunk_index": 0,
+        "content_hash": "h",
+        "crawl_timestamp": "ts",
+        "token_count": 1,
+        "text": "t",
+        "subject": "CS",
+        "course_number": "3114",
+        "course_level": "ug",
+        "credits": "3",
+        "prerequisites": "CS 2114 or CS 2505.",
+        "corequisites": "",
+        "when_offered": None,
+        "cross_listings": ["CMDA 3114"],
+        "college": [],
+    }]
+    indexer.upsert_chunks(chunks, [[0.1, 0.2, 0.3]])
+    payload = mock_qdrant.upsert.call_args.kwargs["points"][0].payload
+    assert payload["subject"] == "CS"
+    assert payload["course_number"] == "3114"
+    assert payload["course_level"] == "ug"
+    assert payload["credits"] == "3"
+    assert payload["prerequisites"] == "CS 2114 or CS 2505."
+    assert payload["cross_listings"] == ["CMDA 3114"]
+    assert "corequisites" not in payload
+    assert "when_offered" not in payload
+    assert "college" not in payload

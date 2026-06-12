@@ -9,10 +9,36 @@ from qdrant_client import QdrantClient, models
 
 logger = logging.getLogger(__name__)
 
+KEYWORD_PAYLOAD_INDEX_FIELDS = (
+    "source_host",
+    "subdomain",
+    "page_type",
+    "subject",
+    "course_level",
+)
+
+STRUCTURED_PAYLOAD_FIELDS = (
+    "subject",
+    "course_number",
+    "course_level",
+    "credits",
+    "prerequisites",
+    "corequisites",
+    "when_offered",
+    "cross_listings",
+    "college",
+    "program_name",
+    "degree_type",
+)
+
 
 def chunk_id_to_uuid(chunk_id: str) -> str:
     """Convert a chunk_id string to a deterministic UUID for Qdrant point ID."""
     return str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
+
+
+def _has_value(value: object) -> bool:
+    return value not in (None, "", [])
 
 
 class QdrantIndexer:
@@ -54,7 +80,7 @@ class QdrantIndexer:
                 lowercase=True,
             ),
         )
-        for field_name in ("source_host", "subdomain", "page_type"):
+        for field_name in KEYWORD_PAYLOAD_INDEX_FIELDS:
             self._client.create_payload_index(
                 collection_name=self._collection,
                 field_name=field_name,
@@ -66,24 +92,30 @@ class QdrantIndexer:
         """Upsert chunk embeddings as Qdrant points."""
         points = []
         for chunk, vector in zip(chunks, embeddings):
+            payload = {
+                "chunk_id": chunk["chunk_id"],
+                "document_id": chunk["document_id"],
+                "url": chunk["url"],
+                "title": chunk["title"],
+                "page_type": chunk.get("page_type", "general"),
+                "headings_path": chunk.get("headings_path", []),
+                "chunk_index": chunk.get("chunk_index", 0),
+                "content_hash": chunk.get("content_hash", ""),
+                "crawl_timestamp": chunk.get("crawl_timestamp", ""),
+                "token_count": chunk.get("token_count", 0),
+                "text": chunk.get("text", ""),
+                "source_host": chunk.get("source_host", ""),
+                "subdomain": chunk.get("subdomain", ""),
+            }
+            for field_name in STRUCTURED_PAYLOAD_FIELDS:
+                value = chunk.get(field_name)
+                if _has_value(value):
+                    payload[field_name] = value
+
             points.append(models.PointStruct(
                 id=chunk_id_to_uuid(chunk["chunk_id"]),
                 vector=vector,
-                payload={
-                    "chunk_id": chunk["chunk_id"],
-                    "document_id": chunk["document_id"],
-                    "url": chunk["url"],
-                    "title": chunk["title"],
-                    "page_type": chunk.get("page_type", "general"),
-                    "headings_path": chunk.get("headings_path", []),
-                    "chunk_index": chunk.get("chunk_index", 0),
-                    "content_hash": chunk.get("content_hash", ""),
-                    "crawl_timestamp": chunk.get("crawl_timestamp", ""),
-                    "token_count": chunk.get("token_count", 0),
-                    "text": chunk.get("text", ""),
-                    "source_host": chunk.get("source_host", ""),
-                    "subdomain": chunk.get("subdomain", ""),
-                },
+                payload=payload,
             ))
         self._client.upsert(
             collection_name=self._collection,

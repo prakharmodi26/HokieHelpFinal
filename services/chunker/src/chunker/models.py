@@ -1,7 +1,26 @@
 """ChunkRecord dataclass — the output unit of the chunking service."""
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List
+from typing import Any, List
+
+
+STRUCTURED_METADATA_FIELDS = (
+    "subject",
+    "course_number",
+    "course_level",
+    "credits",
+    "prerequisites",
+    "corequisites",
+    "when_offered",
+    "cross_listings",
+    "college",
+    "program_name",
+    "degree_type",
+)
+
+
+def _has_value(value: Any) -> bool:
+    return value not in (None, "", [])
 
 
 @dataclass
@@ -21,9 +40,20 @@ class ChunkRecord:
     token_count: int       # Approximate token count (len(text) // 4); used for embedding batching
     source_host: str = ""  # e.g. "dining.vt.edu"
     subdomain: str = ""    # e.g. "dining"
+    subject: Any = None
+    course_number: Any = None
+    course_level: Any = None
+    credits: Any = None
+    prerequisites: Any = None
+    corequisites: Any = None
+    when_offered: Any = None
+    cross_listings: Any = None
+    college: Any = None
+    program_name: Any = None
+    degree_type: Any = None
 
     def to_dict(self) -> dict:
-        return {
+        data = {
             "chunk_id": self.chunk_id,
             "document_id": self.document_id,
             "chunk_index": self.chunk_index,
@@ -38,9 +68,18 @@ class ChunkRecord:
             "source_host": self.source_host,
             "subdomain": self.subdomain,
         }
+        for field_name in STRUCTURED_METADATA_FIELDS:
+            value = getattr(self, field_name)
+            if _has_value(value):
+                data[field_name] = value
+        return data
 
     @classmethod
     def from_dict(cls, data: dict) -> ChunkRecord:
+        structured_metadata = {
+            field_name: data.get(field_name)
+            for field_name in STRUCTURED_METADATA_FIELDS
+        }
         return cls(
             chunk_id=data["chunk_id"],
             document_id=data["document_id"],
@@ -55,4 +94,5 @@ class ChunkRecord:
             token_count=data.get("token_count", len(data["text"]) // 4),
             source_host=data.get("source_host", ""),
             subdomain=data.get("subdomain", ""),
+            **structured_metadata,
         )

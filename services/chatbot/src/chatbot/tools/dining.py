@@ -15,9 +15,10 @@ from __future__ import annotations
 
 import json
 import logging
+import calendar
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Callable
 from zoneinfo import ZoneInfo
 
@@ -37,16 +38,12 @@ MENU_URL = (
 EASTERN = ZoneInfo("America/New_York")
 DEFAULT_TTL_SECONDS = 3600.0  # 1h; plan allows 1-6h
 HTTP_TIMEOUT_SECONDS = 15.0
-# Menus are ~2MB FoodPro pages. When no location filter narrows the roster,
-# only fetch menus if the matched unit count is small; otherwise return
-# hours-only (the typical "which halls are open" query needs no menus).
-MAX_MENU_FETCHES = 8
+# Menus are ~2MB FoodPro pages. Fetch them only after a location filter narrows
+# the query; broad dining queries stay responsive and return hours-only.
 
 HttpGet = Callable[[str], str]
 
 _LOCATION_NUM_RE = re.compile(r"MenuAtLocation\.aspx[^\"']*?locationNum=(\d+)", re.I)
-_MEAL_LABELS = ("breakfast", "brunch", "lunch", "dinner")
-
 # In-process TTL caches: {date: (fetched_at, units)} / {(date, locationNum): (fetched_at, items)}
 _hours_cache: dict[str, tuple[float, list[dict]]] = {}
 _menu_cache: dict[tuple[str, str], tuple[float, list[dict]]] = {}
@@ -183,8 +180,9 @@ def get_dining(
 
     date defaults to today in America/New_York (VT is Eastern). location is a
     case-insensitive substring filter on unit names. meal filters hours/menu by
-    label; menu items without meal attribution stay included. Never raises —
-    network failures degrade to {"date", "units": [], "error": "..."}.
+    label; menu items without meal attribution stay included only when the unit
+    has matching meal hours. Never raises — network failures degrade to
+    {"date", "units": [], "error": "..."}.
     """
     http_get = http_get or _default_http_get
     now = now or time.time
@@ -207,7 +205,7 @@ def get_dining(
         needle = location.lower()
         units = [u for u in units if needle in u["name"].lower()]
 
-    fetch_menus = bool(location) or len(units) <= MAX_MENU_FETCHES
+    fetch_menus = bool(location)
     meal_lower = meal.lower() if meal else None
 
     result_units: list[dict] = []
@@ -215,9 +213,10 @@ def get_dining(
         hours = unit["hours"]
         if meal_lower:
             hours = [h for h in hours if meal_lower in (h.get("label") or "").lower()]
+        is_open = bool(hours) if meal_lower else True
 
         menu: list[dict] = []
-        if fetch_menus and unit.get("location_num"):
+        if is_open and fetch_menus and unit.get("location_num"):
             try:
                 menu = _get_menu_cached(date, unit["location_num"], http_get, now, ttl)
             except Exception as exc:
@@ -233,7 +232,7 @@ def get_dining(
 
         result_units.append({
             "name": unit["name"],
-            "is_open": True,  # present in the day's roster == open that day
+            "is_open": is_open,
             "hours": hours,
             "menu": [
                 {"name": i["name"], "portion": i["portion"], "dietary": i["dietary"]}
@@ -301,20 +300,69 @@ _HALL_NAMES = {
     r"\bdxpress\b": "DXpress",
     r"\bdeet'?s\b": "Deet's",
 }
-_FOOD_WORDS = re.compile(
-    r"\b(dining(\s+halls?)?|menus?|food\s+courts?|eat(ing)?|"
-    r"breakfast|brunch|lunch|dinner)\b",
+_DINING_CONTEXT_RE = re.compile(
+    r"\b(dining(\s+halls?| centers?| locations?| services?)?|menus?|"
+    r"food\s+courts?|meal\s+plans?|breakfast|brunch|lunch|dinner)\b",
+    re.I,
+)
+_LIVE_LOOKUP_RE = re.compile(
+    r"\b(open|closed|hours?|menus?|serv(e|ing|ed)|available|today|tonight|"
+    r"now|breakfast|brunch|lunch|dinner|eat)\b",
+    re.I,
+)
+_NON_LOOKUP_RE = re.compile(
+    r"\b(job|jobs|employment|career|careers|hiring|apply|application|"
+    r"nutritionist|dietitian|policy|policies|contact|director|staff)\b",
     re.I,
 )
 _MEAL_RE = re.compile(r"\b(breakfast|brunch|lunch|dinner)\b", re.I)
+_ISO_DATE_RE = re.compile(r"\b(20\d{2}-\d{2}-\d{2})\b")
+_MONTH_NAMES = {name.lower(): i for i, name in enumerate(calendar.month_name) if name}
+_MONTH_NAMES.update({name.lower(): i for i, name in enumerate(calendar.month_abbr) if name})
+_MONTH_RE = re.compile(
+    r"\b("
+    + "|".join(sorted(map(re.escape, _MONTH_NAMES), key=len, reverse=True))
+    + r")\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,\s*(20\d{2}))?\b",
+    re.I,
+)
+
+
+def _today(now: Callable[[], float]) -> datetime.date:
+    return datetime.fromtimestamp(now(), tz=EASTERN).date()
+
+
+def _date_from_query(query: str, now: Callable[[], float]) -> str | None:
+    """Extract simple date references from a dining query."""
+    iso = _ISO_DATE_RE.search(query)
+    if iso:
+        return iso.group(1)
+
+    q = query.lower()
+    today = _today(now)
+    if re.search(r"\btoday\b", q):
+        return today.isoformat()
+    if re.search(r"\btomorrow\b", q):
+        return (today + timedelta(days=1)).isoformat()
+
+    month_match = _MONTH_RE.search(query)
+    if not month_match:
+        return None
+    month = _MONTH_NAMES[month_match.group(1).rstrip(".").lower()]
+    day = int(month_match.group(2))
+    year = int(month_match.group(3)) if month_match.group(3) else today.year
+    try:
+        parsed = today.replace(year=year, month=month, day=day)
+    except ValueError:
+        return None
+    return parsed.isoformat()
 
 
 def maybe_answer_dining(query: str, **kwargs) -> dict | None:
     """Deterministic pre-router: detect dining intent and answer with live data.
 
-    Returns the structured get_dining() result when the query looks like a
-    dining question (hall name or food/dining keyword), else None. Extra
-    kwargs (http_get/now/ttl) pass through to get_dining for tests.
+    Returns the structured get_dining() result when the query asks for live
+    dining availability/menu data, else None. Extra kwargs (http_get/now/ttl)
+    pass through to get_dining for tests.
     """
     location = None
     for pattern, canonical in _HALL_NAMES.items():
@@ -322,13 +370,22 @@ def maybe_answer_dining(query: str, **kwargs) -> dict | None:
             location = canonical
             break
 
-    if location is None and not _FOOD_WORDS.search(query):
+    live_lookup = bool(_LIVE_LOOKUP_RE.search(query))
+    dining_context = bool(_DINING_CONTEXT_RE.search(query))
+
+    if _NON_LOOKUP_RE.search(query):
+        return None
+    if location is None and not (dining_context and live_lookup):
+        return None
+    if location is not None and not (live_lookup or dining_context):
         return None
 
     meal_match = _MEAL_RE.search(query)
     meal = meal_match.group(1).capitalize() if meal_match else None
+    now = kwargs.get("now") or time.time
+    date = _date_from_query(query, now)
 
-    return get_dining(date=None, location=location, meal=meal, **kwargs)
+    return get_dining(date=date, location=location, meal=meal, **kwargs)
 
 
 # ── prompt-context formatter ─────────────────────────────────────────────────
@@ -351,7 +408,10 @@ def format_dining_context(result: dict) -> str:
         lines.append("No dining locations matching the request are open on this date.")
 
     for unit in result.get("units", []):
-        lines.append(f"\n{unit['name']} — OPEN on {result['date']}.")
+        if unit.get("is_open", True):
+            lines.append(f"\n{unit['name']} — OPEN on {result['date']}.")
+        else:
+            lines.append(f"\n{unit['name']} — not open for the requested meal on {result['date']}.")
         for h in unit["hours"]:
             lines.append(f"  {h['label']}: {h['open']} to {h['close']}")
         menu = unit.get("menu") or []

@@ -33,10 +33,16 @@ def test_cli_runs_discover_then_engine_then_docs(monkeypatch, tmp_path):
                         AsyncMock(return_value={"documents_processed": 0, "documents_failed": 0}))
     monkeypatch.setattr(
         cmain, "load_modes",
-        MagicMock(return_value={"vtechworks.lib.vt.edu": "catalog"}),
+        MagicMock(return_value={
+            "vtechworks.lib.vt.edu": "catalog",
+            "catalog.vt.edu": "special",
+        }),
     )
     monkeypatch.setattr(cmain, "harvest_catalog_records", MagicMock(return_value={
         "records_harvested": 2, "hosts_harvested": 1, "hosts_failed": 0,
+    }))
+    monkeypatch.setattr(cmain, "harvest_courseleaf_catalog", AsyncMock(return_value={
+        "courses_harvested": 2, "programs_harvested": 1, "pages_failed": 0,
     }))
 
     cmain.cli()  # should not raise
@@ -45,12 +51,14 @@ def test_cli_runs_discover_then_engine_then_docs(monkeypatch, tmp_path):
     # registry host modes are threaded into the engine for mode routing
     assert cmain.load_modes.call_args[0][0] == "config/host-registry.yaml"
     assert cmain.run_engine.call_args.kwargs["modes"] == {
-        "vtechworks.lib.vt.edu": "catalog"
+        "vtechworks.lib.vt.edu": "catalog",
+        "catalog.vt.edu": "special",
     }
     # catalog record harvest runs against the cleaned bucket (chunker input)
     args = cmain.harvest_catalog_records.call_args[0]
     assert args[0] == "config/host-registry.yaml"
     assert args[2] == "crawled-pages-cleaned"
+    assert cmain.harvest_courseleaf_catalog.await_args.args[1] == "crawled-pages-cleaned"
 
 
 def _cli_cfg(tmp_path):
@@ -84,6 +92,31 @@ def test_cli_survives_catalog_harvest_failure(monkeypatch, tmp_path):
     monkeypatch.setattr(cmain, "load_modes", MagicMock(return_value={}))
     monkeypatch.setattr(cmain, "harvest_catalog_records",
                         MagicMock(side_effect=RuntimeError("registry exploded")))
+    monkeypatch.setattr(cmain, "harvest_courseleaf_catalog", AsyncMock())
 
     cmain.cli()  # should not raise despite the harvest failure
     assert cmain.harvest_catalog_records.called
+    assert not cmain.harvest_courseleaf_catalog.called
+
+
+def test_cli_survives_courseleaf_harvest_failure(monkeypatch, tmp_path):
+    """CourseLeaf browser/pass failures should not kill the crawl summary."""
+    cfg = _cli_cfg(tmp_path)
+    monkeypatch.setattr(cmain.CrawlerConfig, "from_env", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(cmain, "MinioStorage", MagicMock())
+    monkeypatch.setattr(cmain, "populate_frontier", AsyncMock(return_value={"urls_enqueued": 3}))
+    monkeypatch.setattr(cmain, "run_engine", AsyncMock(return_value={
+        "pages_stored": 3, "pages_failed": 0, "documents": 0, "document_urls": set(),
+    }))
+    monkeypatch.setattr(cmain, "load_modes", MagicMock(return_value={"catalog.vt.edu": "special"}))
+    monkeypatch.setattr(cmain, "harvest_catalog_records", MagicMock(return_value={
+        "records_harvested": 0, "hosts_harvested": 0, "hosts_failed": 0,
+    }))
+    monkeypatch.setattr(
+        cmain,
+        "harvest_courseleaf_catalog",
+        AsyncMock(side_effect=RuntimeError("courseleaf exploded")),
+    )
+
+    cmain.cli()
+    assert cmain.harvest_courseleaf_catalog.called

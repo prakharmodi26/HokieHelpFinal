@@ -152,6 +152,18 @@ def test_get_dining_meal_filter_restricts_hours_and_menu():
     assert "Bacon" not in menu_names  # Breakfast item filtered out
 
 
+def test_get_dining_meal_filter_marks_unit_closed_for_unserved_meal():
+    fake = FakeHttp()
+    result = get_dining(date="2026-06-11", location="Xpress", meal="Dinner", http_get=fake)
+
+    unit = result["units"][0]
+    assert unit["name"] == "Dietrick - Xpress Lane Market"
+    assert unit["is_open"] is False
+    assert unit["hours"] == []
+    assert unit["menu"] == []
+    assert fake.menu_calls == []
+
+
 def test_get_dining_meal_filter_keeps_unattributed_menu_items():
     """Menu items without meal attribution stay included under a meal filter."""
     no_tabs_html = MENU_HTML.replace('href="#meal_1_content"', 'href="#x"').replace(
@@ -251,12 +263,27 @@ def test_maybe_answer_dining_extracts_meal():
     assert all(h["label"] == "Lunch" for h in unit["hours"])
 
 
+def test_maybe_answer_dining_extracts_relative_and_explicit_dates():
+    fake = FakeHttp()
+    now = lambda: 1781227800.0  # 2026-06-11 Eastern
+
+    maybe_answer_dining("Is D2 open tomorrow?", http_get=fake, now=now)
+    maybe_answer_dining("What is D2 serving on 2026-06-15?", http_get=fake, now=now)
+    maybe_answer_dining("What is D2 serving June 16?", http_get=fake, now=now)
+
+    assert "2026-06-12" in fake.hours_calls[0]
+    assert "2026-06-15" in fake.hours_calls[1]
+    assert "2026-06-16" in fake.hours_calls[2]
+
+
 def test_maybe_answer_dining_fires_on_generic_dining_words():
     fake = FakeHttp()
     result = maybe_answer_dining("Which dining halls are open right now?", http_get=fake)
 
     assert result is not None
     assert len(result["units"]) == 3
+    assert fake.menu_calls == []
+    assert "specific" in result["note"]
 
 
 def test_maybe_answer_dining_ignores_unrelated_query():
@@ -265,6 +292,16 @@ def test_maybe_answer_dining_ignores_unrelated_query():
 
     assert maybe_answer_dining("Who is the head of the CS department?", http_get=must_not_call) is None
     assert maybe_answer_dining("What are the MS admission deadlines?", http_get=must_not_call) is None
+
+
+def test_maybe_answer_dining_ignores_dining_services_non_lookup_queries():
+    def must_not_call(url: str) -> str:
+        raise AssertionError("network must not be touched for non-live dining queries")
+
+    assert maybe_answer_dining("How do I apply for dining services jobs?", http_get=must_not_call) is None
+    assert maybe_answer_dining("Who manages VT dining services employment?", http_get=must_not_call) is None
+    assert maybe_answer_dining("What are dining services policies?", http_get=must_not_call) is None
+    assert maybe_answer_dining("Are dining services jobs available?", http_get=must_not_call) is None
 
 
 def test_maybe_answer_dining_does_not_fire_on_substrings():
@@ -404,3 +441,20 @@ def test_chat_survives_dining_seam_crash(app_client):
         resp = client.post("/chat", json={"question": "Is D2 open?", "history": []})
 
     assert resp.status_code == 200  # seam failure must never break the request
+
+
+def test_chat_stream_injects_live_dining_context_and_sources(app_client):
+    from unittest.mock import patch
+
+    client, llm = app_client
+    llm.chat_stream.return_value = iter(["D2", " is", " open"])
+    with patch("chatbot.app.maybe_answer_dining", return_value=CANNED_DINING_RESULT):
+        resp = client.post("/chat/stream", json={"question": "Is D2 open for lunch?", "history": []})
+
+    assert resp.status_code == 200
+    chunks = llm.chat_stream.call_args[0][1]
+    assert chunks[0]["chunk_id"] == "live_dining"
+    body = resp.text
+    assert '"type": "token"' in body
+    assert '"type": "sources"' in body
+    assert "https://dining.vt.edu/hours.html" in body

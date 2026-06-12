@@ -4,8 +4,8 @@ from __future__ import annotations
 import hashlib
 from typing import Any, List
 
-from chunker.models import ChunkRecord
-from chunker.parser import FrontmatterData, Section, infer_page_type
+from chunker.models import ChunkRecord, STRUCTURED_METADATA_FIELDS
+from chunker.parser import Section, infer_page_type
 
 
 def estimate_tokens(text: str) -> int:
@@ -70,7 +70,11 @@ def build_chunks(
     preferred = config.chunk_preferred_tokens
     overlap = config.chunk_overlap_tokens
     minimum = config.chunk_min_tokens
-    page_type = infer_page_type(frontmatter.url)
+    page_type = getattr(frontmatter, "page_type", "") or infer_page_type(frontmatter.url)
+    structured_metadata = {
+        field_name: getattr(frontmatter, field_name, None)
+        for field_name in STRUCTURED_METADATA_FIELDS
+    }
 
     chunk_texts: List[tuple[str, List[str]]] = []  # (text, headings_path)
     pending_parts: List[Section] = []
@@ -127,5 +131,6 @@ def build_chunks(
             token_count=estimate_tokens(text),
             source_host=getattr(frontmatter, "source_host", ""),
             subdomain=getattr(frontmatter, "subdomain", ""),
+            **structured_metadata,
         ))
     return records

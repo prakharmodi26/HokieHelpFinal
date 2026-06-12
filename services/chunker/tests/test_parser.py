@@ -235,3 +235,52 @@ def test_parse_frontmatter_reads_host_and_page_type():
     assert fm.page_type == "dining"
     assert fm.last_modified.startswith("Wed")
     assert body.strip().startswith("# Menus")
+
+
+def test_parse_frontmatter_reads_structured_course_fields():
+    md = (
+        "---\n"
+        "doc_id: cs3114\n"
+        "url: https://catalog.vt.edu/course-descriptions/cs/\n"
+        "title: 'CS 3114: Data Structures and Algorithms'\n"
+        "page_type: course\n"
+        "subject: CS\n"
+        "course_number: '3114'\n"
+        "course_level: ug\n"
+        "credits: '3'\n"
+        "prerequisites: CS 2114 or CS 2505.\n"
+        "corequisites: MATH 2534.\n"
+        "when_offered: Fall and Spring.\n"
+        "cross_listings:\n"
+        "  - CMDA 3114\n"
+        "---\n\n# CS 3114\nbody"
+    )
+    fm, _ = parse_frontmatter(md)
+    assert fm.page_type == "course"
+    assert fm.subject == "CS"
+    assert fm.course_number == "3114"
+    assert fm.course_level == "ug"
+    assert fm.credits == "3"
+    assert fm.prerequisites == "CS 2114 or CS 2505."
+    assert fm.corequisites == "MATH 2534."
+    assert fm.when_offered == "Fall and Spring."
+    assert fm.cross_listings == ["CMDA 3114"]
+
+
+def test_parse_frontmatter_reads_structured_program_fields():
+    md = (
+        "---\n"
+        "doc_id: cs-bs\n"
+        "url: https://catalog.vt.edu/undergraduate/computer-science-bs/\n"
+        "title: Computer Science, B.S.\n"
+        "page_type: program\n"
+        "college: College of Engineering\n"
+        "program_name: Computer Science\n"
+        "degree_type: BS\n"
+        "---\n\n# Computer Science, B.S.\nbody"
+    )
+    fm, _ = parse_frontmatter(md)
+    assert fm.page_type == "program"
+    assert fm.college == "College of Engineering"
+    assert fm.program_name == "Computer Science"
+    assert fm.degree_type == "BS"
