@@ -38,6 +38,19 @@ class TestBuildCrawlerJob:
         assert secret_envs["MINIO_ACCESS_KEY"] == "access-key"
         assert secret_envs["MINIO_SECRET_KEY"] == "secret-key"
 
+    def test_frontier_pvc_mounted(self, config):
+        job = build_crawler_job(config, run_id="abc123")
+        container = job.spec.template.spec.containers[0]
+        mounts = {m.name: m.mount_path for m in container.volume_mounts}
+        volumes = {
+            v.name: v.persistent_volume_claim.claim_name
+            for v in job.spec.template.spec.volumes
+        }
+        assert mounts["frontier"] == "/data"
+        assert volumes["frontier"] == "crawler-frontier"
+        assert container.resources.requests["memory"] == "6Gi"
+        assert container.resources.limits["memory"] == "12Gi"
+
 
 class TestBuildChunkerJob:
     def test_job_name_prefix(self, config):

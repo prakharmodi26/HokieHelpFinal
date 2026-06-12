@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: embedder-fulltest
+  namespace: test
+  labels:
+    app: hokiehelp-embedder
+    run: fulltest
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 14400
+  template:
+    metadata:
+      labels:
+        app: hokiehelp-embedder
+        run: fulltest
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: embedder
+          image: ghcr.io/prakharmodi26/hokiehelp-embedder:vtedu-test
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: embedder-config
+          env:
+            - name: MINIO_CHUNKS_BUCKET
+              value: test-chunks
+            - name: QDRANT_COLLECTION
+              value: hokiehelp_chunks_test
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: secret-key
+          resources:
+            requests:
+              memory: 6Gi
+              cpu: 500m
+              nvidia.com/gpu: "1"
+            limits:
+              memory: 12Gi
+              cpu: "2000m"
+              nvidia.com/gpu: "1"

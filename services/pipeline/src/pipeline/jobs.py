@@ -61,9 +61,12 @@ def build_crawler_job(config: PipelineConfig, run_id: str) -> client.V1Job:
             )
         ],
         env=env_overrides + _minio_secret_envs(),
+        volume_mounts=[
+            client.V1VolumeMount(name="frontier", mount_path="/data"),
+        ],
         resources=client.V1ResourceRequirements(
-            requests={"memory": "3Gi", "cpu": "1000m"},
-            limits={"memory": "6Gi", "cpu": "2000m"},
+            requests={"memory": "6Gi", "cpu": "1000m"},
+            limits={"memory": "12Gi", "cpu": "2000m"},
         ),
     )
 
@@ -85,6 +88,14 @@ def build_crawler_job(config: PipelineConfig, run_id: str) -> client.V1Job:
                 spec=client.V1PodSpec(
                     restart_policy="Never",
                     containers=[container],
+                    volumes=[
+                        client.V1Volume(
+                            name="frontier",
+                            persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource(
+                                claim_name="crawler-frontier",
+                            ),
+                        ),
+                    ],
                 ),
             ),
         ),

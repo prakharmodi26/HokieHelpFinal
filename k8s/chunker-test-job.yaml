@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chunker-fulltest
+  namespace: test
+  labels:
+    app: hokiehelp-chunker
+    run: fulltest
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 3600
+  template:
+    metadata:
+      labels:
+        app: hokiehelp-chunker
+        run: fulltest
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: chunker
+          image: ghcr.io/prakharmodi26/hokiehelp-chunker:vtedu-test
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: chunker-config
+          env:
+            - name: MINIO_CLEANED_BUCKET
+              value: test-crawled-pages-cleaned
+            - name: MINIO_CHUNKS_BUCKET
+              value: test-chunks
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: secret-key
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 250m
+            limits:
+              memory: 1Gi
+              cpu: 500m

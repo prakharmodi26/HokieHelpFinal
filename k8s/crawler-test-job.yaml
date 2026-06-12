@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: crawler-fulltest
+  namespace: test
+  labels:
+    app: hokiehelp-crawler
+    run: fulltest
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 86400
+  template:
+    metadata:
+      labels:
+        app: hokiehelp-crawler
+        run: fulltest
+    spec:
+      restartPolicy: Never
+      volumes:
+        - name: frontier
+          persistentVolumeClaim:
+            claimName: crawler-frontier
+      containers:
+        - name: crawler
+          image: ghcr.io/prakharmodi26/hokiehelp-crawler:vtedu-test
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: crawler-config
+          env:
+            - name: MINIO_BUCKET
+              value: test-crawled-pages
+            - name: MINIO_CLEANED_BUCKET
+              value: test-crawled-pages-cleaned
+            - name: MINIO_EXTERNAL_BUCKET
+              value: test-crawled-pages-external
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: secret-key
+          volumeMounts:
+            - name: frontier
+              mountPath: /data
+          resources:
+            requests:
+              memory: 6Gi
+              cpu: "1000m"
+            limits:
+              memory: 12Gi
+              cpu: "2000m"

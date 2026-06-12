@@ -9,6 +9,8 @@ WORKDIR /app
 
 # Copy project files and install
 COPY pyproject.toml .
+COPY config/ config/
+COPY scripts/ scripts/
 COPY src/ src/
 RUN pip install --no-cache-dir .
 

@@ -10,7 +10,7 @@ class TestPipelineConfigDefaults:
         assert cfg.namespace == "test"
         assert cfg.crawl_max_depth == 4
         assert cfg.crawl_max_pages == 9999999
-        assert cfg.crawl_seed_url == "https://website.cs.vt.edu"
+        assert cfg.crawl_seed_url == "https://vt.edu"
         assert cfg.poll_interval == 30
 
     def test_cli_overrides(self):

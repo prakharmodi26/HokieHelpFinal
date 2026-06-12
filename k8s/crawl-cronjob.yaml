@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hokiehelp-recrawl
+  namespace: test
+  labels:
+    app: hokiehelp-pipeline
+spec:
+  # Owner-controlled: suspend by default so this cannot start writing to the
+  # main buckets/collection until promotion is explicitly approved.
+  suspend: true
+  schedule: "0 3 * * 0"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: hokiehelp-pipeline
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: pipeline
+              image: ghcr.io/prakharmodi26/hokiehelp-pipeline:latest
+              imagePullPolicy: Always
+              envFrom:
+                - configMapRef:
+                    name: pipeline-config

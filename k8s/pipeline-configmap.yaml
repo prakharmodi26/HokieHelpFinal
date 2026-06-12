@@ -6,9 +6,11 @@ metadata:
   labels:
     app: hokiehelp-pipeline
 data:
-  # Default crawl settings for scheduled runs
-  CRAWL_SEED_URL: "https://cs.vt.edu"
-  CRAWL_MAX_DEPTH: "4"
+  # Default crawl settings for scheduled runs. The production crawler is
+  # registry-seeded; CRAWL_SEED_URL is retained only for legacy CLI overrides.
+  CRAWL_SEED_URL: "https://vt.edu"
+  CRAWL_ALLOWED_DOMAINS: "vt.edu"
+  CRAWL_MAX_DEPTH: "10"
   CRAWL_MAX_PAGES: "9999999"
   # Pipeline behavior
   PIPELINE_NAMESPACE: "test"
