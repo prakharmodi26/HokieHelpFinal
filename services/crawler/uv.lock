@@ -956,6 +956,7 @@ name = "hokiehelp-crawler"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "beautifulsoup4" },
     { name = "crawl4ai" },
     { name = "httpx" },
     { name = "minio" },
@@ -973,6 +974,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "beautifulsoup4", specifier = ">=4.12" },
     { name = "crawl4ai", specifier = ">=0.6.0" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "minio", specifier = ">=7.2.0" },
