@@ -1,0 +1,129 @@
+[
+  {
+    "id": "6",
+    "name": "Dietrick - D2",
+    "unit_logo_id": "30",
+    "logo": {
+      "url": "https://apps.students.vt.edu/hours/logos/1695397186_8b43cddc9adb41ca4fb8.png"
+    },
+    "urls": [
+      {
+        "id": "16",
+        "unit_id": "6",
+        "url": "http://foodpro.students.vt.edu/menus/MenuAtLocation.aspx?locationNum=15&naFlag=1",
+        "label": "Today's Menu"
+      },
+      {
+        "id": "17",
+        "unit_id": "6",
+        "url": "https://dining.vt.edu/dining_centers/dietrick-hall.html",
+        "label": "About Dietrick"
+      }
+    ],
+    "hours": [
+      {
+        "unit_id": "6",
+        "schedule_labels_id": "2",
+        "start": "2026-06-11",
+        "end": "2026-06-11",
+        "open_time": "07:00:01",
+        "close_time": "10:30:00",
+        "title": "7:00 AM - 10:30 AM",
+        "label": "Breakfast",
+        "display_order": "2.00"
+      },
+      {
+        "unit_id": "6",
+        "schedule_labels_id": "3",
+        "start": "2026-06-11",
+        "end": "2026-06-11",
+        "open_time": "10:30:01",
+        "close_time": "14:00:00",
+        "title": "10:30 AM - 2:00 PM",
+        "label": "Lunch",
+        "display_order": "3.00"
+      },
+      {
+        "unit_id": "6",
+        "schedule_labels_id": "4",
+        "start": "2026-06-11",
+        "end": "2026-06-11",
+        "open_time": "14:00:01",
+        "close_time": "19:30:00",
+        "title": "2:00 PM - 7:30 PM",
+        "label": "Dinner",
+        "display_order": "4.00"
+      }
+    ]
+  },
+  {
+    "id": "27",
+    "name": "Dietrick - Xpress Lane Market",
+    "unit_logo_id": "27",
+    "logo": {
+      "url": "https://apps.students.vt.edu/hours/logos/1690569098_9ca0d403c4608b0331b2.png"
+    },
+    "urls": [
+      {
+        "id": "53",
+        "unit_id": "27",
+        "url": "https://dining.vt.edu/dining_centers/dietrick-hall.html",
+        "label": "About Dietrick"
+      },
+      {
+        "id": "54",
+        "unit_id": "27",
+        "url": "https://foodpro.students.vt.edu/menus/MenuAtLocation.aspx?locationNum=07&naFlag=1",
+        "label": "Today's Menu"
+      }
+    ],
+    "hours": [
+      {
+        "unit_id": "27",
+        "schedule_labels_id": "1",
+        "start": "2026-06-11",
+        "end": "2026-06-11",
+        "open_time": "08:00:01",
+        "close_time": "20:00:00",
+        "title": "8:00 AM - 8:00 PM",
+        "label": "Regular Hours",
+        "display_order": "1.00"
+      }
+    ]
+  },
+  {
+    "id": "12",
+    "name": "Turner Place at Lavery Hall",
+    "unit_logo_id": "18",
+    "logo": {
+      "url": "https://apps.students.vt.edu/hours/logos/turner.png"
+    },
+    "urls": [
+      {
+        "id": "31",
+        "unit_id": "12",
+        "url": "https://foodpro.students.vt.edu/menus/MenuAtLocation.aspx?locationNum=14&naFlag=1",
+        "label": "Today's Menu"
+      },
+      {
+        "id": "32",
+        "unit_id": "12",
+        "url": "https://dining.vt.edu/dining_centers/turner-place.html",
+        "label": "About Turner Place"
+      }
+    ],
+    "hours": [
+      {
+        "unit_id": "12",
+        "schedule_labels_id": "3",
+        "start": "2026-06-11",
+        "end": "2026-06-11",
+        "open_time": "11:00:01",
+        "close_time": "14:30:00",
+        "title": "11:00 AM - 2:30 PM",
+        "label": "Lunch",
+        "display_order": "3.00"
+      }
+    ]
+  }
+]
