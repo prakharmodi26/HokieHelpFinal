@@ -320,3 +320,87 @@ def test_live_smoke_hours_and_menu():
         assert unit["name"]
         assert isinstance(unit["hours"], list)
         assert isinstance(unit["menu"], list)
+
+
+# ── app wiring: pre-router injection into the chat flow ─────────────────────
+
+CANNED_DINING_RESULT = {
+    "date": "2026-06-11",
+    "fetched_at": "2026-06-11T12:00-04:00",
+    "units": [
+        {
+            "name": "Dietrick - D2",
+            "is_open": True,
+            "hours": [{"label": "Lunch", "open": "10:30:01", "close": "14:00:00"}],
+            "menu": [{"name": "Garden Salad", "portion": "1 Cup", "dietary": ["vegetarian"]}],
+        }
+    ],
+}
+
+
+@pytest.fixture
+def app_client():
+    from unittest.mock import MagicMock, patch
+
+    from fastapi.testclient import TestClient
+
+    from chatbot.session_store import SessionStore
+
+    retriever = MagicMock()
+    retriever.search.return_value = [
+        {
+            "score": 0.85,
+            "chunk_id": "abc_0000",
+            "text": "Sally Hamouda is a professor of CS.",
+            "url": "https://website.cs.vt.edu/faculty/sally.html",
+            "title": "Sally Hamouda | CS | VT",
+        }
+    ]
+    llm = MagicMock()
+    llm.chat.return_value = "answer"
+    llm.rewrite_query.side_effect = lambda q, h: q
+    store = SessionStore(max_requests=1000, window_seconds=3600)
+    with patch("chatbot.app.retriever", retriever), \
+         patch("chatbot.app.llm_client", llm), \
+         patch("chatbot.app._session_store", store):
+        from chatbot.app import app
+
+        yield TestClient(app, cookies={"hokiehelp_session": "dining-test-session"}), llm
+
+
+def test_chat_injects_live_dining_context_for_dining_query(app_client):
+    from unittest.mock import patch
+
+    client, llm = app_client
+    with patch("chatbot.app.maybe_answer_dining", return_value=CANNED_DINING_RESULT):
+        resp = client.post("/chat", json={"question": "Is D2 open for lunch?", "history": []})
+
+    assert resp.status_code == 200
+    chunks = llm.chat.call_args[0][1]
+    assert chunks[0]["chunk_id"] == "live_dining"
+    assert "LIVE VT DINING DATA" in chunks[0]["text"]
+    assert "Garden Salad" in chunks[0]["text"]
+    # live dining surfaces as the top source
+    assert resp.json()["sources"][0]["url"].startswith("https://dining.vt.edu")
+
+
+def test_chat_does_not_inject_for_non_dining_query(app_client):
+    from unittest.mock import patch
+
+    client, llm = app_client
+    with patch("chatbot.app.maybe_answer_dining", return_value=None):
+        resp = client.post("/chat", json={"question": "Who is Sally Hamouda?", "history": []})
+
+    assert resp.status_code == 200
+    chunks = llm.chat.call_args[0][1]
+    assert all(c.get("chunk_id") != "live_dining" for c in chunks)
+
+
+def test_chat_survives_dining_seam_crash(app_client):
+    from unittest.mock import patch
+
+    client, llm = app_client
+    with patch("chatbot.app.maybe_answer_dining", side_effect=RuntimeError("boom")):
+        resp = client.post("/chat", json={"question": "Is D2 open?", "history": []})
+
+    assert resp.status_code == 200  # seam failure must never break the request

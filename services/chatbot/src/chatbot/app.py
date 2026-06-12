@@ -15,6 +15,7 @@ from chatbot.guard import PromptRejected, check_prompt
 from chatbot.retriever import Retriever
 from chatbot.llm import LLMClient
 from chatbot.session_store import SessionStore
+from chatbot.tools.dining import format_dining_context, maybe_answer_dining
 from chatbot import logbuffer
 
 logbuffer.install(level=logging.INFO)
@@ -167,6 +168,37 @@ def _vector_chunks(chunks: list[dict]) -> list[dict]:
     return filtered
 
 
+def _live_dining_chunk(question: str) -> dict | None:
+    """Deterministic dining pre-router: when the question looks like a campus
+    dining query, fetch live hours/menus and package them as a top-ranked
+    context chunk for the LLM to ground on. Returns None for non-dining
+    queries; never raises into the request path."""
+    try:
+        result = maybe_answer_dining(question)
+    except Exception as exc:
+        logger.warning("DINING pre-router failed, continuing without live data: %s", exc)
+        return None
+    if result is None:
+        return None
+    return {
+        "text": format_dining_context(result),
+        "title": "Live VT Dining Hours & Menus",
+        "url": "https://dining.vt.edu/hours.html",
+        "score": 1.0,
+        "chunk_id": "live_dining",
+        "from_vector": True,
+    }
+
+
+def _with_dining_context(question: str, llm_chunks: list[dict], tag: str) -> list[dict]:
+    """Prepend the live dining chunk to the LLM context when the query fires."""
+    dining_chunk = _live_dining_chunk(question)
+    if dining_chunk is None:
+        return llm_chunks
+    logger.info("%s injected live dining context (len=%d)", tag, len(dining_chunk["text"]))
+    return [dining_chunk, *llm_chunks]
+
+
 def _dedup_sources(chunks: list[dict]) -> list[Source]:
     """Deduplicate sources by URL, keeping the highest-scoring chunk per URL."""
     seen: dict[str, Source] = {}
@@ -224,7 +256,7 @@ def ask(
     try:
         chunks = retriever.search(req.question)
         logger.info("ASK retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t0)*1000)
-        llm_chunks = _vector_chunks(chunks)
+        llm_chunks = _with_dining_context(req.question, _vector_chunks(chunks), "ASK")
         t1 = _t.monotonic()
         answer = llm_client.ask(req.question, llm_chunks)
         logger.info("ASK llm answer in %.0fms (answer_len=%d)", (_t.monotonic()-t1)*1000, len(answer))
@@ -265,7 +297,7 @@ def chat(
         t1 = _t.monotonic()
         chunks = retriever.search(search_query)
         logger.info("CHAT retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t1)*1000)
-        llm_chunks = _vector_chunks(chunks)
+        llm_chunks = _with_dining_context(req.question, _vector_chunks(chunks), "CHAT")
 
         # Stage 3: Generate answer using original question + chunks + history
         t2 = _t.monotonic()
@@ -309,7 +341,7 @@ def chat_stream(
         t1 = _t.monotonic()
         chunks = retriever.search(search_query)
         logger.info("STREAM retrieved %d chunks in %.0fms", len(chunks), (_t.monotonic()-t1)*1000)
-        llm_chunks = _vector_chunks(chunks)
+        llm_chunks = _with_dining_context(req.question, _vector_chunks(chunks), "STREAM")
         sources = _dedup_sources(llm_chunks)
     except Exception as exc:
         logger.exception("STREAM failed session=%s: %s", session_id, exc)
