@@ -158,6 +158,55 @@ def test_run_engine_routes_catalog_host_to_card_and_skips_expansion(tmp_path):
     assert sum(fr.count_by_status().values()) == 3
 
 
+def test_run_engine_recovers_from_wedged_batch(tmp_path):
+    """A single URL whose render never returns must not wedge the whole crawl.
+
+    Reproduces the production hang (cpes.vt.edu/library/download/* and SPA login
+    pages stayed 'leased' for 13h while the engine blocked forever on the
+    arun_many stream). The idle watchdog must abort the stuck batch, mark the
+    unreturned URL failed (so it is not re-leased and re-wedged), recycle the
+    browser, and drain the rest of the frontier.
+    """
+    fr = Frontier(str(tmp_path / "f.db"))
+    # download URL leased last: the good pages stream out first (as they do in
+    # production, by completion order), then the download wedges the stream.
+    for u in ("https://cs.vt.edu/ok1", "https://cs.vt.edu/ok2",
+              "https://cpes.vt.edu/library/download/1"):
+        fr.enqueue(u, scope="vt_page", depth=1, hop_history=[u],
+                   discovery_source="seed")
+    storage = MagicMock()
+
+    async def fake_arun_many(urls, config, dispatcher):
+        async def gen():
+            for u in urls:
+                if "download" in u:
+                    await asyncio.sleep(30)  # never returns within idle timeout
+                yield _result(u, "# OK\n" + "word " * 40)
+        return gen()
+
+    crawler = MagicMock()
+    crawler.__aenter__ = AsyncMock(return_value=crawler)
+    crawler.__aexit__ = AsyncMock(return_value=False)
+    crawler.arun_many = AsyncMock(side_effect=fake_arun_many)
+
+    with patch("crawler.engine.AsyncWebCrawler", return_value=crawler):
+        stats = asyncio.run(run_engine(
+            fr, storage, main_bucket="crawled-pages",
+            external_bucket="crawled-pages-external",
+            external_hops=1, max_depth=1, batch_size=10,
+            memory_pct=70.0, max_sessions=5, threshold=0.5,
+            batch_idle_timeout=0.3,
+        ))
+
+    counts = fr.count_by_status()
+    assert counts.get("pending", 0) == 0   # drained, did not hang
+    assert counts.get("leased", 0) == 0    # nothing left stuck in-flight
+    assert counts.get("done", 0) == 2      # the two good pages still ingested
+    assert counts.get("failed", 0) == 1    # only the wedged download URL
+    failed = {row[0] for row in fr.iter_status("failed")}
+    assert failed == {"https://cpes.vt.edu/library/download/1"}
+
+
 def test_run_engine_skips_special_courseleaf_host_without_rendering(tmp_path):
     """special-mode hosts (courseleaf_catalog) are checkpointed as skipped and
     never rendered/full-text ingested — Task 8.4 adds their dedicated pass.

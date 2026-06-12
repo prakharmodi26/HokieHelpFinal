@@ -197,6 +197,9 @@ def cli() -> None:
                 # Registry host modes: full ingest vs catalog cards vs
                 # special handlers (Phase 8 mode routing).
                 modes=modes,
+                # Watchdog: recycle the browser if a batch's render stream
+                # stalls (prevents a single hung page wedging the whole crawl).
+                batch_idle_timeout=config.batch_idle_timeout,
             )
         )
         logger.info(

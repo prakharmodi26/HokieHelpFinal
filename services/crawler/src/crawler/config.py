@@ -36,6 +36,11 @@ class CrawlerConfig:
     memory_threshold_percent: float = 70.0
     max_sessions: int = 10
     prune_content_threshold: float = 0.5
+    # Watchdog: if an arun_many result stream produces no new result for this
+    # many seconds, the batch is treated as wedged (a single page whose render
+    # never returns — downloads, SPA login loops). The browser is recycled and
+    # the unreturned URLs are failed so they are not re-leased and re-wedged.
+    batch_idle_timeout: float = 180.0
 
     @classmethod
     def from_env(cls) -> CrawlerConfig:
@@ -99,4 +104,5 @@ class CrawlerConfig:
             memory_threshold_percent=float(os.environ.get("CRAWL_MEMORY_PCT", "70.0")),
             max_sessions=int(os.environ.get("CRAWL_MAX_SESSIONS", "10")),
             prune_content_threshold=float(os.environ.get("CRAWL_PRUNE_CONTENT_THRESHOLD", "0.5")),
+            batch_idle_timeout=float(os.environ.get("CRAWL_BATCH_IDLE_TIMEOUT", "180.0")),
         )

@@ -7,6 +7,8 @@ full hop history. Empty fast-tier pages are signalled for a JS-tier retry.
 """
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import hashlib
 import logging
 from datetime import datetime, timezone
@@ -29,6 +31,32 @@ logger = logging.getLogger(__name__)
 # Sentinel returned by process_result when a fast-tier render came back empty
 # and the page should be retried on the JS tier.
 NEEDS_JS = "needs_js"
+
+
+class _WedgedBatch(Exception):
+    """Raised when an arun_many result stream goes idle past the watchdog
+    timeout — a single page whose render never returns (binary downloads with
+    no extension, SPA login pages with live websockets) stalled the whole
+    batch. page_timeout only bounds navigation, not post-load scans/waits, so
+    such pages can hang the stream forever; this is the recovery signal."""
+
+
+async def _iter_with_idle_timeout(results, idle_timeout: float):
+    """Yield results from an arun_many stream, raising _WedgedBatch if no new
+    result arrives within idle_timeout seconds. The underlying generator is
+    closed (cancelling the stuck in-flight render) before the signal is raised.
+    """
+    agen = results.__aiter__()
+    while True:
+        try:
+            item = await asyncio.wait_for(agen.__anext__(), timeout=idle_timeout)
+        except StopAsyncIteration:
+            return
+        except asyncio.TimeoutError:
+            with contextlib.suppress(Exception):
+                await agen.aclose()
+            raise _WedgedBatch
+        yield item
 
 
 def _ensure_row(frontier: Frontier, item: FrontierItem) -> None:
@@ -277,6 +305,7 @@ async def run_engine(
     host_filter=None,
     max_urls_per_host: int = -1,
     modes: dict[str, str] | None = None,
+    batch_idle_timeout: float = 180.0,
 ) -> dict:
     """Lease pending URLs in batches, render (fast tier), checkpoint, retry empties
     on the JS tier, until the frontier has no pending rows.
@@ -285,6 +314,11 @@ async def run_engine(
     (registry.load_modes). Hosts not in the map — including every
     BFS-discovered host — default to "full". None (the default) preserves the
     historical all-full behaviour.
+
+    `batch_idle_timeout` guards against a single page whose render never returns
+    wedging the whole crawl: if the result stream produces nothing new for that
+    many seconds, the stuck URLs are failed, the browser is recycled, and the
+    crawl continues.
     """
     stats = {"pages_stored": 0, "pages_failed": 0, "needs_js": 0, "documents": 0}
 
@@ -293,7 +327,6 @@ async def run_engine(
             return "full"
         return modes.get((urlparse(url).hostname or "").lower(), "full")
     document_urls: set[str] = set()
-    dispatcher = make_dispatcher(memory_pct, max_sessions)
     fast_cfg = fast_run_config(threshold)
     js_cfg = js_run_config(threshold)
 
@@ -308,78 +341,115 @@ async def run_engine(
     # frontier so a restart cannot blow past the cap.
     host_counts = frontier.count_by_host() if max_urls_per_host != -1 else None
 
-    async with AsyncWebCrawler(config=browser_config()) as crawler:
-        while True:
-            batch = frontier.lease_pending(limit=batch_size)
-            if not batch:
-                break
+    def _handle(result, by_url, tier):
+        """Process one streamed result against its leased item. Returns
+        (item, outcome), or (None, None) if the result can't be matched."""
+        item = _match_item(by_url, result)
+        if item is None:
+            # Unmatchable result: its row stays leased and is recovered by
+            # requeue_leased() on the next run.
+            logger.warning("No leased item matches result url %s", result.url)
+            return None, None
+        outcome = process_result(
+            result, item, frontier, storage,
+            main_bucket=main_bucket, external_bucket=external_bucket,
+            external_hops=external_hops, max_depth=max_depth, tier=tier,
+            host_filter=host_filter, host_counts=host_counts,
+            max_urls_per_host=max_urls_per_host, mode=mode_of(item.url),
+        )
+        return item, outcome
 
-            # "special" hosts are never rendered or full-text ingested here.
-            # The only crawl-seeded special handler is courseleaf_catalog
-            # (catalog.vt.edu); Task 8.4 adds its dedicated structured course
-            # ingest pass — until then its rows are checkpointed as skipped.
-            # dining_tool hosts are excluded by load_seed_hosts and never
-            # reach the frontier at all.
-            render_batch = []
-            for it in batch:
-                if mode_of(it.url) == "special":
-                    frontier.mark_skipped(
-                        it.url, reason="special handler pass pending (Task 8.4: courseleaf)"
-                    )
-                    continue
-                render_batch.append(it)
-            if not render_batch:
-                continue
-            by_url = {it.url: it for it in render_batch}
+    def _fail_unreturned(by_url, handled, reason):
+        """Mark leased URLs that never produced a result as failed so they are
+        not re-leased and re-wedged on the next pass of this run."""
+        for url, item in by_url.items():
+            if url not in handled:
+                _ensure_row(frontier, item)
+                frontier.mark_failed(url, error=reason)
+                logger.warning("Wedged URL failed (%s): %s", reason, url)
 
-            # --- fast tier ---
-            js_retry: list[FrontierItem] = []
-            results = await crawler.arun_many(
-                urls=list(by_url.keys()), config=fast_cfg, dispatcher=dispatcher,
-            )
-            async for result in results:
-                item = _match_item(by_url, result)
-                if item is None:
-                    # Unmatchable result: its row stays leased and is recovered
-                    # by requeue_leased() on the next run.
-                    logger.warning("No leased item matches result url %s", result.url)
-                    continue
-                outcome = process_result(
-                    result, item, frontier, storage,
-                    main_bucket=main_bucket, external_bucket=external_bucket,
-                    external_hops=external_hops, max_depth=max_depth, tier="fast",
-                    host_filter=host_filter, host_counts=host_counts,
-                    max_urls_per_host=max_urls_per_host, mode=mode_of(item.url),
-                )
-                if outcome == NEEDS_JS:
-                    js_retry.append(item)
-                    stats["needs_js"] += 1
-                else:
-                    document_urls |= outcome
+    drained = False
+    while not drained:
+        # The crawler (and its dispatcher) is created fresh each time the engine
+        # recovers from a wedged batch: exiting the context kills the stuck
+        # Chromium processes that the dead batch left behind.
+        async with AsyncWebCrawler(config=browser_config()) as crawler:
+            dispatcher = make_dispatcher(memory_pct, max_sessions)
+            recycle = False
+            while not recycle:
+                batch = frontier.lease_pending(limit=batch_size)
+                if not batch:
+                    drained = True
+                    break
 
-            # --- JS tier for empties ---
-            if js_retry:
-                js_by_url = {it.url: it for it in js_retry}
-                js_results = await crawler.arun_many(
-                    urls=list(js_by_url.keys()), config=js_cfg, dispatcher=dispatcher,
-                )
-                async for result in js_results:
-                    item = _match_item(js_by_url, result)
-                    if item is None:
-                        logger.warning("No JS-retry item matches result url %s", result.url)
+                # "special" hosts are never rendered or full-text ingested here.
+                # The only crawl-seeded special handler is courseleaf_catalog
+                # (catalog.vt.edu); Task 8.4 adds its dedicated structured course
+                # ingest pass — until then its rows are checkpointed as skipped.
+                # dining_tool hosts are excluded by load_seed_hosts and never
+                # reach the frontier at all.
+                render_batch = []
+                for it in batch:
+                    if mode_of(it.url) == "special":
+                        frontier.mark_skipped(
+                            it.url, reason="special handler pass pending (Task 8.4: courseleaf)"
+                        )
                         continue
-                    outcome = process_result(
-                        result, item, frontier, storage,
-                        main_bucket=main_bucket, external_bucket=external_bucket,
-                        external_hops=external_hops, max_depth=max_depth, tier="js",
-                        host_filter=host_filter, host_counts=host_counts,
-                        max_urls_per_host=max_urls_per_host, mode=mode_of(item.url),
+                    render_batch.append(it)
+                if not render_batch:
+                    continue
+                by_url = {it.url: it for it in render_batch}
+
+                # --- fast tier ---
+                js_retry: list[FrontierItem] = []
+                handled: set[str] = set()
+                results = await crawler.arun_many(
+                    urls=list(by_url.keys()), config=fast_cfg, dispatcher=dispatcher,
+                )
+                try:
+                    async for result in _iter_with_idle_timeout(results, batch_idle_timeout):
+                        item, outcome = _handle(result, by_url, "fast")
+                        if item is None:
+                            continue
+                        handled.add(item.url)
+                        if outcome == NEEDS_JS:
+                            js_retry.append(item)
+                            stats["needs_js"] += 1
+                        else:
+                            document_urls |= outcome
+                except _WedgedBatch:
+                    _fail_unreturned(
+                        by_url, handled,
+                        f"render watchdog: no result for {batch_idle_timeout:.0f}s (fast tier)",
                     )
-                    # tier="js" never returns the sentinel (empties are marked
-                    # skipped), but guard anyway so a string can never pollute
-                    # the document URL set.
-                    if outcome != NEEDS_JS:
-                        document_urls |= outcome
+                    recycle = True
+                    break  # recycle the browser, then resume leasing
+
+                # --- JS tier for empties ---
+                if js_retry:
+                    js_by_url = {it.url: it for it in js_retry}
+                    js_handled: set[str] = set()
+                    js_results = await crawler.arun_many(
+                        urls=list(js_by_url.keys()), config=js_cfg, dispatcher=dispatcher,
+                    )
+                    try:
+                        async for result in _iter_with_idle_timeout(js_results, batch_idle_timeout):
+                            item, outcome = _handle(result, js_by_url, "js")
+                            if item is None:
+                                continue
+                            js_handled.add(item.url)
+                            # tier="js" never returns the sentinel (empties are
+                            # marked skipped), but guard anyway so a string can
+                            # never pollute the document URL set.
+                            if outcome != NEEDS_JS:
+                                document_urls |= outcome
+                    except _WedgedBatch:
+                        _fail_unreturned(
+                            js_by_url, js_handled,
+                            f"render watchdog: no result for {batch_idle_timeout:.0f}s (js tier)",
+                        )
+                        recycle = True
+                        break
 
     # Frontier counts are the authoritative tally (each result was checkpointed
     # as it streamed in); no per-result counter needed.
