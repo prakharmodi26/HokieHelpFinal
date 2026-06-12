@@ -1,4 +1,10 @@
-from crawler.registry import load_seed_hosts, host_root_urls, load_modes, host_handler
+from crawler.registry import (
+    host_handler,
+    host_root_urls,
+    load_catalog_entries,
+    load_modes,
+    load_seed_hosts,
+)
 
 _REG = """
 full:
@@ -33,3 +39,28 @@ def test_modes_and_handlers(tmp_path):
     assert modes["dining.vt.edu"] == "special"
     assert host_handler(str(p), "dining.vt.edu") == "dining_tool"
     assert host_handler(str(p), "catalog.vt.edu") == "courseleaf_catalog"
+
+
+def test_load_catalog_entries_normalises_to_dicts(tmp_path):
+    p = tmp_path / "reg.yaml"
+    p.write_text("""
+full:
+  - registrar.vt.edu
+catalog:
+  - host: vtechworks.lib.vt.edu
+    type: dspace
+    oai: /server/oai/request
+    rest: /server/api
+  - host: opendsa.cs.vt.edu
+  - bare-string-host.vt.edu
+special:
+  - host: dining.vt.edu
+    handler: dining_tool
+""")
+    entries = load_catalog_entries(str(p))
+    by_host = {e["host"]: e for e in entries}
+    assert by_host["vtechworks.lib.vt.edu"]["oai"] == "/server/oai/request"
+    assert by_host["opendsa.cs.vt.edu"] == {"host": "opendsa.cs.vt.edu"}
+    assert by_host["bare-string-host.vt.edu"] == {"host": "bare-string-host.vt.edu"}
+    assert "registrar.vt.edu" not in by_host
+    assert "dining.vt.edu" not in by_host

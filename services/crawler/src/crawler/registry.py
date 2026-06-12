@@ -34,6 +34,18 @@ def load_modes(path: str) -> dict[str, str]:
     return modes
 
 
+def load_catalog_entries(path: str) -> list[dict]:
+    """Catalog entries normalised to dicts: {host, type?, oai?, rest?, api?, ...}.
+
+    Bare-string entries become {"host": <str>}. Used by the catalog record
+    harvest (OAI-PMH / Dataverse) to find per-host endpoint config.
+    """
+    out: list[dict] = []
+    for e in _load(path).get("catalog", []) or []:
+        out.append({"host": e} if isinstance(e, str) else dict(e))
+    return out
+
+
 def host_handler(path: str, host: str) -> str | None:
     for e in _load(path).get("special", []) or []:
         if _entry_host(e) == host:

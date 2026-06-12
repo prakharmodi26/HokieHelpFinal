@@ -7,6 +7,7 @@ import logging
 import sys
 from datetime import datetime, timezone
 
+from crawler.catalog_card import harvest_catalog_records
 from crawler.config import CrawlerConfig
 from crawler.discovery.hostfilter import HostFilter
 from crawler.documents import download_and_process_documents
@@ -96,7 +97,12 @@ def mirror_vt_pages(storage, src_bucket: str, dst_bucket: str) -> int:
 
 
 def _render_summary(
-    counts: dict, stats: dict, mirrored: int, doc_stats: dict, timestamp: str
+    counts: dict,
+    stats: dict,
+    mirrored: int,
+    doc_stats: dict,
+    timestamp: str,
+    harvest_stats: dict | None = None,
 ) -> str:
     """Build the run-summary markdown uploaded to the logs bucket."""
     lines = [
@@ -117,8 +123,14 @@ def _render_summary(
         f"- pages_mirrored_to_cleaned: {mirrored}",
         f"- documents_processed: {doc_stats.get('documents_processed', 0)}",
         f"- documents_failed: {doc_stats.get('documents_failed', 0)}",
-        "",
     ]
+    if harvest_stats is not None:
+        lines += [
+            f"- catalog_records_harvested: {harvest_stats.get('records_harvested', 0)}",
+            f"- catalog_hosts_harvested: {harvest_stats.get('hosts_harvested', 0)}",
+            f"- catalog_hosts_failed: {harvest_stats.get('hosts_failed', 0)}",
+        ]
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -223,13 +235,27 @@ def cli() -> None:
                 doc_stats["documents_failed"],
             )
 
+        # Catalog record harvest: repositories with OAI/Dataverse endpoints
+        # get one card per record written straight to the cleaned bucket.
+        # Guarded so a harvest failure never kills the crawl run (per-host
+        # failures are already tolerated inside harvest_catalog_records).
+        harvest_stats = None
+        try:
+            harvest_stats = harvest_catalog_records(
+                config.host_registry_path, storage, config.minio_cleaned_bucket
+            )
+            logger.info("Catalog record harvest: %s", harvest_stats)
+        except Exception as exc:
+            logger.warning("Catalog record harvest failed: %s", exc)
+
         # Run summary to the logs bucket.
         counts = frontier.count_by_status()
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S")
         summary_key = f"crawl-summary-{timestamp}.md"
         storage.upload_document(
             summary_key,
-            _render_summary(counts, stats, mirrored, doc_stats, timestamp),
+            _render_summary(counts, stats, mirrored, doc_stats, timestamp,
+                            harvest_stats=harvest_stats),
             bucket=LOGS_BUCKET,
         )
         logger.info("Crawl summary uploaded to %s/%s", LOGS_BUCKET, summary_key)
