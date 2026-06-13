@@ -138,6 +138,7 @@ def process_result(
     host_filter=None,
     host_counts: dict[str, int] | None = None,
     max_urls_per_host: int = -1,
+    host_caps: dict[str, int] | None = None,
     mode: str = "full",
 ):
     """Store one crawl result and expand its links. Returns either a set of
@@ -242,12 +243,10 @@ def process_result(
                 if child_scope is Scope.DOCUMENT:
                     continue
                 child_host = (urlparse(href).hostname or "").lower()
-                if (
-                    max_urls_per_host != -1
-                    and host_counts is not None
-                    and host_counts.get(child_host, 0) >= max_urls_per_host
-                ):
-                    continue
+                if host_counts is not None:
+                    cap = host_caps.get(child_host, max_urls_per_host) if host_caps else max_urls_per_host
+                    if cap != -1 and host_counts.get(child_host, 0) >= cap:
+                        continue
                 if frontier.enqueue(
                     href, scope=child_scope.value, depth=item.depth + 1,
                     hop_history=child_hops, discovery_source="bfs",
@@ -304,6 +303,7 @@ async def run_engine(
     threshold: float,
     host_filter=None,
     max_urls_per_host: int = -1,
+    host_caps: dict[str, int] | None = None,
     modes: dict[str, str] | None = None,
     batch_idle_timeout: float = 180.0,
 ) -> dict:
@@ -337,9 +337,10 @@ async def run_engine(
     if requeued:
         logger.info("Requeued %d leased rows stranded by a prior run", requeued)
 
-    # Per-host URL cap (-1 = unlimited). Counts include rows from a resumed
-    # frontier so a restart cannot blow past the cap.
-    host_counts = frontier.count_by_host() if max_urls_per_host != -1 else None
+    # Per-host URL cap tracking. Activated when there is a global cap or any
+    # per-host override; counts include resumed frontier rows so restarts cannot
+    # blow past the cap.
+    host_counts = frontier.count_by_host() if (max_urls_per_host != -1 or host_caps) else None
 
     def _handle(result, by_url, tier):
         """Process one streamed result against its leased item. Returns
@@ -355,7 +356,8 @@ async def run_engine(
             main_bucket=main_bucket, external_bucket=external_bucket,
             external_hops=external_hops, max_depth=max_depth, tier=tier,
             host_filter=host_filter, host_counts=host_counts,
-            max_urls_per_host=max_urls_per_host, mode=mode_of(item.url),
+            max_urls_per_host=max_urls_per_host, host_caps=host_caps,
+            mode=mode_of(item.url),
         )
         return item, outcome
 

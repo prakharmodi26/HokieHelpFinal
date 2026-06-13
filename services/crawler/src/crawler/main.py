@@ -14,7 +14,7 @@ from crawler.discovery.hostfilter import HostFilter
 from crawler.documents import download_and_process_documents
 from crawler.engine import run_engine
 from crawler.frontier import Frontier
-from crawler.registry import host_root_urls, load_modes, load_seed_hosts
+from crawler.registry import host_root_urls, load_host_caps, load_modes, load_seed_hosts
 from crawler.scope import Scope, classify_url
 from crawler.seed_docs import build_department_info_doc
 from crawler.storage import MinioStorage
@@ -180,6 +180,9 @@ def cli() -> None:
             )
 
         modes = load_modes(config.host_registry_path)
+        host_caps = load_host_caps(config.host_registry_path)
+        if host_caps:
+            logger.info("Per-host URL caps loaded for %d hosts", len(host_caps))
         stats = asyncio.run(
             run_engine(
                 frontier,
@@ -194,11 +197,8 @@ def cli() -> None:
                 threshold=config.prune_content_threshold,
                 host_filter=host_filter,
                 max_urls_per_host=config.max_urls_per_host,
-                # Registry host modes: full ingest vs catalog cards vs
-                # special handlers (Phase 8 mode routing).
+                host_caps=host_caps or None,
                 modes=modes,
-                # Watchdog: recycle the browser if a batch's render stream
-                # stalls (prevents a single hung page wedging the whole crawl).
                 batch_idle_timeout=config.batch_idle_timeout,
             )
         )

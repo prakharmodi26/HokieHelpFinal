@@ -66,5 +66,20 @@ def load_seed_hosts(path: str) -> list[str]:
     return sorted(set(hosts))
 
 
+def load_host_caps(path: str) -> dict[str, int]:
+    """Per-host URL caps from ``max_urls`` fields on full-section entries.
+
+    Only hosts with an explicit ``max_urls`` field are returned; the engine
+    falls back to the global ``max_urls_per_host`` for everyone else.
+    Bare-string entries (no max_urls) are skipped.
+    """
+    data = _load(path)
+    caps: dict[str, int] = {}
+    for e in data.get("full", []) or []:
+        if isinstance(e, dict) and "max_urls" in e:
+            caps[e["host"]] = int(e["max_urls"])
+    return caps
+
+
 def host_root_urls(hosts: list[str]) -> list[str]:
     return [f"https://{h}/" for h in hosts]

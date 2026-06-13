@@ -61,7 +61,8 @@ full:
 - biophysics.cs.vt.edu
 - biostat.centers.vt.edu
 - bit.vt.edu
-- blogs.ext.vt.edu
+- host: blogs.ext.vt.edu
+  max_urls: 500
 - bme.vt.edu
 - bold.beam.vt.edu
 - bold.bme.vt.edu
@@ -127,7 +128,8 @@ full:
 - cos.vt.edu
 - courses.cs.vt.edu
 - cpe.vt.edu
-- cpes.vt.edu
+- host: cpes.vt.edu
+  max_urls: 500
 - cradie.soe.vt.edu
 - crawford.chem.vt.edu
 - create.centers.vt.edu
@@ -246,7 +248,8 @@ full:
 - multirad.chem.vt.edu
 - mwcog.owml.vt.edu
 - newbiophysics.cs.vt.edu
-- news.lib.vt.edu
+- host: news.lib.vt.edu
+  max_urls: 500
 - next.cs.vt.edu
 - nli.tlos.vt.edu
 - oap.soe.vt.edu
@@ -315,7 +318,8 @@ full:
 - summit.cloud.vt.edu
 - summit.research.vt.edu
 - swat.eng.vt.edu
-- synergy.cs.vt.edu
+- host: synergy.cs.vt.edu
+  max_urls: 500
 - tbmh.vt.edu
 - tech4humanitylab.clahs.vt.edu
 - techforhumanitylab.clahs.vt.edu
@@ -359,7 +363,8 @@ full:
 - vtcdd.science.vt.edu
 - vtdairy.dasc.vt.edu
 - vthspc.cs.vt.edu
-- vtnews.vt.edu
+- host: vtnews.vt.edu
+  max_urls: 500
 - vtsl.vetmed.vt.edu
 - vtso.geos.vt.edu
 - wanglab.beam.vt.edu
@@ -374,7 +379,8 @@ full:
 - wireless.vt.edu
 - womenscenter.vt.edu
 - worchlab.chem.vt.edu
-- wuvt.vt.edu
+- host: wuvt.vt.edu
+  max_urls: 500
 - www.aaec.vt.edu
 - www.advance.vt.edu
 - www.advising.vt.edu
@@ -439,7 +445,8 @@ full:
 - www.controller.vt.edu
 - www.cos.vt.edu
 - www.cpe.vt.edu
-- www.cpes.vt.edu
+- host: www.cpes.vt.edu
+  max_urls: 500
 - www.cradie.soe.vt.edu
 - www.create.centers.vt.edu
 - www.cs.vt.edu
@@ -579,7 +586,8 @@ full:
 - www.vtcc.vt.edu
 - www.vtcdd.science.vt.edu
 - www.vtdairy.dasc.vt.edu
-- www.vtnews.vt.edu
+- host: www.vtnews.vt.edu
+  max_urls: 500
 - www.vtso.geos.vt.edu
 - www.vtti.vt.edu
 - www.wang.bse.vt.edu
@@ -588,7 +596,8 @@ full:
 - www.weremember.vt.edu
 - www.wireless.vt.edu
 - www.womenscenter.vt.edu
-- www.wuvt.vt.edu
+- host: www.wuvt.vt.edu
+  max_urls: 500
 - www2.cpe.vt.edu
 - www2.ita.vt.edu
 - yang.biol.vt.edu
