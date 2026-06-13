@@ -57,7 +57,7 @@ def load_seed_hosts(path: str) -> list[str]:
     """Hosts the crawler seeds: full + catalog + browser-crawled special.
     Excludes runtime-tool handlers (e.g. dining_tool) which are not crawled."""
     data = _load(path)
-    hosts: list[str] = list(data.get("full", []) or [])
+    hosts: list[str] = [_entry_host(e) for e in (data.get("full", []) or [])]
     hosts += [_entry_host(e) for e in (data.get("catalog", []) or [])]
     for e in data.get("special", []) or []:
         if isinstance(e, dict) and e.get("handler") in _NON_CRAWL_HANDLERS:

@@ -380,7 +380,7 @@ full:
 - womenscenter.vt.edu
 - worchlab.chem.vt.edu
 - host: wuvt.vt.edu
-  max_urls: 500
+  max_urls: 50
 - www.aaec.vt.edu
 - www.advance.vt.edu
 - www.advising.vt.edu
@@ -597,7 +597,7 @@ full:
 - www.wireless.vt.edu
 - www.womenscenter.vt.edu
 - host: www.wuvt.vt.edu
-  max_urls: 500
+  max_urls: 50
 - www2.cpe.vt.edu
 - www2.ita.vt.edu
 - yang.biol.vt.edu
