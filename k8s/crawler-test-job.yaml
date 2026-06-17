@@ -33,11 +33,11 @@ spec:
                 name: crawler-config
           env:
             - name: MINIO_BUCKET
-              value: test-crawled-pages
+              value: test-crawled-pages-0617
             - name: MINIO_CLEANED_BUCKET
-              value: test-crawled-pages-cleaned
+              value: test-crawled-pages-0617-cleaned
             - name: MINIO_EXTERNAL_BUCKET
-              value: test-crawled-pages-external
+              value: test-crawled-pages-0617-external
             - name: MINIO_ACCESS_KEY
               valueFrom:
                 secretKeyRef:

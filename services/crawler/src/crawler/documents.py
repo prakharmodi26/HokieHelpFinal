@@ -14,6 +14,7 @@ import httpx
 from crawler.markdown_doc import build_markdown_document, url_to_object_key
 from crawler.metadata import PageMetadata, doc_id_for_url
 from crawler.storage import MinioStorage
+from crawler.urls import is_ingestible_url
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def collect_document_links(links: dict | None) -> set[str]:
     for category in ("internal", "external"):
         for link in links.get(category, []):
             href = link.get("href", "")
-            if href and is_document_url(href):
+            if href and is_ingestible_url(href) and is_document_url(href):
                 urls.add(href)
     return urls
 
@@ -125,6 +126,9 @@ def _title_from_url(url: str) -> str:
 
 def _validate_document_url(url: str) -> bool:
     """Validate that a document URL is safe to fetch."""
+    if not is_ingestible_url(url):
+        logger.warning("Rejected non-ingestible document URL: %s", url)
+        return False
     parsed = urlparse(url)
     if parsed.scheme not in ALLOWED_SCHEMES:
         logger.warning("Rejected document URL with scheme %r: %s", parsed.scheme, url)
@@ -241,25 +245,33 @@ async def download_and_process_documents(
                 content_hash=content_hash,
             )
 
-            object_key = url_to_object_key(url)
-            storage.upload_document(object_key, document, bucket=target_bucket)
+            # Store defensively: a single document whose key/upload raises
+            # (MinIO-illegal key, transient storage error) fails just this URL,
+            # never the whole documents pass.
+            try:
+                object_key = url_to_object_key(url)
+                storage.upload_document(object_key, document, bucket=target_bucket)
 
-            metadata = PageMetadata(
-                doc_id=doc_id,
-                url=url,
-                title=title,
-                crawl_depth=0,
-                crawl_timestamp=now,
-                content_hash=content_hash,
-                markdown_size_bytes=len(document.encode()),
-                status_code=resp.status_code,
-                response_headers=dict(resp.headers),
-                internal_links=[],
-                external_links=[],
-                last_modified=resp.headers.get("last-modified"),
-                etag=resp.headers.get("etag"),
-            )
-            storage.upload_metadata(object_key, metadata, bucket=target_bucket)
+                metadata = PageMetadata(
+                    doc_id=doc_id,
+                    url=url,
+                    title=title,
+                    crawl_depth=0,
+                    crawl_timestamp=now,
+                    content_hash=content_hash,
+                    markdown_size_bytes=len(document.encode()),
+                    status_code=resp.status_code,
+                    response_headers=dict(resp.headers),
+                    internal_links=[],
+                    external_links=[],
+                    last_modified=resp.headers.get("last-modified"),
+                    etag=resp.headers.get("etag"),
+                )
+                storage.upload_metadata(object_key, metadata, bucket=target_bucket)
+            except Exception as exc:
+                logger.warning("Failed to store document %s: %s", url, exc)
+                stats["documents_failed"] += 1
+                continue
 
             stored_urls.add(url)
             stats["documents_processed"] += 1

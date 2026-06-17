@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontier-wipe
+  namespace: test
+  labels:
+    app: hokiehelp-crawler
+    job-name: frontier-wipe
+spec:
+  restartPolicy: Never
+  volumes:
+    - name: frontier
+      persistentVolumeClaim:
+        claimName: crawler-frontier
+  containers:
+    - name: wipe
+      image: busybox:1.36
+      command: ["sh", "-c"]
+      args:
+        - |
+          echo "BEFORE:"; ls -la /data || true
+          rm -f /data/frontier.db /data/frontier.db-wal /data/frontier.db-shm
+          echo "AFTER:"; ls -la /data || true
+          echo "WIPE_DONE"
+      volumeMounts:
+        - name: frontier
+          mountPath: /data

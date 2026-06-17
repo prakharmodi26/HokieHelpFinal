@@ -344,21 +344,37 @@ async def run_engine(
 
     def _handle(result, by_url, tier):
         """Process one streamed result against its leased item. Returns
-        (item, outcome), or (None, None) if the result can't be matched."""
+        (item, outcome), or (None, None) if the result can't be matched.
+
+        process_result is wrapped: if storing/expanding one result raises for
+        ANY reason (a poison URL that still produced a MinIO-illegal key, a
+        malformed header, an unforeseen edge), that single item is marked
+        failed and the crawl continues. A bad item can never propagate out of
+        the result loop and kill the run — this is the poison-pill guarantee.
+        """
         item = _match_item(by_url, result)
         if item is None:
             # Unmatchable result: its row stays leased and is recovered by
             # requeue_leased() on the next run.
             logger.warning("No leased item matches result url %s", result.url)
             return None, None
-        outcome = process_result(
-            result, item, frontier, storage,
-            main_bucket=main_bucket, external_bucket=external_bucket,
-            external_hops=external_hops, max_depth=max_depth, tier=tier,
-            host_filter=host_filter, host_counts=host_counts,
-            max_urls_per_host=max_urls_per_host, host_caps=host_caps,
-            mode=mode_of(item.url),
-        )
+        try:
+            outcome = process_result(
+                result, item, frontier, storage,
+                main_bucket=main_bucket, external_bucket=external_bucket,
+                external_hops=external_hops, max_depth=max_depth, tier=tier,
+                host_filter=host_filter, host_counts=host_counts,
+                max_urls_per_host=max_urls_per_host, host_caps=host_caps,
+                mode=mode_of(item.url),
+            )
+        except Exception as exc:
+            logger.error(
+                "process_result raised for %s (%s tier) — failing this item and "
+                "continuing: %s", item.url, tier, exc,
+            )
+            _ensure_row(frontier, item)
+            frontier.mark_failed(item.url, error=f"process_result: {exc}")
+            return item, set()
         return item, outcome
 
     def _fail_unreturned(by_url, handled, reason):

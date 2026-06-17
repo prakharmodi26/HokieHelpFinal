@@ -2,6 +2,40 @@ _meta:
   built: '2026-06-10'
   note: patterns generalize to NEW junk hosts (kept live in production); hosts = explicit dead/infra/auth/transactional +
     tiering drops.
+# path_patterns: regexes matched against URL path+query (NOT the host). These drop
+# archive/pagination/dynamic-listing traps while keeping the host's front page.
+# Added 2026-06-17 after wuvt /playlists/track/ firehose (44k playlist-archive pages).
+path_patterns:
+- /playlists?/
+- /track/
+- /tracks/
+- /calendar/
+- /events?/\d
+- \?page=\d
+- \?p=\d
+- /search\b
+- /tag/
+- /tagged/
+- /archive/\d
+# 2026-06-17 host-categorization agent: job/news/media/transactional traps
+- /jobs/\d
+- /listing/\d
+- /position/\d
+- /news/\d{4}/
+- /press-release/\d
+- /event/\d{4}-\d{2}-\d{2}/
+- /events/\d{4}/
+- /wp-content/uploads/
+- /wp-json/
+- /give/
+- /donate/
+- /gift/
+- /campaign/\d
+- /episode/\d
+- /podcast/\d
+- /feed/?$
+- /rss/?$
+- /atom/?$
 patterns:
 - ^(login|sso|cas|idp|shib|2fa|auth)\b
 - \.middleware\.vt\.edu$
@@ -12,7 +46,40 @@ patterns:
 - \.banner\.vt\.edu$
 - (^|\.)(stage-|staging\.|dev\.|test\.|qa\.|uat\.|sandbox\.)
 - -devl
+# 2026-06-16 scope tightening (production-test): drop library paywalled-journal
+# proxies, agricultural extension (incl. county offices), and the acos
+# multilingual auto-content trap. Anchored with (^|\.) so e.g. context.vt.edu
+# is NOT matched by the ext rule.
+- (^|\.)ezproxy\.lib\.vt\.edu$
+- (^|\.)ext\.vt\.edu$
+- ^acos\.cs\.vt\.edu$
+# 2026-06-17: WordPress backend origins (content served via canonical hosts)
+- \.wp\.prod\.es\.cloud\.vt\.edu$
 hosts:
+# 2026-06-17 host-categorization agent: redirect duplicates, auth-gated, dead.
+# classes.vt.edu: JS class-search app (fose.js); course content lives in catalog.vt.edu
+# (courseleaf special handler). Live section data is volatile XHR, not crawlable text.
+- classes.vt.edu
+- agpestadvisoryvaes.wp.prod.es.cloud.vt.edu
+- connect.recsports.vt.edu
+- desktop.alerts.vt.edu
+- dsp.lib.vt.edu
+- calendar.lib.vt.edu
+- cdrs.lib.vt.edu
+- datavizstudio.lib.vt.edu
+- designstudio.lib.vt.edu
+- dice.lib.vt.edu
+- dtstudio.lib.vt.edu
+- etd.lib.vt.edu
+- fusionstudio.lib.vt.edu
+- info-skills.lib.vt.edu
+- www.info-skills.lib.vt.edu
+- informaticslab.lib.vt.edu
+- news.lib.vt.edu
+- rms.lib.vt.edu
+- rosetta.lib.vt.edu
+- www.rosetta.lib.vt.edu
+- virtualstudio.lib.vt.edu
 - '*testmx.vt.edu'
 - 4-h.ext.vt.edu
 - 50years.caus.vt.edu

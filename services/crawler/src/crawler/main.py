@@ -40,7 +40,12 @@ async def populate_frontier(frontier: Frontier, config: CrawlerConfig) -> dict:
     future edit drops that key on any production path, the blocklist silently
     stops applying during the crawl.
     """
-    host_filter = HostFilter.from_yaml(config.host_blocklist_path)
+    # config.blocked_paths (CRAWL_BLOCKED_PATHS) are treated as regex fragments
+    # matched against URL path+query, merged with any path_patterns in the YAML.
+    host_filter = HostFilter.from_yaml(
+        config.host_blocklist_path,
+        extra_path_patterns=list(config.blocked_paths),
+    )
 
     counts = frontier.count_by_status()
     if counts.get("pending", 0) > 0 or counts.get("done", 0) > 0:
@@ -181,6 +186,16 @@ def cli() -> None:
 
         modes = load_modes(config.host_registry_path)
         host_caps = load_host_caps(config.host_registry_path)
+        # Backstop: registry "-1" (unlimited) hosts get a high ceiling so an
+        # uncaught trap can't replay the wuvt firehose. Real departments are far
+        # below this, so legitimate content is never truncated. Set
+        # CRAWL_UNLIMITED_BACKSTOP=-1 to restore truly-unlimited behavior.
+        if config.unlimited_backstop != -1:
+            n_unlimited = sum(1 for c in host_caps.values() if c == -1)
+            host_caps = {h: (config.unlimited_backstop if c == -1 else c)
+                         for h, c in host_caps.items()}
+            logger.info("Applied unlimited backstop %d to %d '-1' hosts",
+                        config.unlimited_backstop, n_unlimited)
         if host_caps:
             logger.info("Per-host URL caps loaded for %d hosts", len(host_caps))
         stats = asyncio.run(

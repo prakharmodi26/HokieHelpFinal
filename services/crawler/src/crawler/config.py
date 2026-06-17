@@ -31,7 +31,15 @@ class CrawlerConfig:
     host_blocklist_path: str = "config/host-blocklist.yaml"
     discovery_source: str = "sitemap+cc"
     max_hosts: int | None = None
-    max_urls_per_host: int = -1
+    # Global backstop for hosts NOT explicitly tiered in the registry (i.e.
+    # BFS-discovered hosts). Registry departments are -1 (unlimited); this 50
+    # only bounds the unclassified tail so no single discovered host can hog.
+    max_urls_per_host: int = 50
+    # Runaway guard for registry hosts tiered -1 (unlimited): an uncaught trap
+    # shape (faceted search, unknown pagination param) could otherwise replay the
+    # wuvt firehose. A -1 cap is rewritten to this ceiling at load time — high
+    # enough not to truncate real departments, low enough to stop a runaway.
+    unlimited_backstop: int = 1500
     batch_size: int = 200
     memory_threshold_percent: float = 70.0
     max_sessions: int = 10
@@ -99,7 +107,8 @@ class CrawlerConfig:
             host_blocklist_path=os.environ.get("HOST_BLOCKLIST_PATH", "config/host-blocklist.yaml"),
             discovery_source=os.environ.get("CRAWL_DISCOVERY_SOURCE", "sitemap+cc"),
             max_hosts=(int(os.environ["CRAWL_MAX_HOSTS"]) if os.environ.get("CRAWL_MAX_HOSTS") else None),
-            max_urls_per_host=int(os.environ.get("CRAWL_MAX_URLS_PER_HOST", "-1")),
+            max_urls_per_host=int(os.environ.get("CRAWL_MAX_URLS_PER_HOST", "50")),
+            unlimited_backstop=int(os.environ.get("CRAWL_UNLIMITED_BACKSTOP", "1500")),
             batch_size=int(os.environ.get("CRAWL_BATCH_SIZE", "200")),
             memory_threshold_percent=float(os.environ.get("CRAWL_MEMORY_PCT", "70.0")),
             max_sessions=int(os.environ.get("CRAWL_MAX_SESSIONS", "10")),

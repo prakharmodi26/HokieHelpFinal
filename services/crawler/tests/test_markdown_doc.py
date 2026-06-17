@@ -144,3 +144,66 @@ def test_frontmatter_includes_host_and_page_type():
     assert "page_type: 'general'" in doc
     assert "is_external: false" in doc
     assert doc.endswith("# Menus\nToday: pizza")
+
+
+# --- frontmatter hardening against hostile metadata (ISC-13/14/15) ---
+import yaml
+
+
+def _parse_frontmatter_like_chunker(doc: str) -> dict:
+    """Replicate the chunker's frontmatter extraction exactly: split at the
+    first '---' after index 3, then yaml.safe_load the block."""
+    assert doc.startswith("---")
+    end = doc.find("---", 3)
+    assert end != -1
+    return yaml.safe_load(doc[3:end])
+
+
+def test_frontmatter_survives_hostile_metadata():
+    """A title/last_modified/url full of YAML-breaking chars must still produce
+    frontmatter that the chunker's yaml.safe_load parses without raising."""
+    doc = build_markdown_document(
+        url="https://x.vt.edu/it's-a/page",
+        title="Don't: break --- it\nNEWLINE: injected",
+        markdown_content="# Body\n\nsome content",
+        crawl_depth=1,
+        crawl_timestamp=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        doc_id="abc123",
+        content_hash="deadbeef",
+        source_host="x.vt.edu",
+        subdomain="x",
+        last_modified="weird 'quote' --- value",
+    )
+    fm = _parse_frontmatter_like_chunker(doc)  # must not raise
+    assert fm["url"] == "https://x.vt.edu/it's-a/page"
+    assert "NEWLINE" not in str(fm.get("title")) or "\n" not in str(fm["title"])
+    # body is preserved verbatim after the frontmatter close
+    assert doc.rstrip().endswith("some content")
+
+
+def test_frontmatter_value_with_triple_dash_does_not_truncate():
+    """A literal '---' inside a value must not be mistaken for the closing
+    delimiter (chunker uses find('---', 3))."""
+    doc = build_markdown_document(
+        url="https://x.vt.edu/p",
+        title="A --- B --- C",
+        markdown_content="# Body",
+        crawl_depth=0,
+        crawl_timestamp=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        doc_id="d1",
+        content_hash="h1",
+    )
+    fm = _parse_frontmatter_like_chunker(doc)
+    # all required keys survived (block wasn't truncated mid-frontmatter)
+    for key in ("doc_id", "url", "title", "content_hash"):
+        assert key in fm
+
+
+def test_object_key_via_markdown_doc_is_minio_safe():
+    """url_to_object_key now routes through safe_object_key (ISC-11)."""
+    crash = (
+        "https://www.pubs.ext.vt.edu/426-041.html"
+        "https://www.pubs.ext.vt.edu/426-841.html"
+    )
+    key = url_to_object_key(crash)
+    assert "://" not in key and ":" not in key and "//" not in key

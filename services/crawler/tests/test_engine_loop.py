@@ -245,3 +245,47 @@ def test_run_engine_skips_special_courseleaf_host_without_rendering(tmp_path):
     counts = fr.count_by_status()
     assert counts.get("skipped", 0) == 1
     assert counts.get("pending", 0) == 0  # drained, no infinite lease loop
+
+
+def test_run_engine_survives_poison_item(tmp_path):
+    """ISC-16/17: an item whose processing raises is marked failed and the run
+    continues to drain the frontier — a poison pill can never kill the loop."""
+    fr = Frontier(str(tmp_path / "f.db"))
+    fr.enqueue("https://cs.vt.edu/poison", scope="vt_page", depth=0,
+               hop_history=["https://cs.vt.edu/poison"], discovery_source="seed")
+    fr.enqueue("https://cs.vt.edu/good", scope="vt_page", depth=0,
+               hop_history=["https://cs.vt.edu/good"], discovery_source="seed")
+    storage = MagicMock()
+
+    async def fake_arun_many(urls, config, dispatcher):
+        async def gen():
+            for u in urls:
+                yield _result(u, "# A\n" + "word " * 40)
+        return gen()
+
+    crawler = MagicMock()
+    crawler.__aenter__ = AsyncMock(return_value=crawler)
+    crawler.__aexit__ = AsyncMock(return_value=False)
+    crawler.arun_many = AsyncMock(side_effect=fake_arun_many)
+
+    real_process = run_engine.__globals__["process_result"]
+
+    def flaky_process(result, item, *args, **kwargs):
+        if item.url.endswith("/poison"):
+            raise RuntimeError("XMinioInvalidObjectName: simulated")
+        return real_process(result, item, *args, **kwargs)
+
+    with patch("crawler.engine.AsyncWebCrawler", return_value=crawler), \
+         patch("crawler.engine.process_result", side_effect=flaky_process):
+        stats = asyncio.run(run_engine(
+            fr, storage, main_bucket="crawled-pages",
+            external_bucket="crawled-pages-external",
+            external_hops=1, max_depth=2, batch_size=10,
+            memory_pct=70.0, max_sessions=5, threshold=0.5,
+        ))
+
+    counts = fr.count_by_status()
+    assert counts.get("failed", 0) == 1   # the poison item failed, alone
+    assert counts.get("done", 0) == 1     # the good item still stored
+    assert counts.get("pending", 0) == 0  # frontier fully drained, no wedge
+    assert stats["pages_failed"] == 1

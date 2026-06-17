@@ -72,6 +72,12 @@ class _Blocker:
     def is_blocked(self, host):
         return host == "login.vt.edu"
 
+    def is_blocked_url(self, url):
+        from urllib.parse import urlparse
+        p = urlparse(url)
+        host = (p.hostname or "").lower()
+        return self.is_blocked(host) or "/playlists/track/" in p.path
+
 
 def test_classify_blocklisted_host_is_out_of_scope():
     scope, _ = classify_url(
@@ -79,3 +85,35 @@ def test_classify_blocklisted_host_is_out_of_scope():
         external_hops=1, host_filter=_Blocker(),
     )
     assert scope is Scope.OUT_OF_SCOPE
+
+
+def test_classify_blocklisted_path_is_out_of_scope():
+    """Path-trap URL (e.g. wuvt playlist archive) is OUT_OF_SCOPE even when the
+    host itself is allowed — keeps the front page, drops the firehose."""
+    scope, _ = classify_url(
+        "https://www.wuvt.vt.edu/playlists/track/449476",
+        parent_hops=["https://vt.edu/"],
+        external_hops=1, host_filter=_Blocker(),
+    )
+    assert scope is Scope.OUT_OF_SCOPE
+
+
+def test_classify_rejects_concatenated_href_crash_url():
+    """ISC-12: the exact crash URL (embedded scheme in path) is OUT_OF_SCOPE,
+    so it can never enter the frontier from seed OR BFS expansion."""
+    crash = (
+        "https://www.pubs.ext.vt.edu/content/en/426/426-041/426-041.html"
+        "https://www.pubs.ext.vt.edu/426/426-841/426-841.html"
+    )
+    scope, _ = classify_url(crash, parent_hops=[], external_hops=1)
+    assert scope is Scope.OUT_OF_SCOPE
+
+
+def test_classify_rejects_malformed_urls():
+    for bad in (
+        "javascript:alert(1)",
+        "https://x.vt.edu/a\nb",
+        "https:///no-host",
+    ):
+        scope, _ = classify_url(bad, parent_hops=[], external_hops=1)
+        assert scope is Scope.OUT_OF_SCOPE, bad

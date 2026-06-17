@@ -16,6 +16,8 @@ from urllib.parse import urlparse
 
 import tldextract
 
+from crawler.urls import is_ingestible_url
+
 # Use a no-network extractor (no live public-suffix fetch in containers/tests).
 _EXTRACT = tldextract.TLDExtract(suffix_list_urls=())
 
@@ -73,11 +75,13 @@ def classify_url(
     new_hop_chain = parent_hops + [url], i.e. the full referrer path to `url`.
     """
     hops = list(parent_hops) + [url]
-    scheme = urlparse(url).scheme
-    if scheme not in ("http", "https"):
+    # Single hygiene gate for both the registry seed path and BFS expansion:
+    # reject malformed/over-length/embedded-scheme URLs before any scope work.
+    # Subsumes the old bare http(s) scheme check.
+    if not is_ingestible_url(url):
         return Scope.OUT_OF_SCOPE, hops
 
-    if host_filter is not None and host_filter.is_blocked(_host(url)):
+    if host_filter is not None and host_filter.is_blocked_url(url):
         return Scope.OUT_OF_SCOPE, hops
 
     if is_document_url(url):

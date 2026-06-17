@@ -75,5 +75,5 @@ def test_config_vtedu_defaults(monkeypatch):
     assert cfg.external_hops == 1
     assert cfg.minio_external_bucket == "crawled-pages-external"
     assert cfg.frontier_db_path  # has a default
-    assert cfg.max_urls_per_host == -1
+    assert cfg.max_urls_per_host == 50  # global backstop for unclassified BFS tail
     assert cfg.batch_size > 0
