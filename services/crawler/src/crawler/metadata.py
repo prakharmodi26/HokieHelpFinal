@@ -29,6 +29,21 @@ def metadata_key_for(object_key: str) -> str:
     return object_key + ".meta.json"
 
 
+# Headers that must never be persisted to MinIO sidecars — they carry
+# credentials or session tokens that would leak into the data lake.
+_SENSITIVE_HEADERS = frozenset({
+    "set-cookie", "authorization", "cookie", "x-api-key",
+    "x-auth-token", "proxy-authorization", "www-authenticate",
+})
+
+
+def _filter_sensitive_headers(headers: dict | None) -> dict | None:
+    """Return a copy of *headers* with sensitive entries removed."""
+    if headers is None:
+        return None
+    return {k: v for k, v in headers.items() if k.lower() not in _SENSITIVE_HEADERS}
+
+
 @dataclass
 class PageMetadata:
     """All metadata captured for a single crawled page."""
@@ -74,7 +89,7 @@ class PageMetadata:
             "content_hash": self.content_hash,
             "markdown_size_bytes": self.markdown_size_bytes,
             "status_code": self.status_code,
-            "response_headers": self.response_headers,
+            "response_headers": _filter_sensitive_headers(self.response_headers),
             "internal_links": self.internal_links,
             "external_links": self.external_links,
             "last_modified": self.last_modified,

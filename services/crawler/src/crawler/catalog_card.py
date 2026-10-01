@@ -218,14 +218,37 @@ _OAI = "{http://www.openarchives.org/OAI/2.0/}"
 _OAI_DC = "{http://www.openarchives.org/OAI/2.0/oai_dc/}"
 _DC = "{http://purl.org/dc/elements/1.1/}"
 
+# Runaway-paging backstop for OAI ListRecords. VTechWorks (~124k records @
+# 100/page) needs ~1,236 pages, so this is far above any legitimate harvest —
+# it only stops a server that pages forever with ever-changing tokens. A
+# *repeated* token is caught separately (cyclic paging).
+_OAI_MAX_PAGES = 50_000
 
-def harvest_oai(base_url: str, oai_path: str, http_get: HttpGet) -> Iterator[dict]:
+
+def harvest_oai(
+    base_url: str, oai_path: str, http_get: HttpGet, set_spec: str | None = None
+) -> Iterator[dict]:
     """Yield one card dict per oai_dc record from an OAI-PMH ListRecords
-    endpoint, following resumptionToken paging. Deleted records are skipped."""
+    endpoint, following resumptionToken paging. Deleted records are skipped.
+
+    If *set_spec* is given, only that OAI set is harvested (e.g. VTechWorks'
+    ETD community ``com_10919_5534``) instead of the whole repository.
+    """
     endpoint = base_url.rstrip("/") + oai_path
     host = (urlparse(base_url).hostname or "").lower()
     url = f"{endpoint}?verb=ListRecords&metadataPrefix=oai_dc"
+    if set_spec:
+        url += f"&set={quote(set_spec)}"
+    seen_tokens: set[str] = set()
+    pages = 0
     while url:
+        pages += 1
+        if pages > _OAI_MAX_PAGES:
+            logger.warning(
+                "OAI harvest for %s exceeded %d pages — stopping (runaway paging)",
+                host, _OAI_MAX_PAGES,
+            )
+            return
         root = ET.fromstring(http_get(url))
         list_records = root.find(f"{_OAI}ListRecords")
         if list_records is None:
@@ -258,6 +281,14 @@ def harvest_oai(base_url: str, oai_path: str, http_get: HttpGet) -> Iterator[dic
             }
         token_el = list_records.find(f"{_OAI}resumptionToken")
         token = (token_el.text or "").strip() if token_el is not None else ""
+        if token and token in seen_tokens:
+            logger.warning(
+                "OAI harvest for %s returned a repeated resumptionToken — "
+                "stopping (cyclic paging)", host,
+            )
+            return
+        if token:
+            seen_tokens.add(token)
         url = (f"{endpoint}?verb=ListRecords&resumptionToken={quote(token)}"
                if token else None)
 
@@ -339,7 +370,9 @@ def harvest_catalog_records(
     for entry in load_catalog_entries(registry_path):
         host = entry["host"]
         if entry.get("oai"):
-            cards = harvest_oai(f"https://{host}", entry["oai"], http_get)
+            cards = harvest_oai(
+                f"https://{host}", entry["oai"], http_get, set_spec=entry.get("set"),
+            )
         elif entry.get("api") and (entry.get("type") or "").startswith("dataverse"):
             cards = harvest_dataverse(f"https://{host}", entry["api"], http_get)
         else:

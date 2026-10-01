@@ -1,5 +1,6 @@
 _meta:
   built: '2026-06-10'
+  updated: '2026-06-19'
   note: patterns generalize to NEW junk hosts (kept live in production); hosts = explicit dead/infra/auth/transactional +
     tiering drops.
 # path_patterns: regexes matched against URL path+query (NOT the host). These drop
@@ -19,6 +20,7 @@ path_patterns:
 - /archive/\d
 # 2026-06-17 host-categorization agent: job/news/media/transactional traps
 - /jobs/\d
+- /jobs/?          # 2026-06-23: career.vt.edu /jobs/?ctag=... job-board filter shells (volatile search listings, not info pages)
 - /listing/\d
 - /position/\d
 - /news/\d{4}/
@@ -36,6 +38,47 @@ path_patterns:
 - /feed/?$
 - /rss/?$
 - /atom/?$
+# 2026-06-19 (HMS Surveyor): residual internal noise traps found in 0617 cleaned bucket.
+# /BodyDetails/: governance.vt.edu committee/body detail pages (hundreds of individual
+#   committee member records; front-page /Bodies/ content is kept, these are deep stubs).
+# 2026-06-22 (audit): narrowed /BodyDetails/ -> /BodyDetails/\d+ so numeric committee-member
+# record stubs stay blocked but named governance/Faculty-Senate body description pages are kept.
+- /BodyDetails/\d+
+# /Minutes/: governance/policy meeting-minutes archive pages (machine-generated pagination).
+- /Minutes/
+# /profile/\d: weedid.cals.vt.edu individual weed species profiles (1344 crawled; legitimate
+#   VT extension content but each page is a DB lookup stub). NOTE: This ONLY applies because
+#   weedid.cals.vt.edu is now capped at 500 via registry retune; the pattern here ensures
+#   the numerical profile pages don't consume the entire cap on other hosts using /profile/
+#   paths. Be conservative: this pattern matches /profile/<digits-only> (not /profile/slug).
+- /profile/\d+/?$
+# 2026-06-21 (noise-audit swarm): internal-noise traps confirmed by content sampling of the
+# 0620 cleaned corpus. All verified junk; substantive content kept.
+# scholar.lib.vt.edu archives with zero VT relevance (path tokens unique to that host):
+- /InterNews/            # 331: 1990s Le Monde / European / ROA-Times / VA-Pilot newspaper scans
+- /VA-news/              # 221: 1990s Virginia election precinct returns (WDBJ-7 archive)
+# pagination / taxonomy listing traps (path-segment forms; the ?page= query form is above):
+- /page/\d               # 127: WordPress/CMS pagination listing pages (post bodies kept elsewhere)
+- /author/               #  28: author archive listing pages (nav-only)
+- /tags/                 #  21: tag index listing pages (/tag/ already covered above)
+- /channels/.*/posts     #  career.vt.edu channel pagination/listing shells
+- /blog/page/\d          #  blog pagination index pages (individual posts kept)
+# Job listings — user directive 2026-06-21: do NOT keep any job postings, now or in future.
+# 2026-06-22 (audit): narrowed from blanket /jobs/ to /jobs/[^/]+/ so individual posting
+# directories (career.vt.edu/jobs/<employer-role-slug>/) and posting subdirs are blocked, while
+# job-SEARCH ADVICE pages (/jobs/index.html, /jobs/internships.html) and the /jobs/ board landing
+# survive. Verified against live career.vt.edu/jobs/ markup.
+- /jobs/[^/]+/
+# Research-paper publication lists — user directive 2026-06-21: remove academic research output
+# (papers, journal articles) corpus-wide, same rationale as the scholar.lib block. These tokens
+# are research-only (synergy.cs/cnsr.ictas lab pub lists, ~657 files) and verified NOT to collide
+# with policy / governance / Board / syllabus PDFs (those use /policies/, /Bodies/, /courses/).
+- /pubs/
+# 2026-06-22 (audit): narrowed /publications?/ -> /publications?/[0-9]. Lab research-paper archives
+# are numeric (e.g. cnsr.ictas /publication/04489490.pdf) and STAY blocked; institutional landing
+# pages (research.vt.edu/publications/annual-report, graduateschool /publications/) are kept.
+- /publications?/[0-9]
+- /papers/
 patterns:
 - ^(login|sso|cas|idp|shib|2fa|auth)\b
 - \.middleware\.vt\.edu$
@@ -56,6 +99,46 @@ patterns:
 # 2026-06-17: WordPress backend origins (content served via canonical hosts)
 - \.wp\.prod\.es\.cloud\.vt\.edu$
 hosts:
+# 2026-06-21 (user directive): scholar.lib.vt.edu is VT's scholarly-article REPOSITORY
+# (ALAN/JTE/JOTS/SPT/etc. journals, conference proceedings, newspaper archives) — academic
+# research output for a global scholarly audience, NOT student/staff help content. Deep audit
+# (findings/05-scholar-deep.md) confirmed ~25% of the whole corpus is journals with no help
+# value to a Hokie asking practical questions. Block the entire host.
+- scholar.lib.vt.edu
+# vtechworks.lib.vt.edu: VT ETD repository (theses/dissertations). User directive 2026-06-21 —
+# block for now. Its OAI + REST + homepage are all 503/504 server-side (repo down), so the
+# catalog harvest can't run anyway. Catalog entry disabled in host-registry.yaml. If the repo
+# recovers AND we decide we want research metadata cards, re-enable the catalog entry and remove
+# this block. Academic research metadata is out of scope for the help chatbot for now.
+- vtechworks.lib.vt.edu
+# 2026-06-21 (noise-audit swarm, HMS Dragnet): dead long-tail hosts confirmed by content
+# sampling — login walls, 404 stubs, or empty form scaffolds with no answerable content.
+- fixedassetstagging.vpfin.vt.edu                          # login wall
+- presentations.career.vt.edu                              # empty/404 stub
+- www.hokieserv.vt.edu                                     # login wall
+- www.rtx.ece.vt.edu                                       # 404 stub
+- www2.ita.vt.edu                                          # empty form scaffold
+- departmentparkingpermitcertification.controller.vt.edu  # auth form, no content
+# 2026-06-19 (HMS Surveyor): Non-VT external hosts that leaked into -cleaned corpus via
+# DOCUMENT scope following PDF/doc links from VT pages. Verified by sampling object content
+# in test-crawled-pages-0617-cleaned. All confirmed non-VT content.
+# armyrotc.army.mil: US Army ROTC national site (87 docs: USACC forms, regulations).
+#   Linked from armyrotc.vt.edu but content is Army, not VT.
+- armyrotc.army.mil
+# blog.stevieawards.com: business awards blog (176 docs: press releases about award winners).
+#   VT is an award recipient but this is a third-party awards site.
+- blog.stevieawards.com
+# tazewellcountyva.org: Tazewell County VA local government (314 docs).
+#   Likely linked from VT Extension/outreach pages. Not VT content.
+- tazewellcountyva.org
+# www.dhrm.virginia.gov: Virginia Dept of Human Resource Management (270 docs).
+#   Linked from VT HR policy pages. Virginia state government, not VT.
+- www.dhrm.virginia.gov
+# ncses.nsf.gov: NSF statistics (260 docs: survey datasets).
+#   Linked from VT research pages. Federal statistics, not VT content.
+- ncses.nsf.gov
+# archive.org: Internet Archive (50 docs in sample). Third-party archival site.
+- archive.org
 # 2026-06-17 host-categorization agent: redirect duplicates, auth-gated, dead.
 # classes.vt.edu: JS class-search app (fose.js); course content lives in catalog.vt.edu
 # (courseleaf special handler). Live section data is volatile XHR, not crawlable text.

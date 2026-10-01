@@ -14,21 +14,31 @@ import re
 from datetime import datetime, timezone
 from dataclasses import asdict, dataclass, field
 from html import unescape
-from urllib.parse import urljoin, urlparse
+from urllib.parse import unquote, urljoin, urlparse
 
 import yaml
-from bs4 import BeautifulSoup, Tag
-from crawl4ai import AsyncWebCrawler
+from bs4 import BeautifulSoup, NavigableString, Tag
 
-from crawler.render import js_run_config
+from crawler.render import (
+    DEFAULT_RENDER_CHUNK_SIZE,
+    DEFAULT_RENDER_IDLE_TIMEOUT,
+    js_run_config,
+    render_in_chunks,
+)
+from crawler.validate import validate_program_record
+from crawler.program_content import requirements_blocks
 
 logger = logging.getLogger(__name__)
 CATALOG_BASE_URL = "https://catalog.vt.edu"
 COURSE_INDEX_URL = f"{CATALOG_BASE_URL}/course-descriptions/"
+# program-explorer flattens every degree program (undergrad + grad, ~622) into
+# one rendered page; the minors and graduate-certificate hubs cover the program
+# types the explorer omits. The bare /undergraduate/ and /graduate/ indexes are
+# NOT seeded — they only expose depth-2 college hubs (0 program-detail links).
 PROGRAM_SEED_URLS = (
     f"{CATALOG_BASE_URL}/program-explorer/",
-    f"{CATALOG_BASE_URL}/undergraduate/",
-    f"{CATALOG_BASE_URL}/graduate/",
+    f"{CATALOG_BASE_URL}/undergraduate/minors/",
+    f"{CATALOG_BASE_URL}/graduate/graduate-certificates/",
 )
 
 _COURSE_CODE_RE = re.compile(
@@ -42,11 +52,16 @@ _CREDITS_RE = re.compile(
 _TITLE_SPLIT_RE = re.compile(r"\s*(?:[:.-]\s+|\s+-\s+)")
 _LABEL_RE = re.compile(
     r"^(?P<label>Prerequisite(?:\(s\))?|Corequisite(?:\(s\))?|"
-    r"Pre-?/?Co-?requisite(?:\(s\))?|When Offered|Cross[- ]Listed|"
-    r"Cross[- ]Listing(?:\(s\))?|Also Listed As)\s*:\s*(?P<value>.*)$",
+    r"Pre-?/?Co-?requisite(?:\(s\))?|When Offered|"
+    # VT's live template uses "Course Crosslist:"; older snapshots used
+    # "Cross-listed with:" / "Also offered as:". Match all of them.
+    r"Course Cross-?list(?:ing)?(?:\(s\))?|Cross-?list(?:ing|ed)?(?:\s+with)?|"
+    r"Cross[- ]Listing(?:\(s\))?|Also Listed As|Also offered as|"
+    r"Also Offered As)\s*:\s*(?P<value>.*)$",
     re.IGNORECASE,
 )
 _SPACE_RE = re.compile(r"\s+")
+_EDITION_RE = re.compile(r"\b(\d{4}-\d{4})\b")
 
 
 @dataclass(frozen=True)
@@ -63,6 +78,11 @@ class CourseRecord:
     description: str | None = None
     url: str | None = None
     key: str | None = None
+    # Any other labelled field the catalog publishes that has no dedicated slot
+    # — e.g. "Pathway Concept Area(s)", "Instructional Contact Hours",
+    # "Repeatability". Captured verbatim ({label: value}) so nothing the page
+    # shows is dropped from the embedded card.
+    extras: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -74,6 +94,7 @@ class ProgramRecord:
     department: str | None = None
     description: str | None = None
     requirements: list[str] = field(default_factory=list)
+    requirements_markdown: bool = False
     level: str | None = None
     key: str | None = None
 
@@ -193,7 +214,7 @@ def _split_labelled_extra(text: str) -> tuple[str | None, str | None]:
         return "corequisites", value
     if label.startswith("when"):
         return "when_offered", value
-    if label.startswith("cross") or label.startswith("also"):
+    if label.startswith("cross") or label.startswith("also") or "crosslist" in label:
         return "cross_listings", value
     return None, None
 
@@ -207,8 +228,23 @@ def _extract_cross_listings(value: str) -> list[str]:
     return listings
 
 
+def _has_label_strong(tag: Tag) -> bool:
+    """Return True if the tag's first non-whitespace content is a <strong> ending in ':'."""
+    strong = tag.find("strong")
+    if strong is None:
+        return False
+    strong_text = (strong.get_text(strip=True) or "")
+    return strong_text.endswith(":")
+
+
 def parse_courseblocks(html: str, source_url: str | None = None) -> list[CourseRecord]:
-    """Parse CourseLeaf courseblock HTML into structured course records."""
+    """Parse CourseLeaf courseblock HTML into structured course records.
+
+    Handles both the stock CourseLeaf template (uses .courseblocktitle /
+    .courseblockdesc class names on <p> elements) and VT's customised template
+    which uses only <div class="cols noindent"> for the title and plain
+    <div class="noindent"> for the body (no .courseblocktitle/.courseblockdesc).
+    """
     soup = BeautifulSoup(html or "", "html.parser")
     records: list[CourseRecord] = []
     blocks = soup.select(".courseblock")
@@ -216,14 +252,21 @@ def parse_courseblocks(html: str, source_url: str | None = None) -> list[CourseR
         blocks = soup.find_all(class_=lambda c: c and "courseblock" in str(c).split())
 
     for block in blocks:
-        title_tag = block.select_one(".courseblocktitle")
+        # --- locate the title element ---
+        # VT custom template: <div class="cols noindent"> holds the course code.
+        # Stock CourseLeaf: <p class="courseblocktitle"> holds the course code.
+        title_tag = block.select_one("div.cols.noindent, div.noindent.cols")
+        if title_tag is None:
+            title_tag = block.select_one(".courseblocktitle")
         if title_tag is None:
             title_tag = block.find(["p", "div", "span"], class_=re.compile("title"))
+
         header = _parse_course_header(_tag_text(title_tag or block))
         if not header:
             continue
 
         description_parts: list[str] = []
+        extra_fields: dict[str, str] = {}   # Pathway, Contact Hours, etc.
         fields: dict[str, str | list[str] | None] = {
             "prerequisites": None,
             "corequisites": None,
@@ -231,13 +274,65 @@ def parse_courseblocks(html: str, source_url: str | None = None) -> list[CourseR
             "cross_listings": [],
         }
 
+        description_found = False
+
         for child in block.find_all(["p", "div"], recursive=False):
             if child is title_tag:
                 continue
             classes = set(child.get("class") or [])
+
+            # Skip the VT "cols noindent" title div if we encounter it again
+            # (shouldn't happen but guard anyway).
+            if "cols" in classes and "noindent" in classes:
+                continue
+
             text = _tag_text(child)
             if not text:
+                # Ignore empty spacer divs (VT template has several).
                 continue
+
+            # --- VT custom template body divs (class="noindent", no stock classes) ---
+            # VT template uses <div class="noindent"> for both labelled fields and
+            # plain descriptions. Stock CourseLeaf uses <p class="courseblockextra
+            # noindent"> for labelled extras — these must fall through to the stock
+            # path below (they carry no <strong> wrapper, just plain "Label: value"
+            # text). Detect VT-only divs by requiring: tag is <div>, class list
+            # contains "noindent", no stock indicator class present.
+            _stock_classes = {"courseblockextra", "courseblockdesc", "courseblocktitle"}
+            is_vt_noindent = (
+                child.name == "div"
+                and "noindent" in classes
+                and "cols" not in classes
+                and _stock_classes.isdisjoint(classes)
+            )
+            if is_vt_noindent:
+                if _has_label_strong(child):
+                    # This is a labelled field: <strong>Label:</strong> value
+                    # Build a plain "Label: value" string for _split_labelled_extra.
+                    key, value = _split_labelled_extra(text)
+                    if key == "cross_listings" and value:
+                        fields[key] = _extract_cross_listings(value)
+                    elif key and value:
+                        fields[key] = value
+                    else:
+                        # Unknown labelled field (Pathway Concept Area(s),
+                        # Instructional Contact Hours, Repeatability, ...).
+                        # _has_label_strong guarantees the first <strong> ends
+                        # in ':', so splitting on the first colon yields a clean
+                        # label/value. Captured verbatim so nothing is dropped.
+                        label, _, value = text.partition(":")
+                        label = _clean_text(label)
+                        value = _clean_text(value)
+                        if label and value:
+                            extra_fields[label] = value
+                else:
+                    # Plain description paragraph — take the first non-empty one.
+                    if not description_found:
+                        description_parts.append(text)
+                        description_found = True
+                continue
+
+            # --- Stock CourseLeaf template (p.courseblocktitle / p.courseblockextra) ---
             key, value = _split_labelled_extra(text)
             if key == "cross_listings" and value:
                 fields[key] = _extract_cross_listings(value)
@@ -258,6 +353,7 @@ def parse_courseblocks(html: str, source_url: str | None = None) -> list[CourseR
             description="\n\n".join(description_parts) or None,
             url=source_url,
             key=key,
+            extras=dict(extra_fields),
         ))
     return records
 
@@ -287,6 +383,191 @@ def _nearest_heading_text(tag: Tag) -> str | None:
         if text:
             return text
     return None
+
+
+_SKIP_NAV_RE = re.compile(r"skip to (?:main )?content", re.I)
+_BRANDING_RE = re.compile(r"academic catalog", re.I)
+_REQ_KEYWORD_RE = re.compile(r"requirement|curriculum|plan of study|credit", re.I)
+_FOOTNOTE_RE = re.compile(r"^(?:\d+\s|\d+\.|\*|\u2020|Note:)", re.I)
+_TABLE_CONTEXT_RE = re.compile(r"curriculum|requirement|plan|course|credit|degree", re.I)
+_REQUIREMENT_PANE_ID_RE = re.compile(
+    r"(?:requirement|curriculum|planofstudy).*textcontainer$", re.I
+)
+
+
+def _program_title(soup: BeautifulSoup) -> str:
+    """Return the real CourseLeaf program title.
+
+    CourseLeaf renders the program name in ``h1.page-title``. The first ``<h1>``
+    in the DOM is site branding (``#site-title`` = "2026-2027 Academic
+    Catalog"); "Skip to Content" is a separate skip-nav anchor. Both must be
+    ignored — historically the fallback grabbed the first ``<h1>`` and produced
+    the 643 mis-titled ("Skip to Content" / "Academic Catalog") program cards.
+    """
+    titled = _tag_text(soup.select_one("h1.page-title"))
+    if titled:
+        return titled
+    for h1 in soup.find_all("h1"):
+        if (h1.get("id") or "") == "site-title":
+            continue
+        text = _tag_text(h1)
+        if not text or _SKIP_NAV_RE.search(text) or _BRANDING_RE.search(text):
+            continue
+        return text
+    return _tag_text(soup.title)
+
+
+def program_requirement_containers(container: Tag) -> list[Tag]:
+    """Return CourseLeaf requirement/curriculum panes in DOM order.
+
+    VT's live 2026-2027 template does not use one stable
+    ``#requirementstextcontainer``.  Examples include
+    ``#programcurriculumtextcontainer`` and
+    ``#graduationrequirementstextcontainer``; some pages use plan-of-study
+    variants.  Treat those panes as the source of record and intentionally do
+    not include ``#roadmaptextcontainer`` to avoid embedding sample-semester
+    roadmap duplicates as degree requirements.
+    """
+    panes: list[Tag] = []
+    seen: set[int] = set()
+    for tag in container.find_all(True):
+        tag_id = str(tag.get("id") or "")
+        if not tag_id or not _REQUIREMENT_PANE_ID_RE.search(tag_id):
+            continue
+        marker = id(tag)
+        if marker in seen:
+            continue
+        seen.add(marker)
+        panes.append(tag)
+    return panes
+
+
+def parse_program_detail(
+    html: str, source_url: str = CATALOG_BASE_URL, *, is_fallback: bool = False
+) -> ProgramRecord | None:
+    """Parse a single CourseLeaf program-detail page into one ProgramRecord.
+
+    Targets the real title (``h1.page-title``) and content container
+    (``#contentarea``): the description comes from the Overview tab pane
+    (``#textcontainer``) and the plan-of-study from the Requirements tab pane
+    (``#requirementstextcontainer``). Falls back to generic selectors
+    (``#content``/``main``) for synthetic/non-CourseLeaf pages.
+
+    Returns ``None`` when no real title is found or the record fails program
+    validation — so empty JS shells and non-program pages are dropped rather
+    than stored as stubs.
+
+    ``is_fallback`` is forwarded to validate_program_record. It defaults to
+    False for direct callers (harvest of a KNOWN program-detail URL): those
+    pages are validated structurally only, so a real program whose
+    ``#requirementstextcontainer`` failed to render (JS hiccup) and whose
+    Overview prose lacks the requirement/curriculum/credit keywords is retained
+    instead of being silently dropped (BUG-D). Only the parse_programs guessing
+    fallback (a no-links page we're merely treating AS a detail page) passes
+    is_fallback=True to keep the keyword gate that kills stub cards.
+    """
+    soup = BeautifulSoup(html or "", "html.parser")
+    title = _program_title(soup)
+    if not title:
+        return None
+
+    content = (
+        soup.select_one("#contentarea")
+        or soup.select_one("#content, main, #textcontainer")
+        or soup
+    )
+
+    # Description: prefer the Overview pane; drop short nav labels ("Our
+    # Website", "Disciplinary Areas:") so the description carries real prose.
+    desc_source = content.select_one("#textcontainer") or content
+    paragraphs = [
+        text
+        for p in desc_source.find_all("p")
+        if (text := _tag_text(p)) and len(text) > 25 and not _LABEL_RE.match(text)
+    ]
+
+    # Preserve actual curriculum tables AND surrounding qualifiers/footnotes.
+    # A heading/list-only scan silently dropped required courses and alternatives.
+    # The live VT template uses several requirement pane IDs, not just the stock
+    # #requirementstextcontainer, so collect all requirement/curriculum panes.
+    req_panes = program_requirement_containers(content)
+    requirements: list[str] = []
+    for req_pane in (req_panes or [content]):
+        requirements.extend(requirements_blocks(req_pane))
+    if not paragraphs and not requirements:
+        return None  # Empty browser/challenge shell is not a replacement source.
+    if re.search(r"page not found|access denied|just a moment|^loading(?:\.*)?$", title, re.I):
+        return None
+
+    record = ProgramRecord(
+        title=title,
+        url=source_url,
+        degree=_infer_degree(title),
+        description="\n\n".join(paragraphs[:3]) or None,
+        requirements=requirements,
+        requirements_markdown=True,
+        level=_infer_program_level(source_url),
+        key=program_key(source_url or title),
+    )
+    result = validate_program_record(record, is_fallback=is_fallback)
+    if not result.valid:
+        # WARNING (not DEBUG) so dropped programs are visible in run logs — a
+        # render flake that costs a whole program should not hide silently.
+        logger.warning(
+            "Rejected program detail record (%s): %s", result.reason, source_url
+        )
+        return None
+    return record
+
+
+def _is_program_detail_path(path: str) -> bool:
+    """True for a program-DETAIL path — i.e. a leaf program page, not a hub.
+
+    Real program details live at depth >= 4 (``/<level>/<college>/<dept>/
+    <program>/`` or ``/<level>/<section>/<program>/``); every structural hub is
+    shallower — the bare level index (depth 2), college hubs and
+    ``/graduate/degree-programs/`` / ``/undergraduate/minors/`` (depth 3). The
+    depth-4 floor therefore excludes sidebar-nav hubs that would otherwise be
+    stored as bogus program cards.
+    """
+    return (
+        ("/undergraduate/" in path or "/graduate/" in path)
+        and path.count("/") >= 4
+    )
+
+
+def parse_program_links(html: str, source_url: str = CATALOG_BASE_URL) -> list[str]:
+    """Discover program-detail URLs from a CourseLeaf listing/seed page.
+
+    The ``/program-explorer/`` app renders every degree program (undergrad +
+    grad, ~622) as a plain ``<a>`` inside ``ul.isotope li.item`` — so prefer
+    that structure, which yields the full flat list in one render (the bare
+    ``/undergraduate/`` and ``/graduate/`` indexes only expose depth-2 college
+    hubs and would need recursion). Fall back to a generic scan for
+    program-detail-shaped hrefs on non-explorer pages (minors/certificate hubs,
+    synthetic listings). URL fragments (e.g. ``#contentarea``) are stripped and
+    duplicates removed — the explorer lists each program twice (grid + list).
+    """
+    soup = BeautifulSoup(html or "", "html.parser")
+    anchors = soup.select("ul.isotope li.item a[href]")
+    if not anchors:
+        anchors = soup.select("a[href]")
+
+    urls: list[str] = []
+    seen: set[str] = set()
+    for anchor in anchors:
+        raw = str(anchor.get("href") or "")
+        if not raw:
+            continue
+        url = urljoin(source_url, raw).partition("#")[0]
+        if not _is_program_detail_path(urlparse(url).path.lower()):
+            continue
+        key = program_key(url)
+        if key in seen:
+            continue
+        seen.add(key)
+        urls.append(url)
+    return urls
 
 
 def parse_programs(html: str, source_url: str = CATALOG_BASE_URL) -> list[ProgramRecord]:
@@ -331,30 +612,13 @@ def parse_programs(html: str, source_url: str = CATALOG_BASE_URL) -> list[Progra
     if records:
         return records
 
-    title = _tag_text(soup.select_one("h1")) or _tag_text(soup.title)
-    if not title:
-        return []
-    main = soup.select_one("#content, main, #textcontainer") or soup
-    paragraphs = [
-        _tag_text(p) for p in main.find_all("p")
-        if _tag_text(p) and not _LABEL_RE.match(_tag_text(p))
-    ]
-    requirements = []
-    for tag in main.find_all(["h2", "h3", "li"]):
-        text = _tag_text(tag)
-        if text and re.search(r"requirement|curriculum|plan of study|credit", text, re.I):
-            requirements.append(text)
-    url = source_url
-    records.append(ProgramRecord(
-        title=title,
-        url=url,
-        degree=_infer_degree(title),
-        description="\n\n".join(paragraphs[:3]) or None,
-        requirements=requirements,
-        level=_infer_program_level(url),
-        key=program_key(url or title),
-    ))
-    return records
+    # No program links on the page — treat it as a program-detail page and
+    # extract one record via the CourseLeaf-aware detail parser (which targets
+    # h1.page-title / #contentarea and validates real program content). This is
+    # the GUESSING path, so keep the keyword gate (is_fallback=True) that drops
+    # non-program pages misidentified as details (the 643 stub-card source).
+    detail = parse_program_detail(html, source_url, is_fallback=True)
+    return [detail] if detail is not None else []
 
 
 def _frontmatter(data: dict) -> str:
@@ -367,11 +631,31 @@ def _content_hash(body: str) -> str:
     return hashlib.sha256(body.encode()).hexdigest()
 
 
+def _program_total_credits(data: dict) -> str | None:
+    """Extract an explicit total-credit requirement from rendered source text.
+
+    This is a source-grounded retrieval aid, not an inference: only emit a
+    summary when the requirements text itself says "Total Credits ... N" or
+    "Complete N credit hours".  Putting the total near the top keeps credit
+    questions from retrieving long elective tables ahead of the answer.
+    """
+    source = "\n".join(str(item) for item in (data.get("requirements") or []))
+    for pattern in (
+        r"\|\s*Total Credits\s*\|[^\n]*?\|\s*(\d{2,3})\s*\|",
+        r"\bTotal Credits\b[^\n]{0,120}\b(\d{2,3})\b",
+        r"\bComplete\s+(\d{2,3})\s+credit hours\b",
+    ):
+        match = re.search(pattern, source, re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return None
+
+
 def _doc_id(url: str) -> str:
     return hashlib.sha256(url.encode()).hexdigest()[:16]
 
 
-def course_card_markdown(record: CourseRecord | dict) -> str:
+def course_card_markdown(record: CourseRecord | dict, catalog_edition: str | None = None) -> str:
     """Markdown card with structured YAML fields for downstream payload."""
     data = _record_dict(record)
     title = f"{data['subject']} {data['number']}: {data['title']}"
@@ -386,6 +670,12 @@ def course_card_markdown(record: CourseRecord | dict) -> str:
         body_lines.append(f"**When offered:** {data['when_offered']}")
     if data.get("cross_listings"):
         body_lines.append(f"**Cross-listed:** {', '.join(data['cross_listings'])}")
+    # Every other labelled field the catalog publishes (Pathway Concept Area(s),
+    # Instructional Contact Hours, Repeatability, ...) — render verbatim so it is
+    # part of the embedded text, not just metadata.
+    extras = data.get("extras") or {}
+    for label, value in extras.items():
+        body_lines.append(f"**{label}:** {value}")
     if data.get("description"):
         body_lines += ["", data["description"]]
     body = "\n".join(body_lines).rstrip() + "\n"
@@ -407,12 +697,15 @@ def course_card_markdown(record: CourseRecord | dict) -> str:
         "corequisites": data.get("corequisites"),
         "when_offered": data.get("when_offered"),
         "cross_listings": data.get("cross_listings") or [],
+        "extra_fields": extras,
         "content_hash": _content_hash(body),
     }
+    if catalog_edition:
+        frontmatter["catalog_edition"] = catalog_edition
     return _frontmatter(frontmatter) + body
 
 
-def program_card_markdown(record: ProgramRecord | dict) -> str:
+def program_card_markdown(record: ProgramRecord | dict, catalog_edition: str | None = None) -> str:
     """Markdown card for CourseLeaf programs with frontmatter payload fields."""
     data = _record_dict(record)
     body_lines = [f"# {data['title']}", ""]
@@ -424,11 +717,19 @@ def program_card_markdown(record: ProgramRecord | dict) -> str:
     ):
         if data.get(key):
             body_lines.append(f"**{label}:** {data[key]}")
+    if total_credits := _program_total_credits(data):
+        body_lines.append(
+            f"**Total Credits:** {total_credits}. Students must complete "
+            f"{total_credits} credit hours for this program to graduate."
+        )
     if data.get("description"):
         body_lines += ["", data["description"]]
     if data.get("requirements"):
         body_lines += ["", "## Requirements", ""]
-        body_lines += [f"- {item}" for item in data["requirements"]]
+        if data.get("requirements_markdown"):
+            body_lines.append("\n\n".join(data["requirements"]))
+        else:
+            body_lines += [f"- {item}" for item in data["requirements"]]
     body = "\n".join(body_lines).rstrip() + "\n"
     key = data.get("key") or program_key(data.get("url") or data["title"])
     frontmatter = {
@@ -444,47 +745,107 @@ def program_card_markdown(record: ProgramRecord | dict) -> str:
         "college": data.get("college"),
         "department": data.get("department"),
         "program_level": data.get("level"),
-        "requirements": data.get("requirements") or [],
+        # Do not duplicate full requirements/tables in YAML frontmatter. The
+        # compatible deployed ingestor parses the frontmatter delimiter with a
+        # simple string search, so markdown table separators inside YAML lists
+        # can truncate metadata and collapse doc_id to the empty-URL fallback.
+        # Requirements remain losslessly in the markdown body for retrieval.
         "content_hash": _content_hash(body),
     }
+    if catalog_edition:
+        frontmatter["catalog_edition"] = catalog_edition
     return _frontmatter(frontmatter) + body
 
 
 async def _render_html(urls: list[str], threshold: float = 0.5) -> dict[str, str]:
-    """Browser-render CourseLeaf URLs and return {url: html}."""
-    if not urls:
-        return {}
+    """Browser-render CourseLeaf URLs and return {url: html}.
+
+    Buffered helper for the small index/seed fetches. Delegates to
+    ``render_in_chunks`` so even these short fetches get the chunk watchdog;
+    the large subject/program-detail phases stream through ``render_in_chunks``
+    directly so cards persist per chunk (see ``harvest_courseleaf_catalog``).
+    """
     rendered: dict[str, str] = {}
-    async with AsyncWebCrawler() as crawler:
-        results = await crawler.arun_many(urls=urls, config=js_run_config(threshold))
-        async for result in results:
-            if getattr(result, "success", False):
-                rendered[result.url] = getattr(result, "html", "") or ""
-            else:
-                logger.warning(
-                    "CourseLeaf render failed for %s: %s",
-                    getattr(result, "url", ""),
-                    getattr(result, "error_message", "unknown"),
-                )
+    async for url, html in render_in_chunks(list(urls), js_run_config(threshold)):
+        rendered[url] = html
     return rendered
+
+
+async def _stream_from_fetch(fetch_html, urls: list[str]):
+    """Adapt a dict-returning ``fetch_html`` test seam into a (url, html)
+    stream so the harvest's per-chunk write path is exercised identically by
+    tests and production."""
+    rendered = await fetch_html(list(urls))
+    for url, html in rendered.items():
+        yield url, html
+
+
+def detect_catalog_edition(html: str) -> str | None:
+    """Extract the catalog edition (e.g. ``"2026-2027"``) from rendered
+    CourseLeaf HTML.
+
+    CourseLeaf renders the edition in the site title ("2026-2027 Academic
+    Catalog"); fall back to ``<title>`` then a whole-document scan. Returns
+    ``None`` when no ``YYYY-YYYY`` token is present. Used to warn when the live
+    catalog year drifts from the configured ``CATALOG_EDITION``.
+    """
+    soup = BeautifulSoup(html or "", "html.parser")
+    for selector in ("#site-title", "title"):
+        match = _EDITION_RE.search(_tag_text(soup.select_one(selector)))
+        if match:
+            return match.group(1)
+    match = _EDITION_RE.search(soup.get_text(" ", strip=True))
+    return match.group(1) if match else None
 
 
 async def harvest_courseleaf_catalog(
     storage,
     target_bucket: str,
     *,
+    catalog_edition: str | None = None,
     fetch_html=None,
+    render_stream=None,
     threshold: float = 0.5,
+    chunk_size: int = DEFAULT_RENDER_CHUNK_SIZE,
+    idle_timeout: float = DEFAULT_RENDER_IDLE_TIMEOUT,
+    max_retries: int = 0,
     now: datetime | None = None,
 ) -> dict:
-    """Render and store CourseLeaf course/program cards into the cleaned bucket.
+    """Render and store CourseLeaf course/program cards into the catalog bucket.
 
-    `fetch_html` is an async test seam accepting a list of URLs and returning
-    {url: html}. Production uses crawl4ai's browser tier because CourseLeaf
-    plain HTTP responses are bot-gated.
+    The two large phases — subject pages (~140) and program-detail pages
+    (~640) — stream through ``render_in_chunks``: each page's cards are written
+    to MinIO as soon as that page renders, so a killed run keeps every chunk it
+    already finished (no all-or-nothing buffer), per-chunk logging gives live
+    progress, and a single stale/mismatched/hung URL stalls at most its own
+    chunk (the render watchdog), never the whole harvest. This job re-renders
+    everything on a clean run by design — it runs once per catalog edition and
+    must re-capture changed courses — so there is no skip-existing step.
+
+    Test seams: ``fetch_html`` accepts a URL list and returns {url: html} (used
+    for the small index/seed fetches, and adapted into a stream for the big
+    phases when ``render_stream`` is not given). ``render_stream`` overrides the
+    streaming renderer directly with an ``(urls) -> AsyncIterator[(url, html)]``
+    factory. Production uses crawl4ai's browser tier because CourseLeaf plain
+    HTTP responses are bot-gated.
+
+    `catalog_edition` (e.g. "2026-2027") is injected into each card's frontmatter
+    so downstream consumers can filter by semester. When omitted the field is absent.
     """
+    test_mode = fetch_html is not None
     fetch_html = fetch_html or (lambda urls: _render_html(urls, threshold))
     now = now or datetime.now(timezone.utc)
+
+    def stream(urls):
+        if render_stream is not None:
+            return render_stream(urls)
+        if test_mode:
+            return _stream_from_fetch(fetch_html, urls)
+        return render_in_chunks(
+            list(urls), js_run_config(threshold),
+            chunk_size=chunk_size, idle_timeout=idle_timeout,
+            max_retries=max_retries,
+        )
 
     stats = {
         "courses_harvested": 0,
@@ -493,46 +854,67 @@ async def harvest_courseleaf_catalog(
         "pages_failed": 0,
     }
 
+    # 1. Course-descriptions index (small, buffered) -> subject page URLs.
     index_html = await fetch_html([COURSE_INDEX_URL])
     stats["pages_rendered"] += len(index_html)
     subject_urls = parse_subject_urls(index_html.get(COURSE_INDEX_URL, ""))
 
-    subject_html = await fetch_html(subject_urls)
-    stats["pages_rendered"] += len(subject_html)
-    stats["pages_failed"] += max(0, len(subject_urls) - len(subject_html))
-    for url, html in subject_html.items():
+    # Edition sanity check: cards are always tagged with the configured
+    # CATALOG_EDITION, but warn loudly if the LIVE catalog year differs — that
+    # means VT rolled the edition and CATALOG_EDITION was not bumped, so cards
+    # would be mis-tagged.
+    detected_edition = detect_catalog_edition(index_html.get(COURSE_INDEX_URL, ""))
+    if detected_edition and catalog_edition and detected_edition != catalog_edition:
+        logger.warning(
+            "Catalog edition mismatch: live catalog is %s but CATALOG_EDITION "
+            "is %s — cards tagged %s. Bump CATALOG_EDITION if VT rolled the year.",
+            detected_edition, catalog_edition, catalog_edition,
+        )
+    elif detected_edition:
+        logger.info("Detected live catalog edition: %s", detected_edition)
+
+    # 2. Subject pages: render and write course cards per chunk.
+    rendered_subjects = 0
+    async for url, html in stream(subject_urls):
+        rendered_subjects += 1
         for record in parse_courseblocks(html, source_url=url):
             storage.upload_document(
                 course_object_key(record),
-                course_card_markdown(record),
+                course_card_markdown(record, catalog_edition=detect_catalog_edition(html) or catalog_edition),
                 bucket=target_bucket,
             )
             stats["courses_harvested"] += 1
+    stats["pages_rendered"] += rendered_subjects
+    stats["pages_failed"] += max(0, len(subject_urls) - rendered_subjects)
 
+    # 3. Program seed/listing pages (small, buffered) -> detail URLs.
     program_html = await fetch_html(list(PROGRAM_SEED_URLS))
     stats["pages_rendered"] += len(program_html)
     stats["pages_failed"] += max(0, len(PROGRAM_SEED_URLS) - len(program_html))
     seen_programs: set[str] = set()
     program_detail_urls: list[str] = []
     for url, html in program_html.items():
-        for record in parse_programs(html, source_url=url):
-            if record.url not in seen_programs:
-                seen_programs.add(record.url)
-                program_detail_urls.append(record.url)
+        for detail_url in parse_program_links(html, source_url=url):
+            if detail_url not in seen_programs:
+                seen_programs.add(detail_url)
+                program_detail_urls.append(detail_url)
 
-    detail_html = await fetch_html(program_detail_urls)
-    stats["pages_rendered"] += len(detail_html)
-    stats["pages_failed"] += max(0, len(program_detail_urls) - len(detail_html))
-    for url, html in detail_html.items():
-        records = parse_programs(html, source_url=url)
-        if not records:
+    # 4. Program detail pages: render and write program cards per chunk. Uses
+    # the detail parser directly (NOT parse_programs) so a detail page's own
+    # sidebar program links can't be mistaken for a listing.
+    rendered_details = 0
+    async for url, html in stream(program_detail_urls):
+        rendered_details += 1
+        record = parse_program_detail(html, source_url=url)
+        if record is None:
             continue
-        record = records[0]
         storage.upload_document(
             program_object_key(record),
-            program_card_markdown(record),
+            program_card_markdown(record, catalog_edition=detect_catalog_edition(html) or catalog_edition),
             bucket=target_bucket,
         )
         stats["programs_harvested"] += 1
+    stats["pages_rendered"] += rendered_details
+    stats["pages_failed"] += max(0, len(program_detail_urls) - rendered_details)
 
     return stats

@@ -1,0 +1,51 @@
+2026-09-24 04:09:58,422 INFO ingestor.embedding_client: EmbeddingClient → http://embeddings-service
+2026-09-24 04:09:58,439 INFO httpx: HTTP Request: GET http://qdrant:6333/collections/hokiehelp-quality-20260922/exists "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,440 INFO ingestor.indexer: Collection hokiehelp-quality-20260922 already exists — reconciling payload indexes
+2026-09-24 04:09:58,446 INFO httpx: HTTP Request: GET http://qdrant:6333 "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,479 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,487 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,495 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,503 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,511 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,522 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,531 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,542 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,553 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,568 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,575 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,583 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,592 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/index?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,641 INFO __main__: Found 8 documents to ingest (mode=full)
+2026-09-24 04:09:58,861 INFO httpx: HTTP Request: POST http://embeddings-service/embed "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,939 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/points?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,945 INFO httpx: HTTP Request: POST http://qdrant:6333/collections/hokiehelp-quality-20260922/points/scroll "HTTP/1.1 200 OK"
+2026-09-24 04:09:58,948 INFO __main__: ingested object=catalog.vt.edu/programs/undergraduate-college-engineering-computer-science-computer-science-bs.md doc_id=d3556d267f8ac571 chunks=13 points=13
+2026-09-24 04:09:59,097 INFO httpx: HTTP Request: POST http://embeddings-service/embed "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,135 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/points?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,139 INFO httpx: HTTP Request: POST http://qdrant:6333/collections/hokiehelp-quality-20260922/points/scroll "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,140 INFO __main__: ingested object=catalog.vt.edu/programs/undergraduate-college-science-mathematics-mathematics-bs-applied-computational-mathematics.md doc_id=dc1da57e50f599e7 chunks=7 points=7
+2026-09-24 04:09:59,294 INFO httpx: HTTP Request: POST http://embeddings-service/embed "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,332 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/points?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,336 INFO httpx: HTTP Request: POST http://qdrant:6333/collections/hokiehelp-quality-20260922/points/scroll "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,336 INFO __main__: ingested object=catalog.vt.edu/programs/undergraduate-college-science-mathematics-mathematics-bs-applied-discrete-mathematics.md doc_id=5741941c895aee08 chunks=7 points=7
+2026-09-24 04:09:59,462 INFO httpx: HTTP Request: POST http://embeddings-service/embed "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,494 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/points?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,498 INFO httpx: HTTP Request: POST http://qdrant:6333/collections/hokiehelp-quality-20260922/points/scroll "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,499 INFO __main__: ingested object=catalog.vt.edu/programs/undergraduate-college-science-mathematics-mathematics-bs-mathematics-education-masters-track.md doc_id=e07ae976028f34ce chunks=6 points=6
+2026-09-24 04:09:59,675 INFO httpx: HTTP Request: POST http://embeddings-service/embed "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,720 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/points?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,724 INFO httpx: HTTP Request: POST http://qdrant:6333/collections/hokiehelp-quality-20260922/points/scroll "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,725 INFO __main__: ingested object=catalog.vt.edu/programs/undergraduate-college-science-mathematics-mathematics-bs.md doc_id=51907e1579f0c85a chunks=9 points=9
+2026-09-24 04:09:59,824 INFO httpx: HTTP Request: POST http://embeddings-service/embed "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,852 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/points?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,856 INFO httpx: HTTP Request: POST http://qdrant:6333/collections/hokiehelp-quality-20260922/points/scroll "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,856 INFO __main__: ingested object=catalog.vt.edu/programs/undergraduate-liberal-arts-human-sciences-education-mathematics-education-bs.md doc_id=48193eb80807dc2c chunks=5 points=5
+2026-09-24 04:09:59,925 INFO httpx: HTTP Request: POST http://embeddings-service/embed "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,942 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/points?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,945 INFO httpx: HTTP Request: POST http://qdrant:6333/collections/hokiehelp-quality-20260922/points/scroll "HTTP/1.1 200 OK"
+2026-09-24 04:09:59,946 INFO __main__: ingested object=catalog.vt.edu/programs/undergraduate-minors-computer-science-minor.md doc_id=f4f5747fa6ed4ac8 chunks=2 points=2
+2026-09-24 04:10:00,045 INFO httpx: HTTP Request: POST http://embeddings-service/embed "HTTP/1.1 200 OK"
+2026-09-24 04:10:00,066 INFO httpx: HTTP Request: PUT http://qdrant:6333/collections/hokiehelp-quality-20260922/points?wait=true "HTTP/1.1 200 OK"
+2026-09-24 04:10:00,069 INFO httpx: HTTP Request: POST http://qdrant:6333/collections/hokiehelp-quality-20260922/points/scroll "HTTP/1.1 200 OK"
+2026-09-24 04:10:00,070 INFO __main__: ingested object=catalog.vt.edu/programs/undergraduate-minors-mathematics-minor.md doc_id=60ea27a122395e0b chunks=3 points=3
+2026-09-24 04:10:00,070 INFO __main__: ingest_done {'processed': 8, 'skipped': 0, 'failed': 0, 'upserted': 52}

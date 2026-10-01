@@ -1,0 +1,372 @@
+{
+  "target_bucket_program_objects": 8,
+  "source_bucket_program_objects": 622,
+  "repair_report": {
+    "started_utc": "2026-09-24T04:09:13.521497+00:00",
+    "source_bucket": "test-crawled-pages-0705",
+    "target_bucket": "hokiehelp-quality-20260922",
+    "attempted": 13,
+    "ok": [
+      {
+        "key": "catalog.vt.edu/programs/undergraduate-college-engineering-computer-science-computer-science-bs.md",
+        "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+        "html_sha256": "c9e2619ec1583068389aa447c2924a3c61cc1b3590266ac5aebdc74cca59f39a",
+        "title": "Computer Science Major",
+        "edition": "2026-2027",
+        "table_count": 13,
+        "source_course_codes": 133,
+        "body_chars": 19150,
+        "doc_id": "d3556d267f8ac571",
+        "content_hash": "2185c94b4b252b4f97a9c59403a79b08f9fac4b6ed316026c4dd695709f8574b"
+      },
+      {
+        "key": "catalog.vt.edu/programs/undergraduate-college-science-mathematics-mathematics-bs-applied-computational-mathematics.md",
+        "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-applied-computational-mathematics/",
+        "html_sha256": "4bf70640379ae6edfb02743ed869a398ded33223a99ccedb5490cf8a4c9ca763",
+        "title": "Mathematics Major with Applied Computational Mathematics Option",
+        "edition": "2026-2027",
+        "table_count": 1,
+        "source_course_codes": 47,
+        "body_chars": 7507,
+        "doc_id": "dc1da57e50f599e7",
+        "content_hash": "4bfc77a235c057fa3ffc19f252fb084cce706f2a820ed8bb46acb044f3edb3a1"
+      },
+      {
+        "key": "catalog.vt.edu/programs/undergraduate-college-science-mathematics-mathematics-bs-applied-discrete-mathematics.md",
+        "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-applied-discrete-mathematics/",
+        "html_sha256": "46578ef5d63d0264aa70454436287ace2ee54935642f6d3485874f3bd96243d7",
+        "title": "Mathematics Major with Applied Discrete Mathematics Option",
+        "edition": "2026-2027",
+        "table_count": 1,
+        "source_course_codes": 61,
+        "body_chars": 8399,
+        "doc_id": "5741941c895aee08",
+        "content_hash": "99e6f721d357d8ceb9ba92f45e88220d458b181ef25de5de90035be277530c9d"
+      },
+      {
+        "key": "catalog.vt.edu/programs/undergraduate-college-science-mathematics-mathematics-bs-mathematics-education-masters-track.md",
+        "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-mathematics-education-masters-track/",
+        "html_sha256": "23ed21a592fe5dc6c578ded098ea18906e9a5bf39e45cc9458303ea717326d2c",
+        "title": "Mathematics Major with Mathematics Education (Master's Track) Option",
+        "edition": "2026-2027",
+        "table_count": 1,
+        "source_course_codes": 46,
+        "body_chars": 7055,
+        "doc_id": "e07ae976028f34ce",
+        "content_hash": "03cc822e776a24e7b2bc905fb0591c970e68d282ad07d6ceef28a5c06ce62c44"
+      },
+      {
+        "key": "catalog.vt.edu/programs/undergraduate-college-science-mathematics-mathematics-bs.md",
+        "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs/",
+        "html_sha256": "0fbf988c83154e893b05efc3305c8ab46e2b940bd8eedc51359c9e9cd76c2be6",
+        "title": "Mathematics Major",
+        "edition": "2026-2027",
+        "table_count": 2,
+        "source_course_codes": 65,
+        "body_chars": 10168,
+        "doc_id": "51907e1579f0c85a",
+        "content_hash": "45499cd93a734787c5ef311c03a70276a1cff3ba4108fb951d534305edc44830"
+      },
+      {
+        "key": "catalog.vt.edu/programs/undergraduate-liberal-arts-human-sciences-education-mathematics-education-bs.md",
+        "url": "https://catalog.vt.edu/undergraduate/liberal-arts-human-sciences/education/mathematics-education-bs/",
+        "html_sha256": "ba3892e72ff1002c4a767c5cc3bdd13a98c7cf8728b7b7d1f3ff87b9ee05c960",
+        "title": "Mathematics Education Major",
+        "edition": "2026-2027",
+        "table_count": 1,
+        "source_course_codes": 30,
+        "body_chars": 5067,
+        "doc_id": "48193eb80807dc2c",
+        "content_hash": "8546b12b4ec9968607473857f6dd696955f102f276ae01575ab08495e9973747"
+      },
+      {
+        "key": "catalog.vt.edu/programs/undergraduate-minors-computer-science-minor.md",
+        "url": "https://catalog.vt.edu/undergraduate/minors/computer-science-minor/",
+        "html_sha256": "42eafc27e9bbfcd947c8f5dc5bb3bc46327b52c661a871ec39748cf7fae5e9bd",
+        "title": "Computer Science (CS) Minor",
+        "edition": "2026-2027",
+        "table_count": 1,
+        "source_course_codes": 29,
+        "body_chars": 2439,
+        "doc_id": "f4f5747fa6ed4ac8",
+        "content_hash": "ed45943c44b44b0fe6f979c81765ff90b5e884ee88a5da73b278dbcdcbee9b79"
+      },
+      {
+        "key": "catalog.vt.edu/programs/undergraduate-minors-mathematics-minor.md",
+        "url": "https://catalog.vt.edu/undergraduate/minors/mathematics-minor/",
+        "html_sha256": "7cb900b0ea819640e4c04b7ba4bf3b237c5de38a931df98d7b12375762a881fa",
+        "title": "Mathematics (MATH) Minor",
+        "edition": "2026-2027",
+        "table_count": 1,
+        "source_course_codes": 26,
+        "body_chars": 3341,
+        "doc_id": "60ea27a122395e0b",
+        "content_hash": "7516efeadc7ef25ae94418b9dfd416f4cedc9ccc90ed74596c8d6b426b4be334"
+      }
+    ],
+    "failed": [
+      {
+        "url": "https://catalog.vt.edu/graduate/degree-programs/computer-science-applications/computer-science-applications-meng/",
+        "error_type": "ValueError",
+        "reason": "Disallowed by robots"
+      },
+      {
+        "url": "https://catalog.vt.edu/graduate/degree-programs/computer-science-applications/computer-science-applications-ms/",
+        "error_type": "ValueError",
+        "reason": "Disallowed by robots"
+      },
+      {
+        "url": "https://catalog.vt.edu/graduate/degree-programs/computer-science-applications/computer-science-applications-phd/",
+        "error_type": "ValueError",
+        "reason": "Disallowed by robots"
+      },
+      {
+        "url": "https://catalog.vt.edu/graduate/degree-programs/mathematics/mathematics-ms/",
+        "error_type": "ValueError",
+        "reason": "Disallowed by robots"
+      },
+      {
+        "url": "https://catalog.vt.edu/graduate/degree-programs/mathematics/mathematics-phd/",
+        "error_type": "ValueError",
+        "reason": "Disallowed by robots"
+      }
+    ],
+    "finished_utc": "2026-09-24T04:09:31.594211+00:00"
+  },
+  "qdrant_points": {
+    "hokiehelp-test": 268330,
+    "hokiehelp-quality-20260922": 268367
+  },
+  "bad_empty_url_doc_points": 0,
+  "cs_card": {
+    "doc_id": "d3556d267f8ac571",
+    "bytes": 19627,
+    "body_chars": 19150,
+    "chunk_points": 13,
+    "frontmatter_catalog_edition": "2026-2027",
+    "frontmatter_program_level": "undergraduate",
+    "frontmatter_requirements_present": false,
+    "has_total_credit_summary": true,
+    "has_roadmap_heading": false,
+    "required_math_and_cs_markers": {
+      "MATH 1225": true,
+      "MATH 1226": true,
+      "MATH 2114": true,
+      "MATH 2204": true,
+      "CMDA 2005": true,
+      "MATH 2534": true,
+      "MATH 3034": true,
+      "MATH 3134": true,
+      "MATH 3124": true,
+      "CS 1114": true,
+      "Statistics Elective": true,
+      "Total Credits": true,
+      "123": true
+    },
+    "contexts": {
+      "MATH 1225": [
+        {
+          "chunk_index": 3,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        }
+      ],
+      "MATH 1226": [
+        {
+          "chunk_index": 3,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        }
+      ],
+      "MATH 2114": [
+        {
+          "chunk_index": 2,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        },
+        {
+          "chunk_index": 12,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Satisfactory Progress Towards Degree"
+          ]
+        }
+      ],
+      "MATH 2204": [
+        {
+          "chunk_index": 2,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        },
+        {
+          "chunk_index": 12,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Satisfactory Progress Towards Degree"
+          ]
+        }
+      ],
+      "CMDA 2005": [
+        {
+          "chunk_index": 2,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        }
+      ],
+      "MATH 2534": [
+        {
+          "chunk_index": 2,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        }
+      ],
+      "MATH 3034": [
+        {
+          "chunk_index": 2,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        }
+      ],
+      "MATH 3134": [
+        {
+          "chunk_index": 2,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        }
+      ],
+      "MATH 3124": [
+        {
+          "chunk_index": 2,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        }
+      ],
+      "CS 1114": [
+        {
+          "chunk_index": 2,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        },
+        {
+          "chunk_index": 12,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Satisfactory Progress Towards Degree"
+          ]
+        }
+      ],
+      "Statistics Elective": [
+        {
+          "chunk_index": 2,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        },
+        {
+          "chunk_index": 5,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Electives"
+          ]
+        }
+      ],
+      "Total Credits": [
+        {
+          "chunk_index": 0,
+          "headings_path": []
+        },
+        {
+          "chunk_index": 3,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ]
+        }
+      ],
+      "MATH 3414": [
+        {
+          "chunk_index": 6,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Electives"
+          ]
+        }
+      ],
+      "MATH 4414": [
+        {
+          "chunk_index": 6,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Electives"
+          ]
+        },
+        {
+          "chunk_index": 7,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Electives"
+          ]
+        }
+      ],
+      "MATH 4175": [
+        {
+          "chunk_index": 9,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Electives"
+          ]
+        }
+      ]
+    }
+  },
+  "math_major_card": {
+    "doc_id": "51907e1579f0c85a",
+    "bytes": 10607,
+    "body_chars": 10168,
+    "chunk_points": 9,
+    "title": "Mathematics Major",
+    "catalog_edition": "2026-2027",
+    "total_credits_120": true
+  }
+}

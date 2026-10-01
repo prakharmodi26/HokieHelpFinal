@@ -1,0 +1,93 @@
+_meta:
+  built: '2026-06-19'
+  note: >
+    Curated allowlist of non-vt.edu hosts/domains that carry genuine Virginia Tech content.
+    Validated by sampling the 0617 crawl buckets (test-crawled-pages-0617-external and
+    test-crawled-pages-0617-cleaned). Each entry was spot-checked with mc cat on at least one
+    .md file to confirm VT affiliation.
+
+    MATCHING SEMANTICS (for HMS Resolute / code captain):
+      - Each entry with a `host` key is matched as an exact hostname.
+      - The entry `vt.domains` with `wildcard_subdomains: true` means ANY subdomain of vt.domains
+        (e.g. solarcar.vt.domains, aiteaching.vt.domains) is allowed. The code must implement
+        suffix-match: host.endswith('.vt.domains') OR host == 'vt.domains'.
+      - `max_urls` semantics are identical to host-registry.yaml: -1 = loader rewrites to 1500
+        backstop; explicit value = hard cap.
+      - `path_exclude` patterns are path-prefix strings (not regex) that must be blocked for
+        that specific host to avoid transactional/noise sub-trees. Applied BEFORE the global
+        path_patterns in host-blocklist.yaml.
+
+    REJECTED CANDIDATES (evidence-based):
+      - richmondhokies.org: index is a 404/WP Engine unconfigured error. No content. EXCLUDED.
+      - tedxvirginiatech.com: index is a Cloudflare 522 timeout. Site dead. EXCLUDED.
+      - hokiesports.evenue.net: ticketing/giving transactional SaaS (verified by sample:
+        redirect to donation flow). EXCLUDED.
+      - shop.hokiesports.com: e-commerce storefront (2 objects, both shop pages). EXCLUDED.
+      - tickets.hokiesports.com: ticket purchase flow (2 objects). EXCLUDED.
+      - www2.hokiesports.com: only 2 objects (spirit/requests.md) - not worth a dedicated entry;
+        content already covered by hokiesports.com. EXCLUDED.
+      - media.hokiesports.com: 2 objects (media/photo CDN references only). EXCLUDED.
+      - stats.hokiesports.com: VT-specific box scores and season stats (verified: Virginia Tech
+        Football season records). Kept shallow under hokiesports.com catch-all is NOT sufficient
+        because stats is a separate subdomain. Including with low cap to get program records page
+        but block deep per-game archives. SEE ENTRY BELOW.
+      - hokiesabroad.com: Only 1 object (homepage with VT study-abroad program listings).
+        Legitimate but minimal. INCLUDING with cap=10.
+      - hokieclub.com: VT athletics donor/scholarship site (confirmed). INCLUDING with cap=50.
+
+    ENV / INTEGRATION NOTE: the code loading this file should expose it via env var
+    VT_AFFILIATED_HOSTS_PATH (default: services/crawler/config/vt-affiliated-hosts.yaml).
+    The loader in host_registry.py (or equivalent) must merge these entries with the
+    standard registry before BFS host-cap lookups. Wildcard domain entries are NOT in the
+    standard registry format; the loader must handle the `wildcard_subdomains: true` flag.
+
+hosts:
+  # ---- VT Domains (student/faculty project hosting) ----
+  # Validated: aiteaching.vt.domains = "Teaching with AI at Virginia Tech – Faculty Learning
+  # Community"; solarcar.vt.domains = "SolarCar at Virginia Tech – student team"; vt.domains
+  # root = VT program description. All subdomains are VT-hosted student/faculty projects.
+  # Individual subdomains crawled are small (1-6 pages each), so max_urls=50 per subdomain
+  # is generous. The wildcard_subdomains flag tells the code to match *.vt.domains.
+  - domain: vt.domains
+    wildcard_subdomains: true
+    max_urls: 50
+    note: VT student/faculty project hosting (Reclaim Hosting via VT). All *.vt.domains
+      subdomains are VT-affiliated. Cap 50/subdomain keeps individual projects lean.
+
+  # ---- Virginia Tech Athletics ----
+  # Validated: hokiesports.com content verified: "About CAMP - Virginia Tech Athletics",
+  # facility pages (Cassell Coliseum, Beamer-Lawson IPF), sports schedules.
+  # Genuine VT athletics editorial content. 47 .md files crawled in external bucket.
+  - host: hokiesports.com
+    max_urls: 200
+    path_exclude:
+      - /camps/register
+      - /shop/
+      - /tickets/
+      - /evenue/
+    note: VT Athletics main editorial site. Cap 200. Exclude commerce/ticketing paths.
+
+  # Validated: stats.hokiesports.com has genuine VT-specific records (VT Football season
+  # records, opponents, etc). Low cap to get program records but avoid per-game explosion.
+  - host: stats.hokiesports.com
+    max_urls: 25
+    path_exclude:
+      - /live
+    note: VT Athletics stats/records. Keep for program-level records pages, exclude live feeds.
+
+  # Validated: hokieclub.com = "The Hokie Club fuels Virginia Tech Athletics' pursuit of
+  # excellence". VT athletics donor/scholarship program. Homepage only needed.
+  - host: hokieclub.com
+    max_urls: 50
+    path_exclude:
+      - /give
+      - /donate
+      - /signin
+      - /account
+    note: VT Athletics donor program. Exclude transactional giving/auth paths.
+
+  # Validated: hokiesabroad.com = VT study-abroad programs (SBIO 3954 credits, VT faculty-led).
+  # Only 1 object crawled (homepage). Small site, include with small cap.
+  - host: hokiesabroad.com
+    max_urls: 25
+    note: VT study-abroad program listings (VT-faculty-led international courses).

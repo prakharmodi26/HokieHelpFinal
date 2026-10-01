@@ -25,7 +25,7 @@ unhandled, it killed the whole run.
 from __future__ import annotations
 
 import re
-from urllib.parse import urlsplit
+from urllib.parse import parse_qsl, urlsplit
 
 # A normal absolute URL is well under this; anything longer is almost certainly
 # a concatenation/loop artifact, not a real page.
@@ -69,6 +69,23 @@ _KEY_ALLOWED_RE = re.compile(r"[^A-Za-z0-9._\-/%~]")
 _MULTISLASH_RE = re.compile(r"/{2,}")
 
 
+def _embeds_open_redirect(query: str) -> bool:
+    """True if a query param VALUE is a full http(s) URL to a bare non-FQDN host.
+
+    Catches open-redirect/proxy artifacts like ``?url=http://evil`` (host has no
+    dot — a placeholder/garbage target). A param pointing at a real dotted host
+    (``?next=https://login.vt.edu/sso``) is deliberately NOT rejected here; scope
+    decides whether that target is in-scope.
+    """
+    for _key, value in parse_qsl(query, keep_blank_values=True):
+        candidate = value.strip()
+        if candidate.lower().startswith(("http://", "https://")):
+            host = (urlsplit(candidate).hostname or "").lower()
+            if not host or "." not in host or not _HOST_RE.match(host):
+                return True
+    return False
+
+
 def is_ingestible_url(url: str) -> bool:
     """Return True only if `url` is safe to enqueue and later store.
 
@@ -95,11 +112,21 @@ def is_ingestible_url(url: str) -> bool:
     if not host or not _HOST_RE.match(host):
         return False
 
-    # Embedded scheme in the path means two URLs were concatenated. A legitimate
-    # query string may carry a redirect URL with '://', but the PATH never does;
-    # checking only the path avoids false positives on ?next=https://… links.
+    # An embedded '://' in the PATH means two URLs were concatenated (a broken
+    # href like ".../426-041.htmlhttps://www...") — the '://' would land in the
+    # object key and crash storage. Only the definitive '://' is rejected: a
+    # bare 'http:'/'https:' inside a path slug (/tags/http-basics,
+    # /wiki/https:hypertext) is a legitimate page, not a concatenation (BUG-G).
     path_lower = parts.path.lower()
-    if "://" in path_lower or "http:" in path_lower or "https:" in path_lower:
+    if "://" in path_lower:
+        return False
+
+    # An open-redirect / proxy param carries a full URL as a query-param VALUE
+    # (?url=http://evil). Reject one whose embedded host is a bare non-FQDN
+    # (garbage/placeholder); a param aimed at a real dotted host
+    # (?next=https://login.vt.edu/sso) is left for classify_url/scope to judge
+    # so legitimate intra-VT redirect links are not dropped (BUG-G).
+    if _embeds_open_redirect(parts.query):
         return False
 
     # Reject non-textual media/binaries outright: video, audio, images, archives,

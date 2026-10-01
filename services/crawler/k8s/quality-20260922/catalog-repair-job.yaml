@@ -1,0 +1,75 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: quality-catalog-repair
+  namespace: test
+  labels:
+    app: hokiehelp-catalog-repair
+    managed-by: hokiehelp-pipeline
+    repair-target: hokiehelp-quality-20260922
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 43200
+  template:
+    metadata:
+      labels:
+        app: hokiehelp-catalog-repair
+        managed-by: hokiehelp-pipeline
+        repair-target: hokiehelp-quality-20260922
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: repair
+          image: ghcr.io/prakharmodi26/hokiehelp-crawler@sha256:835d33b7878770ad064ba65072b7e32c3efc5614baae815edccedff0f5ca8801
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: MINIO_ENDPOINT
+              value: minio:9000
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: secret-key
+            # Optional: e.g. --include-url-regex '(computer-science|mathematics)' for acceptance-first run.
+            - name: REPAIR_ARGS
+              value: "--include-url-regex (computer-science|mathematics)"
+          volumeMounts:
+            - name: repair-overlay
+              mountPath: /repair-overlay
+              readOnly: true
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              rm -rf /tmp/repair
+              mkdir -p /tmp/repair
+              cp -a /app/. /tmp/repair/
+              cp /repair-overlay/courseleaf.py /tmp/repair/src/crawler/courseleaf.py
+              cp /repair-overlay/program_content.py /tmp/repair/src/crawler/program_content.py
+              cp /repair-overlay/validate.py /tmp/repair/src/crawler/validate.py
+              cp /repair-overlay/repair_program_cards.py /tmp/repair/scripts/repair_program_cards.py
+              PYTHONPATH=/tmp/repair/src python /tmp/repair/scripts/repair_program_cards.py \
+                --source-bucket test-crawled-pages-0705 \
+                --bucket hokiehelp-quality-20260922 \
+                ${REPAIR_ARGS}
+      volumes:
+        - name: repair-overlay
+          configMap:
+            name: quality-catalog-repair-overlay
+            items:
+              - key: courseleaf.py
+                path: courseleaf.py
+              - key: program_content.py
+                path: program_content.py
+              - key: validate.py
+                path: validate.py
+              - key: repair_program_cards.py
+                path: repair_program_cards.py

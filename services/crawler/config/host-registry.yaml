@@ -1,55 +1,60 @@
 _meta:
   built: '2026-06-10'
   source: offline snapshot (3508 hosts -> 780 keep) + 4-lane tiering + owner review
-  note: 'STATIC. Registry is a SEED SET, not a boundary: the crawler also follows any live *.vt.edu host not blocklisted.
-    Rebuild by hand from a fresh snapshot.'
+  note: 'STATIC. Registry is a SEED SET, not a boundary: the crawler also follows
+    any live *.vt.edu host not blocklisted. Rebuild by hand from a fresh snapshot.'
   modes:
     full: crawl all pages, ingest text into RAG corpus
-    catalog: metadata-only cards (no full-text ingest); repositories/archives/project sites
-    special: 'non-standard handler (see ''handler''): dining_tool=runtime agent tool (not crawled); courseleaf_catalog=browser-render
-      + structured course/program ingest'
+    catalog: metadata-only cards (no full-text ingest); repositories/archives/project
+      sites
+    special: 'non-standard handler (see ''handler''): dining_tool=runtime agent tool
+      (not crawled); courseleaf_catalog=browser-render + structured course/program
+      ingest'
   retiered: '2026-06-16'
-  tiering: 'Option A: explicit max_urls per host. -1=dept/service (unlimited), 1=faculty/lab/personal (home page only), 25=news/calendar/video,
-    200=cpes. Global CRAWL_MAX_URLS_PER_HOST=50 governs only BFS-discovered hosts not in this registry.'
+  tiering: 'Option A: explicit max_urls per host. -1=dept/service (unlimited), 1=faculty/lab/personal
+    (home page only), 25=news/calendar/video, 200=cpes. Global CRAWL_MAX_URLS_PER_HOST=50
+    governs only BFS-discovered hosts not in this registry.'
+  retiered_0619: '2026-06-19: Retune pass 2. Changed 317 hosts from -1 to default
+    cap 500. Kept 44 large confirmed hubs at -1.'
 full:
 - host: 4help.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: aad.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: aaec.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: accessibility.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: admissions.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: admit.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: advance.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: advancement.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: advising.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: agrability.alce.vt.edu
   max_urls: 1
 - host: agtech.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ai.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: aie.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: aimsbbis.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: airports.cs.vt.edu
   max_urls: 1
 - host: ajmorrisgroup.chem.vt.edu
   max_urls: 1
 - host: alce.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: alerts.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: alumni.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: an.advising.vt.edu
   max_urls: 1
 - host: analytics.cs.vt.edu
@@ -57,63 +62,63 @@ full:
 - host: aoe.vt.edu
   max_urls: -1
 - host: apex.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: apfacultysenate.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: apsc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: arc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: arch.vt.edu
   max_urls: -1
 - host: arec.vaes.vt.edu
   max_urls: -1
 - host: ari.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: armyrotc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: artscenter.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: asce.cee.vt.edu
   max_urls: 1
 - host: asme.me.vt.edu
   max_urls: 1
 - host: aspect.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: assessment.cs.vt.edu
   max_urls: 1
 - host: assist.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ats.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: atsl.cee.vt.edu
   max_urls: 1
 - host: autoboat.aoe.vt.edu
   max_urls: 1
 - host: autonomyandrobotics.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: bams.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: beam.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: behl.cee.vt.edu
   max_urls: 1
 - host: bigtree.cnre.vt.edu
   max_urls: 1
 - host: biochem.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: bioinformatics.cs.vt.edu
   max_urls: 25
 - host: biol.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: biology.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: biophysics.cs.vt.edu
   max_urls: 1
 - host: biostat.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: bit.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: bme.vt.edu
   max_urls: -1
 - host: bold.beam.vt.edu
@@ -123,29 +128,29 @@ full:
 - host: bootcamp.cpe.vt.edu
   max_urls: 1
 - host: bov.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: brand.cee.vt.edu
   max_urls: 1
 - host: brand.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: branding.unirel.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: bse.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: bsld.cee.vt.edu
   max_urls: 1
 - host: bursar.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: caia.cals.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cals.vt.edu
   max_urls: -1
 - host: cameo.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: campuslife.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cancer.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: capelluto.biol.vt.edu
   max_urls: 1
 - host: career.vt.edu
@@ -153,37 +158,37 @@ full:
 - host: caregiving.vt.edu
   max_urls: 1
 - host: cast.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: catawba.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ccc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ccps.alce.vt.edu
   max_urls: 1
 - host: ccx.cee.vt.edu
   max_urls: 1
 - host: cdac.aad.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ceage.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cece.vt.edu
   max_urls: -1
 - host: cee.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cem.cee.vt.edu
   max_urls: 1
 - host: cfpb.vt.edu
   max_urls: 1
 - host: cgit.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cgpr.cee.vt.edu
   max_urls: 1
 - host: chapters.alumni.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: che.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: chem.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: chemc.cs.vt.edu
   max_urls: 1
 - host: chen.biol.vt.edu
@@ -195,25 +200,25 @@ full:
 - host: cimini.biol.vt.edu
   max_urls: 1
 - host: cired.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cirtl.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: citsie.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: civilrights.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: civilwar.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: clahs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: classroomav.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cligs.vt.edu
   max_urls: 1
 - host: cloudbrowser.cs.vt.edu
   max_urls: 1
 - host: cmi.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cnre.vt.edu
   max_urls: -1
 - host: coins.aaec.vt.edu
@@ -221,31 +226,31 @@ full:
 - host: collinslab.bme.vt.edu
   max_urls: 1
 - host: comm.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: commencement.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: communications.cals.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: communitychange.ipg.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: compreq.vt.edu
   max_urls: 1
 - host: controller.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cos.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: courses.cs.vt.edu
   max_urls: -1
 - host: cpe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cpes.vt.edu
   max_urls: 200
 - host: cradie.soe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: crawford.chem.vt.edu
   max_urls: 1
 - host: create.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: crowd.cs.vt.edu
   max_urls: 1
 - host: crowdfund.vt.edu
@@ -253,17 +258,17 @@ full:
 - host: cs.vt.edu
   max_urls: -1
 - host: csgrad.cs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: cte.cs.vt.edu
   max_urls: 1
 - host: cvess.me.vt.edu
   max_urls: 1
 - host: cyber.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: dac.cs.vt.edu
   max_urls: 1
 - host: dairymanagement.cals.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: dendro.cnre.vt.edu
   max_urls: 1
 - host: design.che.vt.edu
@@ -271,9 +276,9 @@ full:
 - host: dmkd.cs.vt.edu
   max_urls: 1
 - host: docs.arc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: dos.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: draghi.biol.vt.edu
   max_urls: 1
 - host: dreams.me.vt.edu
@@ -287,35 +292,35 @@ full:
 - host: echolab.cs.vt.edu
   max_urls: 1
 - host: ecoforecast.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ei.cs.vt.edu
   max_urls: 1
 - host: emergency.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: endeavour.cs.vt.edu
   max_urls: 1
 - host: energy.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: eng.vt.edu
   max_urls: -1
 - host: engage.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: enge.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: english.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: englishlab.cee.vt.edu
   max_urls: 1
 - host: ento.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ewr.cee.vt.edu
   max_urls: 1
 - host: facultycouncil.clahs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: fds.career.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: fhs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: flu1918.lib.vt.edu
   max_urls: 25
 - host: fom.ictas.vt.edu
@@ -327,11 +332,11 @@ full:
 - host: fox.cs.vt.edu
   max_urls: 1
 - host: frec.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: fst.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: fye.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: garden.gis.vt.edu
   max_urls: 1
 - host: gc.ece.vt.edu
@@ -343,33 +348,33 @@ full:
 - host: giving.adv.vt.edu
   max_urls: 1
 - host: globaleducation.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: glycotree.chem.vt.edu
   max_urls: 1
 - host: govrel.president.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: graduate.ombudsman.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: graduateschool.vt.edu
   max_urls: -1
 - host: granatalab.bme.vt.edu
   max_urls: 1
 - host: healthcenter.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: helmet.beam.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: herbarium.biol.vt.edu
   max_urls: 1
 - host: housing.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: hpbc.arch.vt.edu
   max_urls: 1
 - host: hr.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: hsu.biol.vt.edu
   max_urls: 1
 - host: htm.pamplin.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: iatrc.aaec.vt.edu
   max_urls: 1
 - host: iawacenter.aad.vt.edu
@@ -381,15 +386,15 @@ full:
 - host: ideas.cs.vt.edu
   max_urls: 1
 - host: info.classroomav.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: infovis.cs.vt.edu
   max_urls: 25
 - host: international.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: isce.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ise.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ivw.cee.vt.edu
   max_urls: 1
 - host: jcl.cee.vt.edu
@@ -399,7 +404,7 @@ full:
 - host: jobs.apply.vt.edu
   max_urls: 25
 - host: jobs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: jrmorris.chem.vt.edu
   max_urls: 1
 - host: kohl.aaec.vt.edu
@@ -409,9 +414,9 @@ full:
 - host: lam.biol.vt.edu
   max_urls: 1
 - host: latham.cals.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: lci.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: lddi.cee.vt.edu
   max_urls: 1
 - host: lib.vt.edu
@@ -429,13 +434,13 @@ full:
 - host: manta.cs.vt.edu
   max_urls: 1
 - host: maop.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: marinerobotics.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: mascots.cs.vt.edu
   max_urls: 1
 - host: mathed.soe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: merola.chem.vt.edu
   max_urls: 1
 - host: mics.ece.vt.edu
@@ -447,7 +452,7 @@ full:
 - host: mpf.biol.vt.edu
   max_urls: 1
 - host: mph.vetmed.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: multirad.chem.vt.edu
   max_urls: 1
 - host: mwcog.owml.vt.edu
@@ -457,65 +462,65 @@ full:
 - host: next.cs.vt.edu
   max_urls: 1
 - host: nli.tlos.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: oap.soe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: obfp.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: odyssey.lib.vt.edu
   max_urls: 25
 - host: oero.soe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: omega.phys.vt.edu
   max_urls: 1
 - host: oshrc.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: osp.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: outreach.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: packaging.sbio.vt.edu
   max_urls: 1
 - host: pasta.cs.vt.edu
   max_urls: 1
 - host: pathways.prov.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: police.bams.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: provost.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: pruden.cee.vt.edu
   max_urls: 1
 - host: psci.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: realestate.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: recsports.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: registrar.vt.edu
   max_urls: -1
 - host: research.cs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: research.undergraduate.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: research.vt.edu
   max_urls: -1
 - host: risk.controller.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: sacs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: salt.cee.vt.edu
   max_urls: 1
 - host: sanghani.cs.vt.edu
   max_urls: 1
 - host: sbio.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: scape.cs.vt.edu
   max_urls: 1
 - host: scharf.biol.vt.edu
   max_urls: 1
 - host: schevreporting.aie.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: scholar.lib.vt.edu
   max_urls: -1
 - host: schubot.biol.vt.edu
@@ -525,9 +530,9 @@ full:
 - host: scottlab.bse.vt.edu
   max_urls: 1
 - host: sec.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: security.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: seemore.cs.vt.edu
   max_urls: 1
 - host: sem.cee.vt.edu
@@ -539,13 +544,13 @@ full:
 - host: smarthome.cs.vt.edu
   max_urls: 1
 - host: sociology.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: soe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: software.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: soiltest.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: solar.bams.vt.edu
   max_urls: 1
 - host: spacedrones.aoe.vt.edu
@@ -553,29 +558,29 @@ full:
 - host: spec.lib.vt.edu
   max_urls: -1
 - host: spia.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: splice.cs.vt.edu
   max_urls: 1
 - host: ssd.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: stat.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: steplab.me.vt.edu
   max_urls: 1
 - host: stopabuse.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: strom.cee.vt.edu
   max_urls: 1
 - host: student.advising.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: student.software.vt.edu
   max_urls: 1
 - host: studentconduct.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: students.cs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: studentsuccess.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: studio.music.vt.edu
   max_urls: 1
 - host: summit.cloud.vt.edu
@@ -583,15 +588,15 @@ full:
 - host: summit.research.vt.edu
   max_urls: 1
 - host: swat.eng.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: synergy.cs.vt.edu
   max_urls: 25
 - host: tbmh.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: tech4humanitylab.clahs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: techforhumanitylab.clahs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: theta.cs.vt.edu
   max_urls: 1
 - host: thinkandcode.lib.vt.edu
@@ -603,7 +608,7 @@ full:
 - host: tise.cee.vt.edu
   max_urls: 1
 - host: tlos.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: tntlab.beam.vt.edu
   max_urls: 1
 - host: tntlab.bme.vt.edu
@@ -611,27 +616,27 @@ full:
 - host: tour.lib.vt.edu
   max_urls: 1
 - host: travel.controller.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ttac.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ucc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ulc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: ultrasound-lab.beam.vt.edu
   max_urls: 1
 - host: ultrasound-lab.bme.vt.edu
   max_urls: 1
 - host: undergrad.research.cee.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: undergraduate.provost.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: unirel.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: vabeginningfarmer.alce.vt.edu
   max_urls: 1
 - host: vaes.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: val.me.vt.edu
   max_urls: 1
 - host: valor.alce.vt.edu
@@ -647,25 +652,25 @@ full:
 - host: virginiaview.cnre.vt.edu
   max_urls: 1
 - host: vis.arc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: visionarium.arc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: visit.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: visualization.arc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: vpfin.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: vt.edu
   max_urls: -1
 - host: vtc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: vtcar.science.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: vtcc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: vtcdd.science.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: vtdairy.dasc.vt.edu
   max_urls: 1
 - host: vthspc.cs.vt.edu
@@ -681,7 +686,7 @@ full:
 - host: wanglab.bme.vt.edu
   max_urls: 1
 - host: waterinterface.cals.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: webapps.cee.vt.edu
   max_urls: 1
 - host: website.cs.vt.edu
@@ -691,255 +696,255 @@ full:
 - host: wellwater.bse.vt.edu
   max_urls: 1
 - host: weremember.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: winkellab.biol.vt.edu
   max_urls: 1
 - host: wireless.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: womenscenter.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: worchlab.chem.vt.edu
   max_urls: 1
 - host: wuvt.vt.edu
   max_urls: 1
 - host: www.aaec.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.advance.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.advising.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.agency229.cals.vt.edu
   max_urls: 1
 - host: www.agtech.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.air.cee.vt.edu
   max_urls: 1
 - host: www.airflows.cee.vt.edu
   max_urls: 1
 - host: www.alce.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.alerts.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.alumni.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.aoe.vt.edu
   max_urls: -1
 - host: www.apex.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.apps.pamplin.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.apsc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.arch.vt.edu
   max_urls: -1
 - host: www.arec.vaes.vt.edu
   max_urls: -1
 - host: www.armyrotc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.artscenter.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.asce.cee.vt.edu
   max_urls: 1
 - host: www.aspect.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.assist.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.atsl.cee.vt.edu
   max_urls: 1
 - host: www.basis.pamplin.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.bc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.beam.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.biochem.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.biol.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.biology.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.biostat.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.bit.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.bov.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.brand.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.branding.unirel.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.bse.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.bursar.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.caia.cals.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cals.vt.edu
   max_urls: -1
 - host: www.cameo.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cast.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cawri.bse.vt.edu
   max_urls: 1
 - host: www.cawri.cee.vt.edu
   max_urls: 1
 - host: www.ceage.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cee.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cem.cee.vt.edu
   max_urls: 1
 - host: www.cgit.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cgpr.cee.vt.edu
   max_urls: 1
 - host: www.chapters.alumni.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.chem.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cib.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.citsie.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.civilrights.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.civilwar.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.clahs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.classroomav.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cmi.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cnre.vt.edu
   max_urls: -1
 - host: www.comm.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.commencement.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.communications.cals.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.communitychange.ipg.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.compreq.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.controller.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cos.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cpe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cpes.vt.edu
   max_urls: 200
 - host: www.cradie.soe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.create.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.cs.vt.edu
   max_urls: -1
 - host: www.cvess.me.vt.edu
   max_urls: 1
 - host: www.dasc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.dendro.cnre.vt.edu
   max_urls: 1
 - host: www.docs.arc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.dos.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.dreams.me.vt.edu
   max_urls: 1
 - host: www.ece.vt.edu
   max_urls: -1
 - host: www.emergency.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.energy.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.eng.vt.edu
   max_urls: -1
 - host: www.engage.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.enge.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.english.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.ento.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.essential.civilwar.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.ewr.cee.vt.edu
   max_urls: 1
 - host: www.facilities.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.facultycouncil.clahs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.facultysenate.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.faeis.cals.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.fhs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.finaid.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.forestupdate.frec.vt.edu
   max_urls: 1
 - host: www.frec.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.fst.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.fye.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.geos.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.geot.cee.vt.edu
   max_urls: 1
 - host: www.globaleducation.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.governance.vt.edu
   max_urls: -1
 - host: www.govrel.president.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.graduate.ombudsman.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.granatalab.beam.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.healthcenter.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.helmet.beam.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.helmet.bme.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.hnfe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.hokieserv.vt.edu
   max_urls: 1
 - host: www.housing.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.hr.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.htm.pamplin.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.hume.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.icat.vt.edu
   max_urls: -1
 - host: www.international.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.isce.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.ise.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.ita.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.jobs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.kojimalab.biol.vt.edu
   max_urls: 1
 - host: www.latham.cals.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.lci.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.lddi.cee.vt.edu
   max_urls: 1
 - host: www.lib.vt.edu
@@ -949,159 +954,159 @@ full:
 - host: www.magma.geos.vt.edu
   max_urls: 1
 - host: www.maop.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.math.vt.edu
   max_urls: -1
 - host: www.mathed.soe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.mcglothlin.biol.vt.edu
   max_urls: 1
 - host: www.me.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.mics.ece.vt.edu
   max_urls: 1
 - host: www.mph.vetmed.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.music.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.mwcog.owml.vt.edu
   max_urls: 1
 - host: www.nli.tlos.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.oap.soe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.odyssey.lib.vt.edu
   max_urls: 25
 - host: www.oero.soe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.ois.outreach.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.oshrc.centers.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.osp.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.outreach.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.packaging.sbio.vt.edu
   max_urls: 1
 - host: www.parking.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.pathways.prov.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.performingarts.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.president.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.provost.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.psci.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.psyc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.realestate.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.recsports.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.registrar.vt.edu
   max_urls: -1
 - host: www.research.undergraduate.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.research.vt.edu
   max_urls: -1
 - host: www.rms.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.sacs.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.santosgroup.chem.vt.edu
   max_urls: 1
 - host: www.sbio.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.scharf.biol.vt.edu
   max_urls: 1
 - host: www.schevreporting.aie.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.science.vt.edu
   max_urls: -1
 - host: www.scottlab.bse.vt.edu
   max_urls: 1
 - host: www.sec.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.sem.cee.vt.edu
   max_urls: 1
 - host: www.sociology.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.soe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.software.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.soiltest.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.space.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.spia.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.spl.ise.vt.edu
   max_urls: 1
 - host: www.ssd.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.staffsenate.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.stat.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.steplab.me.vt.edu
   max_urls: 1
 - host: www.studentconduct.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.studentsuccess.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.swat.eng.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.swim.cee.vt.edu
   max_urls: 1
 - host: www.tbmh.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.threatassessment.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.tise.cee.vt.edu
   max_urls: 1
 - host: www.tlos.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.tour.lib.vt.edu
   max_urls: 1
 - host: www.ttac.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.ucc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.ulc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.undergraduate.provost.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.unirel.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.vabeginningfarmer.alce.vt.edu
   max_urls: 1
 - host: www.vaes.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.val.me.vt.edu
   max_urls: 1
 - host: www.valor.alce.vt.edu
   max_urls: 1
 - host: www.veterans.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.virginiaview.cnre.vt.edu
   max_urls: 1
 - host: www.visit.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.vt.edu
   max_urls: -1
 - host: www.vtc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.vtcar.science.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.vtcc.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.vtcdd.science.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.vtdairy.dasc.vt.edu
   max_urls: 1
 - host: www.vtnews.vt.edu
@@ -1109,7 +1114,7 @@ full:
 - host: www.vtso.geos.vt.edu
   max_urls: 1
 - host: www.vtti.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.wang.bse.vt.edu
   max_urls: 1
 - host: www.webapps.cee.vt.edu
@@ -1117,17 +1122,17 @@ full:
 - host: www.wellwater.bse.vt.edu
   max_urls: 1
 - host: www.weremember.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.wireless.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.womenscenter.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www.wuvt.vt.edu
   max_urls: 1
 - host: www2.cpe.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: www2.ita.vt.edu
-  max_urls: -1
+  max_urls: 500
 - host: yang.biol.vt.edu
   max_urls: 1
 - host: yaogroup.cs.vt.edu
@@ -1159,14 +1164,20 @@ catalog:
 - host: roanokevalleygreatwar.lib.vt.edu
 - host: theses.lib.vt.edu
 - host: vpiworldwarone.lib.vt.edu
+# vtechworks RE-ENABLED 2026-07-04: repo recovered; thesis metadata is in scope. METADATA-ONLY
+# — harvest_oai emits oai_dc cards (title/authors/year/abstract/link), never full text. Still
+# in host-blocklist.yaml so the MAIN crawler never crawls its HTML; the catalog OAI harvest
+# ignores the blocklist. SCOPED to the ETD community only (set: com_10919_5534 = "ETDs: VT
+# Electronic Theses and Dissertations", ~42,507 theses+dissertations) — NOT the whole ~124k
+# repo (which is mostly faculty pubs/datasets/center output, noise for a student bot). Remove
+# `set:` to harvest everything.
 - host: vtechworks.lib.vt.edu
   type: dspace
   rest: /server/api
   oai: /server/oai/request
+  set: com_10919_5534
 - host: www.vpiworldwarone.lib.vt.edu
 special:
-- host: catalog.vt.edu
-  handler: courseleaf_catalog
 - host: dining.vt.edu
   handler: dining_tool
 - host: www.dining.vt.edu

@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: quality-program-ingest
+  namespace: test
+  labels:
+    app: hokiehelp-program-ingest
+    managed-by: hokiehelp-pipeline
+    repair-target: hokiehelp-quality-20260922
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 43200
+  template:
+    metadata:
+      labels:
+        app: hokiehelp-program-ingest
+        managed-by: hokiehelp-pipeline
+        repair-target: hokiehelp-quality-20260922
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: ingest
+          image: ghcr.io/prakharmodi26/hokiehelp-ingestor@sha256:28a5c5f5372ec8cd42e441ffcc7966f7385c4ecb698a905809ad09013add3df9
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: MINIO_ENDPOINT
+              value: minio:9000
+            - name: MINIO_SECURE
+              value: "false"
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: secret-key
+            - name: EMBED_MODE
+              value: remote
+            - name: EMBEDDINGS_URL
+              value: http://embeddings-service
+            - name: EMBEDDING_MODEL
+              value: BAAI/bge-m3
+            - name: EMBEDDINGS_MODEL
+              value: BAAI/bge-m3
+            - name: EMBED_MODEL
+              value: BAAI/bge-m3
+            - name: CHUNK_SIZE
+              value: "2048"
+            - name: INGEST_BUCKET
+              value: hokiehelp-quality-20260922
+            - name: INGEST_PREFIX
+              value: catalog.vt.edu/programs/
+            - name: INGEST_MODE
+              value: full
+            - name: QDRANT_COLLECTION
+              value: hokiehelp-quality-20260922
+            - name: QDRANT_HOST
+              value: qdrant
+            - name: QDRANT_PORT
+              value: "6333"

@@ -11,10 +11,32 @@ YAML and the ``CRAWL_BLOCKED_PATHS`` env list (injected by the caller via from_y
 """
 from __future__ import annotations
 
+import logging
 import re
 from urllib.parse import urlparse
 
 import yaml
+
+logger = logging.getLogger(__name__)
+
+
+def _compile_patterns(patterns: list[str], *, kind: str) -> list[re.Pattern]:
+    """Compile regex patterns, skipping (and warning on) any that are malformed.
+
+    A single bad pattern must never crash the crawler. The blocklist is a
+    noise-reduction layer, not a security boundary (scope/affiliation gates are
+    the real boundary), so dropping one unparseable pattern — loudly — is the
+    correct degrade: the crawler keeps running and that one rule simply does not
+    apply. Sources include CRAWL_BLOCKED_PATHS (operator-supplied env), so a typo
+    there can no longer take the whole run down with a traceback.
+    """
+    compiled: list[re.Pattern] = []
+    for p in patterns:
+        try:
+            compiled.append(re.compile(p))
+        except re.error as exc:
+            logger.warning("Skipping invalid %s pattern %r: %s", kind, p, exc)
+    return compiled
 
 
 class HostFilter:
@@ -24,9 +46,9 @@ class HostFilter:
         hosts: list[str],
         path_patterns: list[str] | None = None,
     ) -> None:
-        self._patterns = [re.compile(p) for p in patterns]
+        self._patterns = _compile_patterns(patterns, kind="host")
         self._hosts = set(h.lower() for h in hosts)
-        self._path_patterns = [re.compile(p) for p in (path_patterns or [])]
+        self._path_patterns = _compile_patterns(path_patterns or [], kind="path")
 
     def is_blocked(self, host: str) -> bool:
         host = (host or "").lower()

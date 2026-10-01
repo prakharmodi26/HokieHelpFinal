@@ -1,0 +1,65 @@
+=====OBJECT catalog.vt.edu/programs/undergraduate-college-engineering-computer-science-computer-science-bs.md BYTES 19533 =====
+{
+  "title": "Computer Science Major",
+  "body_chars": 19056,
+  "tables": 39,
+  "frontmatter_requirements_present": false,
+  "markers": {
+    "MATH 1225": true,
+    "MATH 1226": true,
+    "MATH 2114": true,
+    "MATH 2204": true,
+    "CMDA 2005": true,
+    "MATH 2534": true,
+    "MATH 3034": true,
+    "MATH 3134": true,
+    "MATH 3124": true,
+    "CS 1114": true,
+    "Statistics Elective": true,
+    "Total Credits": true,
+    "123": true,
+    "MATH 3414": true,
+    "MATH 4414": true,
+    "MATH 4175": true,
+    "2026-2027": true
+  }
+}
+=====OBJECT catalog.vt.edu/programs/undergraduate-college-science-mathematics-mathematics-bs.md BYTES 10513 =====
+{
+  "title": "Mathematics Major",
+  "body_chars": 10074,
+  "tables": 6,
+  "frontmatter_requirements_present": false,
+  "markers": {
+    "MATH 1225": true,
+    "MATH 1226": true,
+    "MATH 2114": true,
+    "MATH 2204": true,
+    "CMDA 2005": false,
+    "MATH 2534": true,
+    "MATH 3034": true,
+    "MATH 3134": false,
+    "MATH 3124": true,
+    "CS 1114": true,
+    "Statistics Elective": false,
+    "Total Credits": true,
+    "123": false,
+    "MATH 3414": false,
+    "MATH 4414": true,
+    "MATH 4175": true,
+    "2026-2027": true
+  }
+}
+=====OBJECT reports/program-repair.json BYTES 6219 =====
+{
+  "attempted": 13,
+  "ok": 8,
+  "failed": 5,
+  "failed_reasons": [
+    "Disallowed by robots",
+    "Disallowed by robots",
+    "Disallowed by robots",
+    "Disallowed by robots",
+    "Disallowed by robots"
+  ]
+}

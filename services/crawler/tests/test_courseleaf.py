@@ -228,8 +228,8 @@ def test_parse_program_detail_extracts_description_and_requirements():
     assert record.degree == "B.S."
     assert record.level == "undergraduate"
     assert "software development" in record.description
-    assert "Degree Requirements" in record.requirements
-    assert "Minimum 120 credit hours required for graduation." in record.requirements
+    assert "### Degree Requirements" in record.requirements
+    assert "- Minimum 120 credit hours required for graduation." in record.requirements
 
 
 def test_program_card_markdown_has_program_page_type_and_fields():
@@ -249,7 +249,10 @@ def test_program_card_markdown_has_program_page_type_and_fields():
     assert data["program_name"] == "Computer Science Major, B.S."
     assert data["degree_type"] == "B.S."
     assert data["program_level"] == "undergraduate"
-    assert "Degree Requirements" in data["requirements"]
+    # Tables/requirements stay in the body: large YAML fields exceed the
+    # deployed ingestor's bounded frontmatter parser.
+    assert "requirements" not in data
+    assert "### Degree Requirements" in markdown
     assert len(data["content_hash"]) == 64
     assert "# Computer Science Major, B.S." in markdown
     assert "## Requirements" in markdown
