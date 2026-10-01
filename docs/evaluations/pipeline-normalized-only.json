@@ -1,0 +1,899 @@
+{
+  "generated_utc": "2026-09-21T01:00:33.195002+00:00",
+  "implementation": "production LLMClient + Retriever.search_many + evidence selection/finalizer",
+  "settings": {
+    "planner": "DeepSeek-V4.1-Flash",
+    "answer_models": [
+      "GLM-5.3",
+      "DeepSeek-V4.1-Flash"
+    ],
+    "collection": "hokiehelp-test",
+    "candidate_k": 30,
+    "top_k": 12,
+    "context_chars": 24000,
+    "rerank_floor": 0.3,
+    "neighbors": false
+  },
+  "limitations": [
+    "Constructed public questions, not real user logs.",
+    "No golden credit total: program/cohort/source correctness needs human review.",
+    "The branch does not include the newer stack's MCP/version-aware retrieval."
+  ],
+  "cases": [
+    {
+      "id": "credits-complete",
+      "question": "how many credits do i need to complete bs in cs",
+      "history": [],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "Virginia Tech Bachelor of Science in Computer Science total credits required to graduate"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 2.623,
+      "retrieval_seconds": 0.563,
+      "retrieved_count": 12,
+      "context_body_chars": 17022,
+      "evidence": [
+        {
+          "chunk_id": "6397df2be2282f59#0000",
+          "source_id": 1,
+          "title": "Master of Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "rerank_score": 0.9840323328971863,
+          "query_fusion_score": 0.01639344262295082,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "4f5a70393624837f#0000",
+          "source_id": 2,
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rerank_score": 0.9809125065803528,
+          "query_fusion_score": 0.016129032258064516,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "25c5dbaa43ae694d#0000",
+          "source_id": 3,
+          "title": "Doctorate (Ph.D.)  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/graduate/future-grads/doctorate.html",
+          "rerank_score": 0.9537942409515381,
+          "query_fusion_score": 0.015873015873015872,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "6397df2be2282f59#0001",
+          "source_id": 1,
+          "title": "Master of Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "rerank_score": 0.9531006813049316,
+          "query_fusion_score": 0.015625,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "4f5a70393624837f#0001",
+          "source_id": 2,
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rerank_score": 0.9529258608818054,
+          "query_fusion_score": 0.015384615384615385,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "4729d6cd5b412936#0001",
+          "source_id": 4,
+          "title": "Accelerated Graduate Programs  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/accelerated-programs-and-graduate-school.html",
+          "rerank_score": 0.9518632292747498,
+          "query_fusion_score": 0.015151515151515152,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "bf8a1e4670160a64#0000",
+          "source_id": 5,
+          "title": "Computer Science and Applications, MS",
+          "url": "https://catalog.vt.edu/graduate/degree-programs/computer-science-applications/computer-science-applications-ms/",
+          "rerank_score": 0.9458011984825134,
+          "query_fusion_score": 0.014925373134328358,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "ab91aaae2c0424d6#0005",
+          "source_id": 6,
+          "title": "Cos Stat Sdsc 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "rerank_score": 0.9438672661781311,
+          "query_fusion_score": 0.014705882352941176,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "f450fc4d0ccafac3#0003",
+          "source_id": 7,
+          "title": "Cos Stat Smth 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "rerank_score": 0.9400236010551453,
+          "query_fusion_score": 0.014492753623188406,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "22914ac2f9e3e8e3#0000",
+          "source_id": 8,
+          "title": "Master of Science  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/graduate/future-grads/MSThesis.html",
+          "rerank_score": 0.9277569651603699,
+          "query_fusion_score": 0.014285714285714285,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "166f70480c8a5cc7#0017",
+          "source_id": 9,
+          "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+          "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/",
+          "rerank_score": 0.8723474144935608,
+          "query_fusion_score": 0.014084507042253521,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "e926f94a5808ec45#0000",
+          "source_id": 10,
+          "title": "Master of Engineering - Computer Science and Applications  | iac | Virginia Tech",
+          "url": "https://www.vt.edu/innovationcampus/masters-degrees/meng-cs.html",
+          "rerank_score": 0.7961340546607971,
+          "query_fusion_score": 0.013888888888888888,
+          "context_truncated": false
+        }
+      ],
+      "answers": {
+        "GLM-5.3": {
+          "raw": "I don't have the credit requirement for the B.S. in Computer Science in my available sources \u2014 the CS materials I can see cover graduate programs (M.S., M.Eng., Ph.D.), not the undergraduate B.S. degree.\n\nWhat I can tell you from general undergraduate policy is that the number of credit hours required varies from one major to another, and approved graduation requirements are published on the University Registrar's website [9]. For the exact B.S. in CS total, you'd need to check the CS undergraduate check-sheet or the Registrar's site.\n\nIf you're interested in the graduate CS degrees instead, I can help with those credit requirements.",
+          "final": "I don't have the credit requirement for the B.S. in Computer Science in my available sources \u2014 the CS materials I can see cover graduate programs (M.S., M.Eng., Ph.D.), not the undergraduate B.S. degree.\n\nWhat I can tell you from general undergraduate policy is that the number of credit hours required varies from one major to another, and approved graduation requirements are published on the University Registrar's website [9]. For the exact B.S. in CS total, you'd need to check the CS undergraduate check-sheet or the Registrar's site.\n\nIf you're interested in the graduate CS degrees instead, I can help with those credit requirements.",
+          "sources": [
+            {
+              "id": 9,
+              "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+              "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/"
+            }
+          ],
+          "seconds": 34.302
+        },
+        "DeepSeek-V4.1-Flash": {
+          "raw": "I don't have evidence in the supplied sources stating the total credit requirement for a Bachelor of Science in Computer Science at Virginia Tech, so I can't give you that number.\n\nThe sources I have cover graduate CS degrees (M.S., M.Eng., Ph.D.) and undergraduate policies for other programs, but none specify the BS in CS credit total. If you can point me to the CS undergraduate checksheet or catalog page, I can pull the figure from there.",
+          "final": "I couldn't find enough reliable information in the available Virginia Tech sources to answer that. Please clarify the program, topic, or year if relevant.",
+          "sources": [],
+          "seconds": 4.911
+        }
+      },
+      "stream_probe": {
+        "model": "GLM-5.3",
+        "token_events": 109,
+        "seconds": 31.448,
+        "answer": "I don't have the credit requirement for the B.S. in Computer Science in the sources provided. The undergraduate catalog policy only notes that the number of credit hours required varies from one major to another, without listing a total for CS specifically [9].\n\nThe evidence I have covers Virginia Tech's **graduate** CS programs (M.S., M.Eng., Ph.D.) rather than the undergraduate B.S. If you were asking about one of those, or if you can point me to the undergraduate CS checksheet, I'm happy to help.",
+        "sources": [
+          {
+            "id": 9,
+            "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+            "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/"
+          }
+        ]
+      }
+    },
+    {
+      "id": "credits-graduate",
+      "question": "how many credits do i need to graduate BS in CS",
+      "history": [],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "Virginia Tech Bachelor of Science in Computer Science graduation credit requirements"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 2.85,
+      "retrieval_seconds": 0.531,
+      "retrieved_count": 12,
+      "context_body_chars": 15915,
+      "evidence": [
+        {
+          "chunk_id": "6397df2be2282f59#0000",
+          "source_id": 1,
+          "title": "Master of Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "rerank_score": 0.9818405508995056,
+          "query_fusion_score": 0.01639344262295082,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "4f5a70393624837f#0000",
+          "source_id": 2,
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rerank_score": 0.9752489924430847,
+          "query_fusion_score": 0.016129032258064516,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "166f70480c8a5cc7#0017",
+          "source_id": 3,
+          "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+          "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/",
+          "rerank_score": 0.9728307723999023,
+          "query_fusion_score": 0.015873015873015872,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "4f5a70393624837f#0001",
+          "source_id": 2,
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rerank_score": 0.9711290597915649,
+          "query_fusion_score": 0.015625,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "6397df2be2282f59#0001",
+          "source_id": 1,
+          "title": "Master of Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "rerank_score": 0.9664104580879211,
+          "query_fusion_score": 0.015384615384615385,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "ab91aaae2c0424d6#0005",
+          "source_id": 4,
+          "title": "Cos Stat Sdsc 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "rerank_score": 0.9567152261734009,
+          "query_fusion_score": 0.015151515151515152,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "22914ac2f9e3e8e3#0000",
+          "source_id": 5,
+          "title": "Master of Science  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/graduate/future-grads/MSThesis.html",
+          "rerank_score": 0.9417614340782166,
+          "query_fusion_score": 0.014925373134328358,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "fa19289c091169ea#0002",
+          "source_id": 6,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "rerank_score": 0.934155285358429,
+          "query_fusion_score": 0.014705882352941176,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "fcc6248bde12d6ae#0002",
+          "source_id": 7,
+          "title": "Cos Stat 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/2022/cos_stat_22.pdf",
+          "rerank_score": 0.9319595694541931,
+          "query_fusion_score": 0.014492753623188406,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "705e7d1210d98a60#0000",
+          "source_id": 8,
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://iac.vt.edu/admissions/apply.html",
+          "rerank_score": 0.9317114353179932,
+          "query_fusion_score": 0.014285714285714285,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "99ba17434eafb105#0000",
+          "source_id": 9,
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://www.vt.edu/innovationcampus/admissions/apply.html",
+          "rerank_score": 0.9317114353179932,
+          "query_fusion_score": 0.014084507042253521,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "6077850893b8afe5#0000",
+          "source_id": 10,
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://www.vt.edu/innovationcampus/masters-degrees/apply.html",
+          "rerank_score": 0.9317114353179932,
+          "query_fusion_score": 0.013888888888888888,
+          "context_truncated": false
+        }
+      ],
+      "answers": {
+        "GLM-5.3": {
+          "raw": "The evidence I have doesn't state the total credit hours required for the B.S. in Computer Science specifically. The university's undergraduate policies note that the number of credit hours required varies from one major to another, with the approved requirements published by the University Registrar [3].\n\nWhat the general undergraduate policy does establish for graduation:\n\n- A minimum 2.00 GPA for all hours attempted, plus a satisfactory record in your major and any minor [3]\n- At least 25% of the credits required for your degree must be earned at Virginia Tech, and no more than 50% of credit hours from a two-year institution can count toward graduation [3]\n\nIf you can tell me your catalog year/cohort, I can check whether the supplied evidence covers the specific checksheet for your program.",
+          "final": "The evidence I have doesn't state the total credit hours required for the B.S. in Computer Science specifically. The university's undergraduate policies note that the number of credit hours required varies from one major to another, with the approved requirements published by the University Registrar [3].\n\nWhat the general undergraduate policy does establish for graduation:\n\n- A minimum 2.00 GPA for all hours attempted, plus a satisfactory record in your major and any minor [3]\n- At least 25% of the credits required for your degree must be earned at Virginia Tech, and no more than 50% of credit hours from a two-year institution can count toward graduation [3]\n\nIf you can tell me your catalog year/cohort, I can check whether the supplied evidence covers the specific checksheet for your program.",
+          "sources": [
+            {
+              "id": 3,
+              "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+              "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/"
+            }
+          ],
+          "seconds": 32.328
+        },
+        "DeepSeek-V4.1-Flash": {
+          "raw": "Virginia Tech requires **120 credit hours** to graduate with a bachelor's degree, with a minimum 2.00 GPA for all hours attempted [3]. At least 25% of the credits for the degree must be earned from Virginia Tech, and no more than 50% of credit hours from a two-year institution may count toward graduation [3].\n\nNote: the sources describe the B.S. in Computer Science majors (computer science, secure computing, and data-centric computing) but do not list a separate, major-specific credit total beyond the university-wide 120-hour requirement [6][3].",
+          "final": "Virginia Tech requires **120 credit hours** to graduate with a bachelor's degree, with a minimum 2.00 GPA for all hours attempted [3]. At least 25% of the credits for the degree must be earned from Virginia Tech, and no more than 50% of credit hours from a two-year institution may count toward graduation [3].\n\nNote: the sources describe the B.S. in Computer Science majors (computer science, secure computing, and data-centric computing) but do not list a separate, major-specific credit total beyond the university-wide 120-hour requirement [6][3].",
+          "sources": [
+            {
+              "id": 3,
+              "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+              "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/"
+            },
+            {
+              "id": 6,
+              "title": "Accreditation  | Computer Science | Virginia Tech",
+              "url": "https://website.cs.vt.edu/About/accreditation.html"
+            }
+          ],
+          "seconds": 5.262
+        }
+      }
+    },
+    {
+      "id": "credits-undergraduate",
+      "question": "How many credits do i need to complete undergraduate in cs",
+      "history": [],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "Virginia Tech undergraduate Computer Science degree total credits required"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 2.94,
+      "retrieval_seconds": 0.545,
+      "retrieved_count": 12,
+      "context_body_chars": 19067,
+      "evidence": [
+        {
+          "chunk_id": "4f5a70393624837f#0000",
+          "source_id": 1,
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rerank_score": 0.991455614566803,
+          "query_fusion_score": 0.01639344262295082,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "6397df2be2282f59#0000",
+          "source_id": 2,
+          "title": "Master of Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "rerank_score": 0.9844563603401184,
+          "query_fusion_score": 0.016129032258064516,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "61dde6ef62cc4161#0004",
+          "source_id": 3,
+          "title": "coe_cs_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "rerank_score": 0.9808392524719238,
+          "query_fusion_score": 0.015873015873015872,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "f39b91efc69bf470#0002",
+          "source_id": 4,
+          "title": "coe_cs_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf",
+          "rerank_score": 0.9798612594604492,
+          "query_fusion_score": 0.015625,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "8079c39a28b1249c#0004",
+          "source_id": 5,
+          "title": "coe_sc_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_sc_22_23.pdf",
+          "rerank_score": 0.9769347906112671,
+          "query_fusion_score": 0.015384615384615385,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "bf8a1e4670160a64#0000",
+          "source_id": 6,
+          "title": "Computer Science and Applications, MS",
+          "url": "https://catalog.vt.edu/graduate/degree-programs/computer-science-applications/computer-science-applications-ms/",
+          "rerank_score": 0.9709643721580505,
+          "query_fusion_score": 0.015151515151515152,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "4f5a70393624837f#0001",
+          "source_id": 1,
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rerank_score": 0.968020498752594,
+          "query_fusion_score": 0.014925373134328358,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "22914ac2f9e3e8e3#0000",
+          "source_id": 7,
+          "title": "Master of Science  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/graduate/future-grads/MSThesis.html",
+          "rerank_score": 0.9649212956428528,
+          "query_fusion_score": 0.014705882352941176,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "323fde4a098df55d#0003",
+          "source_id": 8,
+          "title": "Approved Accelerated UG/GR Programs  | Graduate School | Virginia Tech",
+          "url": "http://graduateschool.vt.edu/admissions/accelerated_masters_programs/accelerated_ug-gr_program_listing.html",
+          "rerank_score": 0.9613164663314819,
+          "query_fusion_score": 0.014492753623188406,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "4729d6cd5b412936#0001",
+          "source_id": 9,
+          "title": "Accelerated Graduate Programs  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/accelerated-programs-and-graduate-school.html",
+          "rerank_score": 0.9610249400138855,
+          "query_fusion_score": 0.014285714285714285,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "b42348fd53379147#0000",
+          "source_id": 10,
+          "title": "4+1  accelerated master's degree  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/undergraduate/future-undergrads/BSMS.html",
+          "rerank_score": 0.954562783241272,
+          "query_fusion_score": 0.014084507042253521,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "166f70480c8a5cc7#0017",
+          "source_id": 11,
+          "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+          "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/",
+          "rerank_score": 0.9537081718444824,
+          "query_fusion_score": 0.013888888888888888,
+          "context_truncated": false
+        }
+      ],
+      "answers": {
+        "GLM-5.3": {
+          "raw": "I don't have the total credit count for the undergraduate Computer Science degree in the evidence provided. The undergraduate catalog states that \"the number of credit hours required varies from one major to another\" and that approved graduation requirements appear on the University Registrar's website [11], but the specific total for the CS B.S. isn't included in the passages I have.\n\nThe CS checksheet excerpts I do have cover other requirements \u2014 such as the cap of 6 credits of CS Independent Study/Undergraduate Research, the foreign language requirement, and satisfactory-progress rules \u2014 but not the overall credit total [3][4].\n\nIf you can tell me your catalog year, I can check whether that helps, though the total credit figure may still need to be confirmed through the Registrar's checksheet.",
+          "final": "I don't have the total credit count for the undergraduate Computer Science degree in the evidence provided. The undergraduate catalog states that \"the number of credit hours required varies from one major to another\" and that approved graduation requirements appear on the University Registrar's website [11], but the specific total for the CS B.S. isn't included in the passages I have.\n\nThe CS checksheet excerpts I do have cover other requirements \u2014 such as the cap of 6 credits of CS Independent Study/Undergraduate Research, the foreign language requirement, and satisfactory-progress rules \u2014 but not the overall credit total [3][4].\n\nIf you can tell me your catalog year, I can check whether that helps, though the total credit figure may still need to be confirmed through the Registrar's checksheet.",
+          "sources": [
+            {
+              "id": 11,
+              "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+              "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/"
+            },
+            {
+              "id": 3,
+              "title": "coe_cs_22.pdf",
+              "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf"
+            },
+            {
+              "id": 4,
+              "title": "coe_cs_22_23.pdf",
+              "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf"
+            }
+          ],
+          "seconds": 31.04
+        },
+        "DeepSeek-V4.1-Flash": {
+          "raw": "The supplied evidence doesn't state a total credit-hour requirement for the undergraduate Computer Science degree. What it does show:\n\n- The number of credit hours required varies by major, and all students must earn 25% of the credits required for their degree from Virginia Tech; no more than 50% of credit hours from a two-year institution may be used toward graduation requirements [11].\n- For CS majors specifically, no more than 6 total credits of CS Independent Study (4974) and/or CS Undergraduate Research (4994) may count toward CS degree requirements [3][4][5].\n\nFor the exact total, you'd need the current CS checksheet or the University Registrar's approved graduation requirements, which aren't included in the evidence I have here.",
+          "final": "The supplied evidence doesn't state a total credit-hour requirement for the undergraduate Computer Science degree. What it does show:\n\n- The number of credit hours required varies by major, and all students must earn 25% of the credits required for their degree from Virginia Tech; no more than 50% of credit hours from a two-year institution may be used toward graduation requirements [11].\n- For CS majors specifically, no more than 6 total credits of CS Independent Study (4974) and/or CS Undergraduate Research (4994) may count toward CS degree requirements [3][4][5].\n\nFor the exact total, you'd need the current CS checksheet or the University Registrar's approved graduation requirements, which aren't included in the evidence I have here.",
+          "sources": [
+            {
+              "id": 11,
+              "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+              "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/"
+            },
+            {
+              "id": 3,
+              "title": "coe_cs_22.pdf",
+              "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf"
+            },
+            {
+              "id": 4,
+              "title": "coe_cs_22_23.pdf",
+              "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf"
+            },
+            {
+              "id": 5,
+              "title": "coe_sc_22_23.pdf",
+              "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_sc_22_23.pdf"
+            }
+          ],
+          "seconds": 8.048
+        }
+      }
+    },
+    {
+      "id": "math-followup",
+      "question": "What math courses does it require?",
+      "history": [
+        {
+          "role": "user",
+          "content": "Tell me about the Computer Science bachelor's major at Virginia Tech."
+        },
+        {
+          "role": "assistant",
+          "content": "Which part of the Computer Science major would you like to know about?"
+        }
+      ],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "Virginia Tech Bachelor of Science in Computer Science required mathematics courses"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 2.317,
+      "retrieval_seconds": 0.526,
+      "retrieved_count": 12,
+      "context_body_chars": 19196,
+      "evidence": [
+        {
+          "chunk_id": "0f07e0e5897a2d45#0000",
+          "source_id": 1,
+          "title": "Mathematics  | College of Science | Virginia Tech",
+          "url": "https://science.vt.edu/academics/programs/math.html",
+          "rerank_score": 0.9803186058998108,
+          "query_fusion_score": 0.01639344262295082,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "31ef2ed0a5a758f9#0019",
+          "source_id": 2,
+          "title": "Sbes Handbook 5.23.24 Final",
+          "url": "https://bme.vt.edu/content/dam/bme_vt_edu/graduate/sbes-handbooks/SBES%20Handbook%205.23.24%20FINAL.pdf",
+          "rerank_score": 0.9754835963249207,
+          "query_fusion_score": 0.016129032258064516,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "523a01711971a331#0020",
+          "source_id": 3,
+          "title": "Sbes Handbook 5.28.25 Final",
+          "url": "https://bme.vt.edu/content/dam/bme_vt_edu/graduate/SBES%20Handbook%205.28.25%20FINAL.pdf",
+          "rerank_score": 0.9753431081771851,
+          "query_fusion_score": 0.015873015873015872,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "fa19289c091169ea#0000",
+          "source_id": 4,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "rerank_score": 0.9686195850372314,
+          "query_fusion_score": 0.015625,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "cf767c3f432560d3#0000",
+          "source_id": 5,
+          "title": "Undergraduate Program  | Department of Mathematics | Virginia Tech",
+          "url": "https://www.math.vt.edu/undergrad-math.html",
+          "rerank_score": 0.9459012746810913,
+          "query_fusion_score": 0.015384615384615385,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "7175edfd6cf07f0e#0000",
+          "source_id": 6,
+          "title": "Mathematics | Virginia Tech",
+          "url": "https://www.vt.edu/academics/minors/mathematics.html",
+          "rerank_score": 0.9174507260322571,
+          "query_fusion_score": 0.015151515151515152,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "4df2b4cb5bca3177#0000",
+          "source_id": 7,
+          "title": "Math Coursework Table",
+          "url": "https://liberalarts.vt.edu/content/dam/liberalarts_vt_edu/departments-and-schools/school-of-education/forms-and-documents/teacher-prep-program-checksheets-and-lists/math_coursework_table.pdf",
+          "rerank_score": 0.8733229041099548,
+          "query_fusion_score": 0.014925373134328358,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "f262cd2e2474091a#0001",
+          "source_id": 8,
+          "title": "CMDA | Analytics @ Virginia Tech",
+          "url": "https://analytics.cs.vt.edu/edu-cmda.php",
+          "rerank_score": 0.8622356653213501,
+          "query_fusion_score": 0.014705882352941176,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "ab91aaae2c0424d6#0005",
+          "source_id": 9,
+          "title": "Cos Stat Sdsc 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "rerank_score": 0.8546422123908997,
+          "query_fusion_score": 0.014492753623188406,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "0eef43d855c02271#0001",
+          "source_id": 10,
+          "title": "Major Programs and Plans of study  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "rerank_score": 0.7752646803855896,
+          "query_fusion_score": 0.014285714285714285,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "0f07e0e5897a2d45#0001",
+          "source_id": 1,
+          "title": "Mathematics  | College of Science | Virginia Tech",
+          "url": "https://science.vt.edu/academics/programs/math.html",
+          "rerank_score": 0.7708100080490112,
+          "query_fusion_score": 0.014084507042253521,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "7ed23d40457921ab#0000",
+          "source_id": 11,
+          "title": "Mathematics | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/mathematics.html",
+          "rerank_score": 0.7554566264152527,
+          "query_fusion_score": 0.013888888888888888,
+          "context_truncated": false
+        }
+      ],
+      "answers": {
+        "GLM-5.3": {
+          "raw": "The specific math course requirements for the Computer Science bachelor's major aren't included in the information I have available.\n\nWhat I can tell you from the evidence:\n\n- The B.S. in Computer Science is described as a technically rigorous field that requires a strong background in mathematics [4].\n- The department publishes checksheets and roadmaps for CS majors (organized by catalog year, e.g., 2024-2025, 2023-2024, etc.), which would contain the detailed course requirements [10] \u2014 but the actual course lists aren't in the passages I have.\n\nIf you can share which catalog year applies to you (or your expected entry year), I can let you know if that helps narrow anything down, though the detailed math course list itself isn't in my current sources.",
+          "final": "The specific math course requirements for the Computer Science bachelor's major aren't included in the information I have available.\n\nWhat I can tell you from the evidence:\n\n- The B.S. in Computer Science is described as a technically rigorous field that requires a strong background in mathematics [4].\n- The department publishes checksheets and roadmaps for CS majors (organized by catalog year, e.g., 2024-2025, 2023-2024, etc.), which would contain the detailed course requirements [10] \u2014 but the actual course lists aren't in the passages I have.\n\nIf you can share which catalog year applies to you (or your expected entry year), I can let you know if that helps narrow anything down, though the detailed math course list itself isn't in my current sources.",
+          "sources": [
+            {
+              "id": 4,
+              "title": "Accreditation  | Computer Science | Virginia Tech",
+              "url": "https://website.cs.vt.edu/About/accreditation.html"
+            },
+            {
+              "id": 10,
+              "title": "Major Programs and Plans of study  | students.cs | Virginia Tech",
+              "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html"
+            }
+          ],
+          "seconds": 42.59
+        },
+        "DeepSeek-V4.1-Flash": {
+          "raw": "The sources I have for the Computer Science bachelor's program don't list its specific math course requirements. The CS accreditation page notes only that computer science \"requires a strong background in mathematics\" [4], and the CS major page points to checksheets and roadmaps by catalog year but doesn't include the course lists themselves [10].\n\nSo I can't tell you which math courses the CS B.S. requires. If you can tell me your catalog year (e.g., 2023\u201324 or 2024\u201325), I can check whether I have a source that covers it.",
+          "final": "The sources I have for the Computer Science bachelor's program don't list its specific math course requirements. The CS accreditation page notes only that computer science \"requires a strong background in mathematics\" [4], and the CS major page points to checksheets and roadmaps by catalog year but doesn't include the course lists themselves [10].\n\nSo I can't tell you which math courses the CS B.S. requires. If you can tell me your catalog year (e.g., 2023\u201324 or 2024\u201325), I can check whether I have a source that covers it.",
+          "sources": [
+            {
+              "id": 4,
+              "title": "Accreditation  | Computer Science | Virginia Tech",
+              "url": "https://website.cs.vt.edu/About/accreditation.html"
+            },
+            {
+              "id": 10,
+              "title": "Major Programs and Plans of study  | students.cs | Virginia Tech",
+              "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html"
+            }
+          ],
+          "seconds": 9.574
+        }
+      }
+    },
+    {
+      "id": "math-major-switch",
+      "question": "What about the math major?",
+      "history": [
+        {
+          "role": "user",
+          "content": "How many credits do I need to graduate with a CS major?"
+        },
+        {
+          "role": "assistant",
+          "content": "Requirements depend on the program and entering cohort."
+        }
+      ],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "Virginia Tech mathematics major graduation credit requirements"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 2.907,
+      "retrieval_seconds": 0.529,
+      "retrieved_count": 12,
+      "context_body_chars": 17079,
+      "evidence": [
+        {
+          "chunk_id": "56b4d0ee3ba6980c#0019",
+          "source_id": 1,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank_score": 0.9863631129264832,
+          "query_fusion_score": 0.01639344262295082,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "166f70480c8a5cc7#0017",
+          "source_id": 2,
+          "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+          "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/",
+          "rerank_score": 0.9862577319145203,
+          "query_fusion_score": 0.016129032258064516,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "7175edfd6cf07f0e#0000",
+          "source_id": 3,
+          "title": "Mathematics | Virginia Tech",
+          "url": "https://www.vt.edu/academics/minors/mathematics.html",
+          "rerank_score": 0.9790757894515991,
+          "query_fusion_score": 0.015873015873015872,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "f450fc4d0ccafac3#0003",
+          "source_id": 4,
+          "title": "Cos Stat Smth 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "rerank_score": 0.9781354665756226,
+          "query_fusion_score": 0.015625,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "f5780bc296ba72b4#0001",
+          "source_id": 5,
+          "title": "6815",
+          "url": "https://policies.vt.edu/assets/6815.pdf",
+          "rerank_score": 0.9774138927459717,
+          "query_fusion_score": 0.015384615384615385,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "ab91aaae2c0424d6#0005",
+          "source_id": 6,
+          "title": "Cos Stat Sdsc 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "rerank_score": 0.9770664572715759,
+          "query_fusion_score": 0.015151515151515152,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "b5331ac6d0c29a57#0008",
+          "source_id": 7,
+          "title": "Future Graduate Students  | Department of Mathematics | Virginia Tech",
+          "url": "https://www.math.vt.edu/grads-math/future-grads.html",
+          "rerank_score": 0.9752018451690674,
+          "query_fusion_score": 0.014925373134328358,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "979a46c9d003516a#0006",
+          "source_id": 8,
+          "title": "Ug Catalog Changes 26 27 2",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/UG%20Catalog%20Changes%2026-27%202.pdf",
+          "rerank_score": 0.9626027941703796,
+          "query_fusion_score": 0.014705882352941176,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "fcc6248bde12d6ae#0002",
+          "source_id": 9,
+          "title": "Cos Stat 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/2022/cos_stat_22.pdf",
+          "rerank_score": 0.9605096578598022,
+          "query_fusion_score": 0.014492753623188406,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "c6331c9cdeafb18d#0007",
+          "source_id": 10,
+          "title": "Cusp 2025 2026 C 2Nd Reading",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/01-26/CUSP%202025-2026%20C%202nd%20Reading.pdf",
+          "rerank_score": 0.9488224983215332,
+          "query_fusion_score": 0.014285714285714285,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "31f18e7798022d54#0007",
+          "source_id": 11,
+          "title": "Cusp 2025 2026C First Reading Final Revised",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/11-10/CUSP%202025-2026C%20First%20Reading%20Final%20Revised.pdf",
+          "rerank_score": 0.9447912573814392,
+          "query_fusion_score": 0.014084507042253521,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "aa83ea511495d3a4#0007",
+          "source_id": 12,
+          "title": "Advertising Major | Virginia Tech Academic Catalog",
+          "url": "https://catalog.vt.edu/undergraduate/liberal-arts-human-sciences/communication/advertising-ba/",
+          "rerank_score": 0.9389128684997559,
+          "query_fusion_score": 0.013888888888888888,
+          "context_truncated": false
+        }
+      ],
+      "answers": {},
+      "error_type": "RuntimeError"
+    },
+    {
+      "id": "unknown-person",
+      "question": "What courses does Professor Quasar Noodlewick teach at Virginia Tech?",
+      "history": [],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "Virginia Tech Professor Quasar Noodlewick courses taught"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 7.607,
+      "retrieval_seconds": 0.57,
+      "retrieved_count": 2,
+      "context_body_chars": 3981,
+      "evidence": [
+        {
+          "chunk_id": "e25e834cd5876974#0001",
+          "source_id": 1,
+          "title": "CNSR@VT -- Complex Networks and Security Research at Virginia Tech",
+          "url": "http://www.cnsr.ictas.vt.edu/teaching.html",
+          "rerank_score": 0.41935068368911743,
+          "query_fusion_score": 0.01639344262295082,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "ba2b2fea926fe6b5#0001",
+          "source_id": 2,
+          "title": "Tutoring and Study Skills  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/undergraduate/resources-support/tutoring.html",
+          "rerank_score": 0.3282063603401184,
+          "query_fusion_score": 0.016129032258064516,
+          "context_truncated": false
+        }
+      ],
+      "answers": {
+        "GLM-5.3": {
+          "raw": "I don't have any information about a Professor Quasar Noodlewick at Virginia Tech in the sources available to me. If you can double-check the name spelling or provide additional details (such as their department), I'd be happy to try again.",
+          "final": "I couldn't find enough reliable information in the available Virginia Tech sources to answer that. Please clarify the program, topic, or year if relevant.",
+          "sources": [],
+          "seconds": 9.226
+        },
+        "DeepSeek-V4.1-Flash": {
+          "raw": "I don't have any evidence about a Professor Quasar Noodlewick at Virginia Tech, so I can't answer which courses they teach. If you can confirm the correct name or department, I can check again.",
+          "final": "I couldn't find enough reliable information in the available Virginia Tech sources to answer that. Please clarify the program, topic, or year if relevant.",
+          "sources": [],
+          "seconds": 1.606
+        }
+      }
+    },
+    {
+      "id": "greeting",
+      "question": "Hi!",
+      "history": [],
+      "plan": {
+        "intent": "conversation",
+        "queries": [],
+        "clarification": null
+      },
+      "plan_seconds": 1.001,
+      "skipped_retrieval": true
+    },
+    {
+      "id": "ambiguous",
+      "question": "When is the deadline?",
+      "history": [],
+      "plan": {
+        "intent": "clarify",
+        "queries": [],
+        "clarification": "Which deadline are you asking about?"
+      },
+      "plan_seconds": 5.937,
+      "skipped_retrieval": true
+    }
+  ]
+}

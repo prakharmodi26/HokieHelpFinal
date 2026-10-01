@@ -1,0 +1,139 @@
+{
+  "generated_utc": "2026-09-24T03:49:18.182494+00:00",
+  "url": "http://127.0.0.1:8000",
+  "method": "Actual deployed /chat and /chat/stream; no mocked planner, retrieval, evidence or model",
+  "limitations": [
+    "Heuristic checks do not prove semantic entailment.",
+    "Single sequential pass, not a load test."
+  ],
+  "cases": [
+    {
+      "id": "greeting",
+      "question": "Hi!",
+      "history": [],
+      "http_status": 200,
+      "answer": "Hi! I can help with questions about Virginia Tech. What would you like to know?",
+      "sources": [],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "no_sources": true
+      },
+      "seconds": 0.513
+    },
+    {
+      "id": "credits-complete",
+      "question": "how many credits do i need to complete bs in cs",
+      "history": [],
+      "http_status": 200,
+      "answer": "You need to complete **at least 123 semester credit hours** to earn a B.S. in Computer Science at Virginia Tech. This requirement is consistent across the checksheet editions in the evidence (2021\u201322, 2022, 2022\u201323, and 2023\u201324) [2][3][4][5].\n\nAlong with the 123 credits, graduation requires:\n- A minimum overall GPA of 2.00\n- A minimum in-major GPA of 2.00 (calculated using all classes with a CS designator)\n- A grade of \"C\" (2.0) or better in CS 1114, CS 2104, CS 2114, CS 2505, CS 2506, and CS 3114 [2][3][4]\n\nOne note: if you double-count Pathways Concept 7 with another core concept, you must take additional free elective credits to maintain the minimum of 123 credits [3][4][5].",
+      "sources": [
+        {
+          "id": 2,
+          "title": "coe_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf"
+        },
+        {
+          "id": 3,
+          "title": "coe_cs_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf"
+        },
+        {
+          "id": 4,
+          "title": "coe_cs_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf"
+        },
+        {
+          "id": 5,
+          "title": "coe_cs_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "mentions_123": true,
+        "no_wrong_program_url": true,
+        "has_cited_sources": true
+      },
+      "seconds": 17.099
+    },
+    {
+      "id": "credits-graduate",
+      "question": "how many credits do i need to graduate BS in CS",
+      "history": [],
+      "http_status": 200,
+      "answer": "For the Computer Science B.S. checksheets from 2021, 2022, and 2022\u20132023, you need to complete **at least 123 semester credit hours** [2][5][6].\n\nAlong with the credit total, those checksheets require:\n- A minimum overall GPA of 2.00 and a minimum in-major GPA of 2.00 (in-major GPA uses all courses with a CS designator) [2][5][6]\n- A \"C\" (2.0) or better in CS 1114, CS 2104, CS 2114, CS 2505, CS 2506, and CS 3114 [2][5][6]\n\nA couple of caveats:\n- Which requirements apply to you depends on the catalog year you started at Virginia Tech \u2014 students should follow the checksheet for the year they began [7].\n- The evidence I have doesn't state a total credit number for other catalog years (e.g., the 2023\u201324 checksheet or the 2026\u20132027 catalog edition), so I can't confirm the total for those cohorts. If you started in a different year, let me know and I can help clarify what applies to you.",
+      "sources": [
+        {
+          "id": 2,
+          "title": "Computer Science Major Checksheet 2022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf"
+        },
+        {
+          "id": 5,
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf"
+        },
+        {
+          "id": 6,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf"
+        },
+        {
+          "id": 7,
+          "title": "Academic Advising Frequently Asked Questions  | College of Science | Virginia Tech",
+          "url": "https://science.vt.edu/academics/advising/faq.html"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "mentions_123": true,
+        "no_wrong_program_url": true,
+        "has_cited_sources": true
+      },
+      "seconds": 18.108
+    },
+    {
+      "id": "credits-undergraduate",
+      "question": "How many credits do i need to complete undergraduate in cs",
+      "history": [],
+      "http_status": 200,
+      "answer": "You need to complete **123 credit hours** to graduate with the B.S. in Computer Science at Virginia Tech [1].\n\nA couple of related notes from the checksheets:\n\n- If you double-count Pathways Concept 7 with another core concept, you must take additional free elective credits to maintain the minimum of 123 credits [2][3][4].\n- College-level foreign language credits used to meet the foreign language requirement (2 years in high school or 1 year/6 credit hours in college of the same language) do **not** count toward the degree [2][3].\n\nThis 123-credit total is consistent across the catalog edition and checksheet years in the evidence provided [1][2][3][4].",
+      "sources": [
+        {
+          "id": 1,
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/"
+        },
+        {
+          "id": 2,
+          "title": "coe_cs_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf"
+        },
+        {
+          "id": 3,
+          "title": "coe_cs_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf"
+        },
+        {
+          "id": 4,
+          "title": "coe_cs_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "mentions_123": true,
+        "no_wrong_program_url": true,
+        "has_cited_sources": true
+      },
+      "seconds": 13.167
+    }
+  ],
+  "readiness": {
+    "status": "ready"
+  }
+}

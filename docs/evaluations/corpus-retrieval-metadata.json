@@ -1,0 +1,3730 @@
+{
+  "generated_utc": "2026-09-22T21:53:49.271559+00:00",
+  "method": "Production Retriever.search_many, hand-specified normalized query + original; no LLM calls",
+  "implementation_sha256": "b7602e22c547c749e7cb6980f9659af8d6d899174b0a44baaab2d95759cf079c",
+  "settings": {
+    "collection": "hokiehelp-test",
+    "candidate_k": 30,
+    "top_k": 12,
+    "min_score": 0.3,
+    "neighbors": false,
+    "program_candidates_enabled": true
+  },
+  "cases": [
+    {
+      "id": "credits-complete",
+      "original": "how many credits do i need to complete bs in cs",
+      "normalized": "Virginia Tech undergraduate CS (Computer Science) BS degree checksheet total required credit hours",
+      "searches": [
+        {
+          "query": "Virginia Tech undergraduate CS (Computer Science) BS degree checksheet total required credit hours",
+          "candidate_count": 30,
+          "known_source_candidates": [
+            {
+              "rank": 1,
+              "chunk_id": "d3556d267f8ac571#0006",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": true,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 2,
+              "chunk_id": "d3556d267f8ac571#0004",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 3,
+              "chunk_id": "d3556d267f8ac571#0001",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 4,
+              "chunk_id": "d3556d267f8ac571#0003",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 5,
+              "chunk_id": "d3556d267f8ac571#0002",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 8,
+              "chunk_id": "21d8ef4e32ef41d9#0015",
+              "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+              "title": "Cs Major 2023 24",
+              "candidate_lane": "general",
+              "known_source": "cs-checksheet-2023-24",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            }
+          ]
+        },
+        {
+          "query": "how many credits do i need to complete bs in cs",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "d3556d267f8ac571#0006",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "title": "Computer Science Major",
+          "rerank_score": 0.574573814868927,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 1
+            }
+          ],
+          "candidate_lane": "program",
+          "program_name": "Computer Science Major",
+          "program_level": "undergraduate",
+          "catalog_edition": "2026-2027",
+          "known_source": "cs-catalog-major",
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": true
+        },
+        {
+          "chunk_id": "5237bb1ccb3f98e3#0004",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "title": "coe_cs_23_24.pdf",
+          "rerank_score": 0.9795506000518799,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 1
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "61dde6ef62cc4161#0004",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "title": "coe_cs_22.pdf",
+          "rerank_score": 0.9772408604621887,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 18
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "f39b91efc69bf470#0002",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf",
+          "title": "coe_cs_22_23.pdf",
+          "rerank_score": 0.9764007329940796,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 19
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "b5e4bfe6a619e1c4#0002",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "title": "coe_cs_21_22.pdf",
+          "rerank_score": 0.9749168753623962,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 22
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "f450fc4d0ccafac3#0003",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "title": "Cos Stat Smth 23 24",
+          "rerank_score": 0.972727358341217,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 12
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "ab91aaae2c0424d6#0005",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "title": "Cos Stat Sdsc 23 24",
+          "rerank_score": 0.9671630263328552,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 17
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "61dde6ef62cc4161#0003",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "title": "coe_cs_22.pdf",
+          "rerank_score": 0.939024806022644,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 12
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": true,
+            "math_1226": true,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "f39b91efc69bf470#0001",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf",
+          "title": "coe_cs_22_23.pdf",
+          "rerank_score": 0.9383503198623657,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 13
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": true,
+            "math_1226": true,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "b5e4bfe6a619e1c4#0001",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "title": "coe_cs_21_22.pdf",
+          "rerank_score": 0.9369805455207825,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 15
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": true,
+            "math_1226": true,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "61dde6ef62cc4161#0005",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "title": "coe_cs_22.pdf",
+          "rerank_score": 0.9253649115562439,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 23
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": true
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "f39b91efc69bf470#0003",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf",
+          "title": "coe_cs_22_23.pdf",
+          "rerank_score": 0.9222025275230408,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 27
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": true
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "d3556d267f8ac571#0006",
+        "5237bb1ccb3f98e3#0004",
+        "61dde6ef62cc4161#0004",
+        "f39b91efc69bf470#0002",
+        "b5e4bfe6a619e1c4#0002",
+        "f450fc4d0ccafac3#0003",
+        "ab91aaae2c0424d6#0005",
+        "61dde6ef62cc4161#0003",
+        "f39b91efc69bf470#0001",
+        "b5e4bfe6a619e1c4#0001",
+        "61dde6ef62cc4161#0005",
+        "f39b91efc69bf470#0003"
+      ],
+      "seconds": 1.1
+    },
+    {
+      "id": "credits-graduate",
+      "original": "how many credits do i need to graduate BS in CS",
+      "normalized": "Virginia Tech undergraduate CS (Computer Science) BS degree checksheet total required credit hours",
+      "searches": [
+        {
+          "query": "Virginia Tech undergraduate CS (Computer Science) BS degree checksheet total required credit hours",
+          "candidate_count": 30,
+          "known_source_candidates": [
+            {
+              "rank": 1,
+              "chunk_id": "d3556d267f8ac571#0006",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": true,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 2,
+              "chunk_id": "d3556d267f8ac571#0004",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 3,
+              "chunk_id": "d3556d267f8ac571#0001",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 4,
+              "chunk_id": "d3556d267f8ac571#0003",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 5,
+              "chunk_id": "d3556d267f8ac571#0002",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 9,
+              "chunk_id": "21d8ef4e32ef41d9#0015",
+              "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+              "title": "Cs Major 2023 24",
+              "candidate_lane": "general",
+              "known_source": "cs-checksheet-2023-24",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            }
+          ]
+        },
+        {
+          "query": "how many credits do i need to graduate BS in CS",
+          "candidate_count": 30,
+          "known_source_candidates": [
+            {
+              "rank": 29,
+              "chunk_id": "21d8ef4e32ef41d9#0005",
+              "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+              "title": "Cs Major 2023 24",
+              "candidate_lane": "general",
+              "known_source": "cs-checksheet-2023-24",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            }
+          ]
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "d3556d267f8ac571#0006",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "title": "Computer Science Major",
+          "rerank_score": 0.574573814868927,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 1
+            }
+          ],
+          "candidate_lane": "program",
+          "program_name": "Computer Science Major",
+          "program_level": "undergraduate",
+          "catalog_edition": "2026-2027",
+          "known_source": "cs-catalog-major",
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": true
+        },
+        {
+          "chunk_id": "f450fc4d0ccafac3#0003",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "title": "Cos Stat Smth 23 24",
+          "rerank_score": 0.972727358341217,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 12
+            },
+            {
+              "query_index": 1,
+              "rank": 21
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "ab91aaae2c0424d6#0005",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "title": "Cos Stat Sdsc 23 24",
+          "rerank_score": 0.967348575592041,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 17
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "21d8ef4e32ef41d9#0005",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+          "title": "Cs Major 2023 24",
+          "rerank_score": 0.934155285358429,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 29
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": "cs-checksheet-2023-24",
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "44624e66a3c9b30f#0006",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "rerank_score": 0.925499677658081,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 30
+            },
+            {
+              "query_index": 1,
+              "rank": 26
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "b1ff46c7517e3cc6#0001",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MENG..html",
+          "title": "Master of Engineering  | students.cs | Virginia Tech",
+          "rerank_score": 0.917302668094635,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 8
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "70257d292cd488fa#0001",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MENG.html",
+          "title": "Master of Engineering  | students.cs | Virginia Tech",
+          "rerank_score": 0.917302668094635,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 9
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "cb7733c8e65fe86d#0005",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "title": "Cs Major 2021",
+          "rerank_score": 0.9141375422477722,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 22
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "18d6e3efe93be998#0005",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "title": "Cs Major 2022",
+          "rerank_score": 0.9139840602874756,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 16
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "44624e66a3c9b30f#0015",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "rerank_score": 0.9116528034210205,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 27
+            },
+            {
+              "query_index": 1,
+              "rank": 15
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": true
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "1eeeb88a79f795f2#0009",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "title": "Cs Major 2021 22 Draft",
+          "rerank_score": 0.902265727519989,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 25
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "7f611a4e5c2dd618#0021",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "title": "Data Centric Supporting Docs",
+          "rerank_score": 0.9012274742126465,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 1
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": true
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "d3556d267f8ac571#0006",
+        "f450fc4d0ccafac3#0003",
+        "ab91aaae2c0424d6#0005",
+        "21d8ef4e32ef41d9#0005",
+        "44624e66a3c9b30f#0006",
+        "b1ff46c7517e3cc6#0001",
+        "70257d292cd488fa#0001",
+        "cb7733c8e65fe86d#0005",
+        "18d6e3efe93be998#0005",
+        "44624e66a3c9b30f#0015",
+        "1eeeb88a79f795f2#0009",
+        "7f611a4e5c2dd618#0021"
+      ],
+      "seconds": 1.111
+    },
+    {
+      "id": "credits-undergraduate",
+      "original": "How many credits do i need to complete undergraduate in cs",
+      "normalized": "Virginia Tech undergraduate CS (Computer Science) BS degree checksheet total required credit hours",
+      "searches": [
+        {
+          "query": "Virginia Tech undergraduate CS (Computer Science) BS degree checksheet total required credit hours",
+          "candidate_count": 30,
+          "known_source_candidates": [
+            {
+              "rank": 1,
+              "chunk_id": "d3556d267f8ac571#0006",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": true,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 2,
+              "chunk_id": "d3556d267f8ac571#0004",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 3,
+              "chunk_id": "d3556d267f8ac571#0001",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 4,
+              "chunk_id": "d3556d267f8ac571#0003",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 5,
+              "chunk_id": "d3556d267f8ac571#0002",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 8,
+              "chunk_id": "21d8ef4e32ef41d9#0015",
+              "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+              "title": "Cs Major 2023 24",
+              "candidate_lane": "general",
+              "known_source": "cs-checksheet-2023-24",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            }
+          ]
+        },
+        {
+          "query": "How many credits do i need to complete undergraduate in cs",
+          "candidate_count": 30,
+          "known_source_candidates": [
+            {
+              "rank": 26,
+              "chunk_id": "21d8ef4e32ef41d9#0007",
+              "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+              "title": "Cs Major 2023 24",
+              "candidate_lane": "general",
+              "known_source": "cs-checksheet-2023-24",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            }
+          ]
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "d3556d267f8ac571#0006",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "title": "Computer Science Major",
+          "rerank_score": 0.574573814868927,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 1
+            }
+          ],
+          "candidate_lane": "program",
+          "program_name": "Computer Science Major",
+          "program_level": "undergraduate",
+          "catalog_edition": "2026-2027",
+          "known_source": "cs-catalog-major",
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": true
+        },
+        {
+          "chunk_id": "300cfa845e100bcd#0004",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_sc_23_24.pdf",
+          "title": "coe_sc_23_24.pdf",
+          "rerank_score": 0.9806919097900391,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 20
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "5237bb1ccb3f98e3#0004",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "title": "coe_cs_23_24.pdf",
+          "rerank_score": 0.9795506000518799,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 1
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "61dde6ef62cc4161#0004",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "title": "coe_cs_22.pdf",
+          "rerank_score": 0.9771537780761719,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 6
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "8079c39a28b1249c#0004",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_sc_22_23.pdf",
+          "title": "coe_sc_22_23.pdf",
+          "rerank_score": 0.9765353798866272,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 24
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "f39b91efc69bf470#0002",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf",
+          "title": "coe_cs_22_23.pdf",
+          "rerank_score": 0.9764007329940796,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 8
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "6a2cbb81748cbbfc#0004",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_sc_21_22.pdf",
+          "title": "coe_sc_21_22.pdf",
+          "rerank_score": 0.975669801235199,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 14
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "b5e4bfe6a619e1c4#0002",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "title": "coe_cs_21_22.pdf",
+          "rerank_score": 0.9750121831893921,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 3
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "f450fc4d0ccafac3#0003",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "title": "Cos Stat Smth 23 24",
+          "rerank_score": 0.972727358341217,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 12
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "ab91aaae2c0424d6#0005",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "title": "Cos Stat Sdsc 23 24",
+          "rerank_score": 0.9671630263328552,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 17
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "61dde6ef62cc4161#0003",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "title": "coe_cs_22.pdf",
+          "rerank_score": 0.939024806022644,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 13
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": true,
+            "math_1226": true,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "f39b91efc69bf470#0001",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf",
+          "title": "coe_cs_22_23.pdf",
+          "rerank_score": 0.9383503198623657,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 16
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": true,
+            "math_1226": true,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "d3556d267f8ac571#0006",
+        "300cfa845e100bcd#0004",
+        "5237bb1ccb3f98e3#0004",
+        "61dde6ef62cc4161#0004",
+        "8079c39a28b1249c#0004",
+        "f39b91efc69bf470#0002",
+        "6a2cbb81748cbbfc#0004",
+        "b5e4bfe6a619e1c4#0002",
+        "f450fc4d0ccafac3#0003",
+        "ab91aaae2c0424d6#0005",
+        "61dde6ef62cc4161#0003",
+        "f39b91efc69bf470#0001"
+      ],
+      "seconds": 1.138
+    },
+    {
+      "id": "math-followup",
+      "original": "What math courses does it require?",
+      "normalized": "Virginia Tech undergraduate CS Computer Science major checksheet required mathematics courses",
+      "searches": [
+        {
+          "query": "Virginia Tech undergraduate CS Computer Science major checksheet required mathematics courses",
+          "candidate_count": 30,
+          "known_source_candidates": [
+            {
+              "rank": 1,
+              "chunk_id": "d3556d267f8ac571#0004",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 2,
+              "chunk_id": "d3556d267f8ac571#0001",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 3,
+              "chunk_id": "d3556d267f8ac571#0003",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 4,
+              "chunk_id": "d3556d267f8ac571#0002",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 5,
+              "chunk_id": "d3556d267f8ac571#0006",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": true,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 6,
+              "chunk_id": "d3556d267f8ac571#0005",
+              "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+              "title": "Computer Science Major",
+              "candidate_lane": "program",
+              "program_name": "Computer Science Major",
+              "program_level": "undergraduate",
+              "catalog_edition": "2026-2027",
+              "known_source": "cs-catalog-major",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            }
+          ]
+        },
+        {
+          "query": "What math courses does it require?",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "d3556d267f8ac571#0002",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "title": "Computer Science Major",
+          "rerank_score": 0.8074606657028198,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 4
+            }
+          ],
+          "candidate_lane": "program",
+          "program_name": "Computer Science Major",
+          "program_level": "undergraduate",
+          "catalog_edition": "2026-2027",
+          "known_source": "cs-catalog-major",
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": true
+        },
+        {
+          "chunk_id": "1a85947fbcfa97fe#0045",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2020-2021/10-26/resolution_d_20_21_supporting_documents.pdf",
+          "title": "Resolution D 20 21 Supporting Documents",
+          "rerank_score": 0.983020007610321,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 21
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": true
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "dd3514e0001255c3#0025",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_supporting_docs.pdf",
+          "title": "Secure Computing Supporting Docs",
+          "rerank_score": 0.9750121831893921,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 23
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "7f611a4e5c2dd618#0029",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "title": "Data Centric Supporting Docs",
+          "rerank_score": 0.9714558720588684,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 18
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "44624e66a3c9b30f#0006",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "rerank_score": 0.9626730680465698,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 9
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "14e90b454aff52b2#0000",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/23-24/minor_math_23_24.pdf",
+          "title": "minor_math_23_24.pdf",
+          "rerank_score": 0.9590010046958923,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 13
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": true,
+            "math_1226": true,
+            "math_2114": true,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "44624e66a3c9b30f#0008",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "rerank_score": 0.9446893334388733,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 12
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "7175edfd6cf07f0e#0000",
+          "url": "https://www.vt.edu/academics/minors/mathematics.html",
+          "title": "Mathematics | Virginia Tech",
+          "rerank_score": 0.9305844902992249,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 26
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "4df2b4cb5bca3177#0000",
+          "url": "https://liberalarts.vt.edu/content/dam/liberalarts_vt_edu/departments-and-schools/school-of-education/forms-and-documents/teacher-prep-program-checksheets-and-lists/math_coursework_table.pdf",
+          "title": "Math Coursework Table",
+          "rerank_score": 0.9223425984382629,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 7
+            },
+            {
+              "query_index": 1,
+              "rank": 6
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "7f611a4e5c2dd618#0026",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "title": "Data Centric Supporting Docs",
+          "rerank_score": 0.8410438895225525,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 25
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "44624e66a3c9b30f#0011",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "rerank_score": 0.8139049410820007,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 22
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "108da1a31f3b918a#0001",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/22-23/cos_math_adm_22_23.pdf",
+          "title": "cos_math_adm_22_23.pdf",
+          "rerank_score": 0.8079156875610352,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 7
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "d3556d267f8ac571#0002",
+        "1a85947fbcfa97fe#0045",
+        "dd3514e0001255c3#0025",
+        "7f611a4e5c2dd618#0029",
+        "44624e66a3c9b30f#0006",
+        "14e90b454aff52b2#0000",
+        "44624e66a3c9b30f#0008",
+        "7175edfd6cf07f0e#0000",
+        "4df2b4cb5bca3177#0000",
+        "7f611a4e5c2dd618#0026",
+        "44624e66a3c9b30f#0011",
+        "108da1a31f3b918a#0001"
+      ],
+      "seconds": 1.021
+    },
+    {
+      "id": "math-major",
+      "original": "What about the math major?",
+      "normalized": "Virginia Tech undergraduate mathematics major degree required credit hours",
+      "searches": [
+        {
+          "query": "Virginia Tech undergraduate mathematics major degree required credit hours",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        },
+        {
+          "query": "What about the math major?",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "51907e1579f0c85a#0000",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs/",
+          "title": "Mathematics Major",
+          "rerank_score": 0.786786675453186,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 1
+            },
+            {
+              "query_index": 1,
+              "rank": 8
+            }
+          ],
+          "candidate_lane": "program",
+          "program_name": "Mathematics Major",
+          "program_level": "undergraduate",
+          "catalog_edition": "2026-2027",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": true
+        },
+        {
+          "chunk_id": "14e90b454aff52b2#0000",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/23-24/minor_math_23_24.pdf",
+          "title": "minor_math_23_24.pdf",
+          "rerank_score": 0.9930152893066406,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 4
+            },
+            {
+              "query_index": 1,
+              "rank": 22
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": true,
+            "math_1226": true,
+            "math_2114": true,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "56b4d0ee3ba6980c#0019",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "title": "Mathmajorhandbook",
+          "rerank_score": 0.9908744096755981,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 2
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "02cdf1c82ee3b206#0000",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/accel-u-g-degree.pdf",
+          "title": "Accel U G Degree",
+          "rerank_score": 0.9889278411865234,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 27
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "d865de1af5329689#0006",
+          "url": "https://liberalarts.vt.edu/departments-and-schools/school-of-education/academic-programs/mathematics-education/licensure-mathematics-education.html",
+          "title": "About the Mathematics Education Teacher Preparation Program  | College of Liberal Arts and Human Sciences | Virginia Tech",
+          "rerank_score": 0.9837850332260132,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 19
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "166f70480c8a5cc7#0017",
+          "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/",
+          "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+          "rerank_score": 0.9764904975891113,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 13
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "f450fc4d0ccafac3#0003",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "title": "Cos Stat Smth 23 24",
+          "rerank_score": 0.974821150302887,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 7
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "ab91aaae2c0424d6#0005",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "title": "Cos Stat Sdsc 23 24",
+          "rerank_score": 0.9628831148147583,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 9
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "31f18e7798022d54#0007",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/11-10/CUSP%202025-2026C%20First%20Reading%20Final%20Revised.pdf",
+          "title": "Cusp%202025 2026C%20First%20Reading%20Final%20Revised",
+          "rerank_score": 0.9594592452049255,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 6
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "979a46c9d003516a#0006",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/UG%20Catalog%20Changes%2026-27%202.pdf",
+          "title": "Ug%20Catalog%20Changes%2026 27%202",
+          "rerank_score": 0.9566342234611511,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 21
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "c6331c9cdeafb18d#0007",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/01-26/CUSP%202025-2026%20C%202nd%20Reading.pdf",
+          "title": "Cusp%202025 2026%20C%202Nd%20Reading",
+          "rerank_score": 0.9550683498382568,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 8
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "166f70480c8a5cc7#0029",
+          "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/",
+          "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+          "rerank_score": 0.951323390007019,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 28
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "51907e1579f0c85a#0000",
+        "14e90b454aff52b2#0000",
+        "56b4d0ee3ba6980c#0019",
+        "02cdf1c82ee3b206#0000",
+        "d865de1af5329689#0006",
+        "166f70480c8a5cc7#0017",
+        "f450fc4d0ccafac3#0003",
+        "ab91aaae2c0424d6#0005",
+        "31f18e7798022d54#0007",
+        "979a46c9d003516a#0006",
+        "c6331c9cdeafb18d#0007",
+        "166f70480c8a5cc7#0029"
+      ],
+      "seconds": 1.138
+    },
+    {
+      "id": "data-centric",
+      "original": "How many credits for Data-Centric Computing?",
+      "normalized": "Virginia Tech undergraduate Data-Centric Computing major total required credit hours",
+      "searches": [
+        {
+          "query": "Virginia Tech undergraduate Data-Centric Computing major total required credit hours",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        },
+        {
+          "query": "How many credits for Data-Centric Computing?",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "2e350e9088bedeb9#0006",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "title": "Data Centric Computing Major 2023 24",
+          "rerank_score": 0.9630224108695984,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 11
+            },
+            {
+              "query_index": 1,
+              "rank": 5
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "2e350e9088bedeb9#0008",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "title": "Data Centric Computing Major 2023 24",
+          "rerank_score": 0.958304226398468,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 9
+            },
+            {
+              "query_index": 1,
+              "rank": 1
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "2e350e9088bedeb9#0005",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "title": "Data Centric Computing Major 2023 24",
+          "rerank_score": 0.9543930292129517,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 24
+            },
+            {
+              "query_index": 1,
+              "rank": 6
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "31f18e7798022d54#0007",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/11-10/CUSP%202025-2026C%20First%20Reading%20Final%20Revised.pdf",
+          "title": "Cusp%202025 2026C%20First%20Reading%20Final%20Revised",
+          "rerank_score": 0.9494823217391968,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 22
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "2e350e9088bedeb9#0007",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "title": "Data Centric Computing Major 2023 24",
+          "rerank_score": 0.9482505321502686,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 18
+            },
+            {
+              "query_index": 1,
+              "rank": 8
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "c6331c9cdeafb18d#0007",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/01-26/CUSP%202025-2026%20C%202nd%20Reading.pdf",
+          "title": "Cusp%202025 2026%20C%202Nd%20Reading",
+          "rerank_score": 0.9448931217193604,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 21
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "25075a8f570c86a0#0006",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Data Centric%20Computing%20Major%20Checksheet%202022 2023",
+          "rerank_score": 0.9437636137008667,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 7
+            },
+            {
+              "query_index": 1,
+              "rank": 3
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "25075a8f570c86a0#0005",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Data Centric%20Computing%20Major%20Checksheet%202022 2023",
+          "rerank_score": 0.9265698790550232,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 9
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "53c7bebf8f6f57d3#0019",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "title": "Dcc Major 2021 22 Draft",
+          "rerank_score": 0.920647144317627,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 16
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "53c7bebf8f6f57d3#0008",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "title": "Dcc Major 2021 22 Draft",
+          "rerank_score": 0.920074462890625,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 15
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "08247ccd8db89b4b#0018",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2022.pdf",
+          "title": "Dcc Major 2022",
+          "rerank_score": 0.9127477407455444,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 27
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "2e350e9088bedeb9#0020",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "title": "Data Centric Computing Major 2023 24",
+          "rerank_score": 0.9014011025428772,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 25
+            },
+            {
+              "query_index": 1,
+              "rank": 7
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "2e350e9088bedeb9#0006",
+        "2e350e9088bedeb9#0008",
+        "2e350e9088bedeb9#0005",
+        "31f18e7798022d54#0007",
+        "2e350e9088bedeb9#0007",
+        "c6331c9cdeafb18d#0007",
+        "25075a8f570c86a0#0006",
+        "25075a8f570c86a0#0005",
+        "53c7bebf8f6f57d3#0019",
+        "53c7bebf8f6f57d3#0008",
+        "08247ccd8db89b4b#0018",
+        "2e350e9088bedeb9#0020"
+      ],
+      "seconds": 0.934
+    },
+    {
+      "id": "cs-2023",
+      "original": "How many credits for the 2023-24 CS major?",
+      "normalized": "Virginia Tech undergraduate CS (Computer Science) BS degree checksheet total required credit hours for 2023-24",
+      "searches": [
+        {
+          "query": "Virginia Tech undergraduate CS (Computer Science) BS degree checksheet total required credit hours for 2023-24",
+          "candidate_count": 30,
+          "known_source_candidates": [
+            {
+              "rank": 3,
+              "chunk_id": "21d8ef4e32ef41d9#0015",
+              "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+              "title": "Cs Major 2023 24",
+              "candidate_lane": "general",
+              "known_source": "cs-checksheet-2023-24",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            }
+          ]
+        },
+        {
+          "query": "How many credits for the 2023-24 CS major?",
+          "candidate_count": 30,
+          "known_source_candidates": [
+            {
+              "rank": 1,
+              "chunk_id": "21d8ef4e32ef41d9#0005",
+              "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+              "title": "Cs Major 2023 24",
+              "candidate_lane": "general",
+              "known_source": "cs-checksheet-2023-24",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            },
+            {
+              "rank": 4,
+              "chunk_id": "21d8ef4e32ef41d9#0001",
+              "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+              "title": "Cs Major 2023 24",
+              "candidate_lane": "general",
+              "known_source": "cs-checksheet-2023-24",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": true,
+                "math_1226": true,
+                "math_2114": true,
+                "cs_1114": true
+              }
+            },
+            {
+              "rank": 26,
+              "chunk_id": "21d8ef4e32ef41d9#0006",
+              "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+              "title": "Cs Major 2023 24",
+              "candidate_lane": "general",
+              "known_source": "cs-checksheet-2023-24",
+              "body_markers": {
+                "credit_total_123": false,
+                "math_1225": false,
+                "math_1226": false,
+                "math_2114": false,
+                "cs_1114": false
+              }
+            }
+          ]
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "21d8ef4e32ef41d9#0005",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+          "title": "Cs Major 2023 24",
+          "rerank_score": 0.9871788024902344,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 1
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": "cs-checksheet-2023-24",
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "21d8ef4e32ef41d9#0006",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+          "title": "Cs Major 2023 24",
+          "rerank_score": 0.9855521321296692,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 26
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": "cs-checksheet-2023-24",
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "2e350e9088bedeb9#0006",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "title": "Data Centric Computing Major 2023 24",
+          "rerank_score": 0.9812389612197876,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 15
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "2e350e9088bedeb9#0008",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "title": "Data Centric Computing Major 2023 24",
+          "rerank_score": 0.9807657599449158,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 3
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "2e350e9088bedeb9#0005",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "title": "Data Centric Computing Major 2023 24",
+          "rerank_score": 0.9799382090568542,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 7
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "21d8ef4e32ef41d9#0015",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+          "title": "Cs Major 2023 24",
+          "rerank_score": 0.9782188534736633,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 3
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": "cs-checksheet-2023-24",
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "44624e66a3c9b30f#0006",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "rerank_score": 0.9738444089889526,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 11
+            },
+            {
+              "query_index": 1,
+              "rank": 9
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "44624e66a3c9b30f#0015",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "rerank_score": 0.9710743427276611,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 7
+            },
+            {
+              "query_index": 1,
+              "rank": 24
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": true,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": true
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "2e350e9088bedeb9#0007",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "title": "Data Centric Computing Major 2023 24",
+          "rerank_score": 0.9667888283729553,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 21
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "f450fc4d0ccafac3#0003",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "title": "Cos Stat Smth 23 24",
+          "rerank_score": 0.9654463529586792,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 14
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "b9fd4a4620f1b784#0000",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-hci-minors-checksheets-roadmaps-advising-info.html",
+          "title": "Minor programs and plans of study  | students.cs | Virginia Tech",
+          "rerank_score": 0.9640516638755798,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 18
+            },
+            {
+              "query_index": 1,
+              "rank": 6
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "25075a8f570c86a0#0006",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Data Centric%20Computing%20Major%20Checksheet%202022 2023",
+          "rerank_score": 0.9562273025512695,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 19
+            },
+            {
+              "query_index": 1,
+              "rank": 16
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "21d8ef4e32ef41d9#0005",
+        "21d8ef4e32ef41d9#0006",
+        "2e350e9088bedeb9#0006",
+        "2e350e9088bedeb9#0008",
+        "2e350e9088bedeb9#0005",
+        "21d8ef4e32ef41d9#0015",
+        "44624e66a3c9b30f#0006",
+        "44624e66a3c9b30f#0015",
+        "2e350e9088bedeb9#0007",
+        "f450fc4d0ccafac3#0003",
+        "b9fd4a4620f1b784#0000",
+        "25075a8f570c86a0#0006"
+      ],
+      "seconds": 1.361
+    },
+    {
+      "id": "admissions",
+      "original": "What are Virginia Tech's first-year admission requirements?",
+      "normalized": "Virginia Tech undergraduate first-year admissions requirements",
+      "searches": [
+        {
+          "query": "Virginia Tech undergraduate first-year admissions requirements",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        },
+        {
+          "query": "What are Virginia Tech's first-year admission requirements?",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "c74d975ba6b2c10d#0000",
+          "url": "https://vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "title": "First-year Admissions Requirements | Virginia Tech",
+          "rerank_score": 0.9987792372703552,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 3
+            },
+            {
+              "query_index": 1,
+              "rank": 2
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "c74d975ba6b2c10d#0001",
+          "url": "https://vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "title": "First-year Admissions Requirements | Virginia Tech",
+          "rerank_score": 0.9984391331672668,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 9
+            },
+            {
+              "query_index": 1,
+              "rank": 15
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "c74d975ba6b2c10d#0004",
+          "url": "https://vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "title": "First-year Admissions Requirements | Virginia Tech",
+          "rerank_score": 0.9979332685470581,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 13
+            },
+            {
+              "query_index": 1,
+              "rank": 6
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "c74d975ba6b2c10d#0003",
+          "url": "https://vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "title": "First-year Admissions Requirements | Virginia Tech",
+          "rerank_score": 0.9968273043632507,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 5
+            },
+            {
+              "query_index": 1,
+              "rank": 3
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "18f614c274e783dd#0000",
+          "url": "https://vt.edu/admissions/international/requirements.html",
+          "title": "International Admissions Requirements | Virginia Tech",
+          "rerank_score": 0.996249258518219,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 1
+            },
+            {
+              "query_index": 1,
+              "rank": 4
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "618d8fd3f49b5539#0000",
+          "url": "https://www.vt.edu/admissions/frequently-asked-questions/first-year-applicant-faq.html",
+          "title": "First-Year Applicant FAQ | Virginia Tech",
+          "rerank_score": 0.9959456324577332,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 4
+            },
+            {
+              "query_index": 1,
+              "rank": 5
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "60109506feecbd4d#0003",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/04-27/Changes%20to%202026-2027%20Catalog.pdf",
+          "title": "Changes%20To%202026 2027%20Catalog",
+          "rerank_score": 0.995372474193573,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 16
+            },
+            {
+              "query_index": 1,
+              "rank": 17
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "979a46c9d003516a#0000",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/UG%20Catalog%20Changes%2026-27%202.pdf",
+          "title": "Ug%20Catalog%20Changes%2026 27%202",
+          "rerank_score": 0.9936364889144897,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 11
+            },
+            {
+              "query_index": 1,
+              "rank": 19
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "52f6d09127aca432#0000",
+          "url": "https://www.vt.edu/admissions/undergraduate/apply/freshman-checklist.html",
+          "title": "First-year Application Checklist | Virginia Tech",
+          "rerank_score": 0.9929609894752502,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 25
+            },
+            {
+              "query_index": 1,
+              "rank": 20
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "43d0f1baf1518824#0005",
+          "url": "https://lci.vt.edu/Programs/AdvantageVT/academic-guidelines.html",
+          "title": "Academic Guidelines  | Language and Culture Institute | Virginia Tech",
+          "rerank_score": 0.9886244535446167,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 10
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "166f70480c8a5cc7#0016",
+          "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/",
+          "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+          "rerank_score": 0.9867772459983826,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 30
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "618d8fd3f49b5539#0001",
+          "url": "https://www.vt.edu/admissions/frequently-asked-questions/first-year-applicant-faq.html",
+          "title": "First-Year Applicant FAQ | Virginia Tech",
+          "rerank_score": 0.9822876453399658,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 24
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "c74d975ba6b2c10d#0000",
+        "c74d975ba6b2c10d#0001",
+        "c74d975ba6b2c10d#0004",
+        "c74d975ba6b2c10d#0003",
+        "18f614c274e783dd#0000",
+        "618d8fd3f49b5539#0000",
+        "60109506feecbd4d#0003",
+        "979a46c9d003516a#0000",
+        "52f6d09127aca432#0000",
+        "43d0f1baf1518824#0005",
+        "166f70480c8a5cc7#0016",
+        "618d8fd3f49b5539#0001"
+      ],
+      "seconds": 0.864
+    },
+    {
+      "id": "parking",
+      "original": "Where can I get a parking permit at Virginia Tech?",
+      "normalized": "Virginia Tech student parking permit purchase",
+      "searches": [
+        {
+          "query": "Virginia Tech student parking permit purchase",
+          "candidate_count": 29,
+          "known_source_candidates": []
+        },
+        {
+          "query": "Where can I get a parking permit at Virginia Tech?",
+          "candidate_count": 29,
+          "known_source_candidates": []
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "08ce55f335a66e3a#0002",
+          "url": "https://parking.vt.edu/parking/students.html",
+          "title": "Student Parking  | Parking Services | Virginia Tech",
+          "rerank_score": 0.9968149065971375,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 8
+            },
+            {
+              "query_index": 1,
+              "rank": 6
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "033a0626cb3f3631#0012",
+          "url": "https://parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "title": "22Ts008%20Parking%20Operation%20Manual%200106",
+          "rerank_score": 0.9964480400085449,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 15
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "cf9430435bb604d3#0001",
+          "url": "https://www.governance.vt.edu/assets/cmt_tpc_mins_10-21-14.pdf",
+          "title": "Cmt Tpc Mins 10 21 14",
+          "rerank_score": 0.9953904151916504,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 16
+            },
+            {
+              "query_index": 1,
+              "rank": 14
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "410ffa272b05745e#0003",
+          "url": "https://policies.vt.edu/assets/5120.pdf",
+          "title": "5120",
+          "rerank_score": 0.9948403239250183,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 1
+            },
+            {
+              "query_index": 1,
+              "rank": 24
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "e5eda9db3249d70a#0007",
+          "url": "https://www.procurement.vt.edu/content/dam/procurement_vt_edu/docs/terms/Purchase-Order-Terms-And-Conditions.pdf",
+          "title": "Purchase Order Terms And Conditions",
+          "rerank_score": 0.9933071732521057,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 6
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "ade3d8731f0f9433#0012",
+          "url": "https://www.procurement.vt.edu/content/dam/procurement_vt_edu/docs/terms/Bid-General-Terms-And-Conditions.pdf",
+          "title": "Bid General Terms And Conditions",
+          "rerank_score": 0.9923638105392456,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 13
+            },
+            {
+              "query_index": 1,
+              "rank": 19
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "08ce55f335a66e3a#0000",
+          "url": "https://parking.vt.edu/parking/students.html",
+          "title": "Student Parking  | Parking Services | Virginia Tech",
+          "rerank_score": 0.9897116422653198,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 9
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "f6c11318941e9852#0001",
+          "url": "http://parking.vt.edu/parking/accessible.html",
+          "title": "Reserved Accessible Spaces  | Parking Services | Virginia Tech",
+          "rerank_score": 0.9893062710762024,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 28
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "033a0626cb3f3631#0018",
+          "url": "https://parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "title": "22Ts008%20Parking%20Operation%20Manual%200106",
+          "rerank_score": 0.9881765246391296,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 21
+            },
+            {
+              "query_index": 1,
+              "rank": 20
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "695681c147561222#0000",
+          "url": "https://www.parking.vt.edu",
+          "title": "Parking Services  | Parking Services | Virginia Tech",
+          "rerank_score": 0.9876639246940613,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 20
+            },
+            {
+              "query_index": 1,
+              "rank": 12
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "033a0626cb3f3631#0010",
+          "url": "https://parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "title": "22Ts008%20Parking%20Operation%20Manual%200106",
+          "rerank_score": 0.9870296716690063,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 5
+            },
+            {
+              "query_index": 1,
+              "rank": 2
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "4633385f6a9db8f0#0001",
+          "url": "https://parking.vt.edu/parking/visitors.html",
+          "title": "Visitor Parking  | Parking Services | Virginia Tech",
+          "rerank_score": 0.9852146506309509,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 29
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "08ce55f335a66e3a#0002",
+        "033a0626cb3f3631#0012",
+        "cf9430435bb604d3#0001",
+        "410ffa272b05745e#0003",
+        "e5eda9db3249d70a#0007",
+        "ade3d8731f0f9433#0012",
+        "08ce55f335a66e3a#0000",
+        "f6c11318941e9852#0001",
+        "033a0626cb3f3631#0018",
+        "695681c147561222#0000",
+        "033a0626cb3f3631#0010",
+        "4633385f6a9db8f0#0001"
+      ],
+      "seconds": 0.823
+    },
+    {
+      "id": "unknown-program",
+      "original": "What are the Chronoengineering degree requirements?",
+      "normalized": "Virginia Tech undergraduate Chronoengineering major degree requirements",
+      "searches": [
+        {
+          "query": "Virginia Tech undergraduate Chronoengineering major degree requirements",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        },
+        {
+          "query": "What are the Chronoengineering degree requirements?",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "166f70480c8a5cc7#0016",
+          "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/",
+          "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+          "rerank_score": 0.8949732184410095,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 16
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "24bae26b80fb8e2e#0005",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/22-23/cos_neur_cneu_22_23.pdf",
+          "title": "Cos Neur Cneu 22 23",
+          "rerank_score": 0.8606036305427551,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 15
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "29a267bd6c8e26e7#0001",
+          "url": "https://eng.vt.edu/undergraduate/degree-programs.html",
+          "title": "Degree Programs  | Engineering | Virginia Tech",
+          "rerank_score": 0.7754347920417786,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 17
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "166f70480c8a5cc7#0029",
+          "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/",
+          "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+          "rerank_score": 0.7437268495559692,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 26
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "08a4f7a9a26d5a9f#0001",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2018-2019/apr8/background_doc_18_19_f.pdf",
+          "title": "Background Doc 18 19 F",
+          "rerank_score": 0.7379142642021179,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 19
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "5c176bc9e4437b30#0000",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/mechanical-engineering/mechanical-engineering-bs/",
+          "title": "Mechanical Engineering Major",
+          "rerank_score": 0.7254541516304016,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 5
+            }
+          ],
+          "candidate_lane": "general",
+          "program_name": "Mechanical Engineering Major",
+          "program_level": "undergraduate",
+          "catalog_edition": "2026-2027",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "9dec12179659004c#0005",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/22-23/cos_neur_cbnu_22_23.pdf",
+          "title": "Cos Neur Cbnu 22 23",
+          "rerank_score": 0.7186931371688843,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 25
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "d101d060b00669b6#0001",
+          "url": "https://eng.vt.edu/undergraduate/minors.html",
+          "title": "Minors  | Engineering | Virginia Tech",
+          "rerank_score": 0.7075057625770569,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 11
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "62110197e357cbd0#0001",
+          "url": "https://eng.vt.edu/undergraduate/resources-support/change-of-major/restricted-minors-redirect.html",
+          "title": "Minors  | Engineering | Virginia Tech",
+          "rerank_score": 0.7075057625770569,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 13
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "7fff9ffbb5fa48f9#0029",
+          "url": "https://publichealth.vt.edu/bsph-advising/policies.html",
+          "title": "Academic Policies  | Public Health Program | Virginia Tech",
+          "rerank_score": 0.6639958620071411,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 24
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "c54bad2aa520a9a4#0003",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/join-computer-science.html",
+          "title": "Join Computer Science  | students.cs | Virginia Tech",
+          "rerank_score": 0.5923129320144653,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 18
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": true,
+            "math_1226": true,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "bfe0fe2e66508673#0001",
+          "url": "https://eng.vt.edu/undergraduate/resources-support/change-of-major.html",
+          "title": "Change of Major/Minor  | Engineering | Virginia Tech",
+          "rerank_score": 0.5819565653800964,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 7
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "166f70480c8a5cc7#0016",
+        "24bae26b80fb8e2e#0005",
+        "29a267bd6c8e26e7#0001",
+        "166f70480c8a5cc7#0029",
+        "08a4f7a9a26d5a9f#0001",
+        "5c176bc9e4437b30#0000",
+        "9dec12179659004c#0005",
+        "d101d060b00669b6#0001",
+        "62110197e357cbd0#0001",
+        "7fff9ffbb5fa48f9#0029",
+        "c54bad2aa520a9a4#0003",
+        "bfe0fe2e66508673#0001"
+      ],
+      "seconds": 1.105
+    },
+    {
+      "id": "unknown-person",
+      "original": "What courses does Professor Quasar Noodlewick teach?",
+      "normalized": "Virginia Tech Professor Quasar Noodlewick courses taught",
+      "searches": [
+        {
+          "query": "Virginia Tech Professor Quasar Noodlewick courses taught",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        },
+        {
+          "query": "What courses does Professor Quasar Noodlewick teach?",
+          "candidate_count": 30,
+          "known_source_candidates": []
+        }
+      ],
+      "selected": [
+        {
+          "chunk_id": "e25e834cd5876974#0001",
+          "url": "http://www.cnsr.ictas.vt.edu/teaching.html",
+          "title": "CNSR@VT -- Complex Networks and Security Research at Virginia Tech",
+          "rerank_score": 0.4192318022251129,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 10
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        },
+        {
+          "chunk_id": "ba2b2fea926fe6b5#0001",
+          "url": "https://eng.vt.edu/undergraduate/resources-support/tutoring.html",
+          "title": "Tutoring and Study Skills  | Engineering | Virginia Tech",
+          "rerank_score": 0.32713067531585693,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 8
+            }
+          ],
+          "candidate_lane": "general",
+          "known_source": null,
+          "body_markers": {
+            "credit_total_123": false,
+            "math_1225": false,
+            "math_1226": false,
+            "math_2114": false,
+            "cs_1114": false
+          },
+          "program_match": false
+        }
+      ],
+      "evidence_chunk_ids": [
+        "e25e834cd5876974#0001",
+        "ba2b2fea926fe6b5#0001"
+      ],
+      "seconds": 0.868
+    }
+  ]
+}

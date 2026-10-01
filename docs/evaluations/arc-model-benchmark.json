@@ -1,0 +1,643 @@
+{
+  "generated_utc": "2026-09-20T06:27:03.587163+00:00",
+  "endpoint": "https://llm-api.arc.vt.edu/api/v1",
+  "implementation": "chatbot.llm production prompts + QueryPlan schema + evidence finalizer",
+  "settings": {
+    "max_tokens": 2048,
+    "planner_max_tokens": 1024,
+    "timeout": 30
+  },
+  "limitations": [
+    "Synthetic fixture string checks are not semantic gold.",
+    "Citation integrity does not establish claim entailment.",
+    "One sample per case/model; endpoint load affects latency."
+  ],
+  "models": {
+    "GLM-5.3": [
+      {
+        "kind": "planner",
+        "id": "greeting_basic",
+        "output": "{\"intent\":\"conversation\",\"queries\":[],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 1.937
+      },
+      {
+        "kind": "planner",
+        "id": "gratitude_close",
+        "output": "{\"intent\":\"conversation\",\"queries\":[],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 1.451
+      },
+      {
+        "kind": "planner",
+        "id": "out_of_scope_code_request",
+        "output": "{\"intent\":\"conversation\",\"queries\":[],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 3.138
+      },
+      {
+        "kind": "planner",
+        "id": "greeting_plus_substantive_question",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science department mailing address\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 2.631
+      },
+      {
+        "kind": "planner",
+        "id": "standalone_deadline",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science major application deadline\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 9.152
+      },
+      {
+        "kind": "planner",
+        "id": "standalone_faculty_course",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Dr. Quasar Lin computer graphics course fall semester\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 10.008
+      },
+      {
+        "kind": "planner",
+        "id": "constraint_dense_single",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech CS 1014 online sections summer 2027 non-majors\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 8.04
+      },
+      {
+        "kind": "planner",
+        "id": "single_entity_two_facets",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science advising office location\",\"Virginia Tech Computer Science advising office hours\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": false,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": false,
+        "seconds": 16.722
+      },
+      {
+        "kind": "planner",
+        "id": "comparison_two_tracks",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science undergraduate software engineering track vs data-centric computing track\",\"Virginia Tech Computer Science software engineering track curriculum requirements\",\"Virginia Tech Computer Science data-centric computing track curriculum requirements\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 13.185
+      },
+      {
+        "kind": "planner",
+        "id": "multipart_three_parts",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science minor how to declare\",\"Virginia Tech Computer Science minor required courses\",\"Virginia Tech Computer Science minor advisor\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 5.939
+      },
+      {
+        "kind": "planner",
+        "id": "history_pronoun_resolution",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Dr. Priya Raman office hours\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 5.571
+      },
+      {
+        "kind": "planner",
+        "id": "history_topic_shift_no_injection",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science department head\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 3.923
+      },
+      {
+        "kind": "planner",
+        "id": "history_constraint_swap",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science master's student funding assistantships fellowships\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 4.234
+      },
+      {
+        "kind": "planner",
+        "id": "ambiguous_missing_target",
+        "output": "{\"intent\":\"clarify\",\"queries\":[],\"clarification\":\"Which application, program, or deadline do you mean?\"}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 3.761
+      },
+      {
+        "kind": "planner",
+        "id": "ambiguous_unresolvable_reference",
+        "output": "{\"intent\":\"clarify\",\"queries\":[],\"clarification\":\"What would you like to apply for (e.g., a program, scholarship, or job)?\"}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 3.618
+      },
+      {
+        "kind": "answer",
+        "id": "grounded_office_hours",
+        "output": "Dr. Quasar Lin's office hours are **Tuesdays and Thursdays, 1:30\u20133:30 PM** in **McBryde Hall, room 660**. Students can also email qstar@synthetic.invalid to schedule an appointment. [1]",
+        "finish_reason": "stop",
+        "final_answer": "Dr. Quasar Lin's office hours are **Tuesdays and Thursdays, 1:30\u20133:30 PM** in **McBryde Hall, room 660**. Students can also email qstar@synthetic.invalid to schedule an appointment. [1]",
+        "cited_ids": [
+          1
+        ],
+        "checks": {
+          "required_terms": true,
+          "no_forbidden": true,
+          "valid_citations": true
+        },
+        "passed_heuristics": true,
+        "seconds": 4.106
+      },
+      {
+        "kind": "answer",
+        "id": "grounded_minor_credits",
+        "output": "The Computational Basket Weaving (CBW) minor is an **18-credit** program [1].",
+        "finish_reason": "stop",
+        "final_answer": "The Computational Basket Weaving (CBW) minor is an **18-credit** program [1].",
+        "cited_ids": [
+          1
+        ],
+        "checks": {
+          "required_terms": true,
+          "no_forbidden": true,
+          "valid_citations": true
+        },
+        "passed_heuristics": true,
+        "seconds": 1.86
+      },
+      {
+        "kind": "answer",
+        "id": "missing_detail_refusal",
+        "output": "Dr. Quasar Lin's phone number is not listed on his faculty profile, so I'm unable to provide it [1].\n\nWhat the profile does include:\n- **Role:** Teaching assistant professor, VT CS department\n- **Office hours:** Tuesdays and Thursdays, 1:30\u20133:30 PM\n- **Office:** McBryde Hall, room 660 [1]\n\nIf you need to reach him, visiting during office hours may be your best option based on the available information.",
+        "finish_reason": "stop",
+        "requires_refusal_review": true,
+        "final_answer": "Dr. Quasar Lin's phone number is not listed on his faculty profile, so I'm unable to provide it [1].\n\nWhat the profile does include:\n- **Role:** Teaching assistant professor, VT CS department\n- **Office hours:** Tuesdays and Thursdays, 1:30\u20133:30 PM\n- **Office:** McBryde Hall, room 660 [1]\n\nIf you need to reach him, visiting during office hours may be your best option based on the available information.",
+        "cited_ids": [
+          1
+        ],
+        "checks": {
+          "required_terms": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 5.116
+      },
+      {
+        "kind": "answer",
+        "id": "person_not_found_refusal",
+        "output": "I don't have any information about a Dr. Bogo Sort in the materials available to me, so I can't tell you who they are or what courses they teach.\n\nThe only faculty information I have is for Dr. Ada Cache, an associate professor in the VT CS department, who teaches SYN 2234 (Memory Hierarchy) and SYN 4414 (Latency Tolerant Systems) [1]. If you meant a different faculty member, could you double-check the name or provide more details?",
+        "finish_reason": "stop",
+        "requires_refusal_review": true,
+        "final_answer": "I don't have any information about a Dr. Bogo Sort in the materials available to me, so I can't tell you who they are or what courses they teach.\n\nThe only faculty information I have is for Dr. Ada Cache, an associate professor in the VT CS department, who teaches SYN 2234 (Memory Hierarchy) and SYN 4414 (Latency Tolerant Systems) [1]. If you meant a different faculty member, could you double-check the name or provide more details?",
+        "cited_ids": [
+          1
+        ],
+        "checks": {
+          "required_terms": true,
+          "no_forbidden": false
+        },
+        "passed_heuristics": false,
+        "seconds": 9.935
+      },
+      {
+        "kind": "answer",
+        "id": "citation_multi_source",
+        "output": "- **Applications open:** March 1 each year for fall entry (and close on June 15) [1].\n- **Application fee:** $75 [2]. Fee waivers are available for synthetic bridge program participants [2].",
+        "finish_reason": "stop",
+        "final_answer": "- **Applications open:** March 1 each year for fall entry (and close on June 15) [1].\n- **Application fee:** $75 [2]. Fee waivers are available for synthetic bridge program participants [2].",
+        "cited_ids": [
+          1,
+          2
+        ],
+        "checks": {
+          "required_terms": true,
+          "no_forbidden": true,
+          "valid_citations": true
+        },
+        "passed_heuristics": true,
+        "seconds": 4.108
+      }
+    ],
+    "DeepSeek-V4.1-Flash": [
+      {
+        "kind": "planner",
+        "id": "greeting_basic",
+        "output": "{\"intent\":\"conversation\",\"queries\":[],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 1.102
+      },
+      {
+        "kind": "planner",
+        "id": "gratitude_close",
+        "output": "{\"intent\":\"conversation\",\"queries\":[],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 1.138
+      },
+      {
+        "kind": "planner",
+        "id": "out_of_scope_code_request",
+        "output": "{\"intent\":\"conversation\",\"queries\":[],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 1.165
+      },
+      {
+        "kind": "planner",
+        "id": "greeting_plus_substantive_question",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science department mailing address\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 2.463
+      },
+      {
+        "kind": "planner",
+        "id": "standalone_deadline",
+        "output": "{\"intent\":\"clarify\",\"queries\":[],\"clarification\":\"Do you mean the undergraduate admissions deadline for the Computer Science major, or the internal change-of-major application deadline?\"}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": false,
+          "query_count": false,
+          "constraints": false,
+          "no_forbidden": true
+        },
+        "passed_heuristics": false,
+        "seconds": 7.049
+      },
+      {
+        "kind": "planner",
+        "id": "standalone_faculty_course",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Dr. Quasar Lin computer graphics fall course\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 7.041
+      },
+      {
+        "kind": "planner",
+        "id": "constraint_dense_single",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech CS 1014 online sections Summer 2027 for non-majors\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 4.998
+      },
+      {
+        "kind": "planner",
+        "id": "single_entity_two_facets",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science advising office location\",\"Virginia Tech Computer Science advising office hours\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": false,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": false,
+        "seconds": 3.781
+      },
+      {
+        "kind": "planner",
+        "id": "comparison_two_tracks",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science undergraduate software engineering track vs data-centric computing track difference\",\"Virginia Tech Computer Science undergraduate software engineering track requirements\",\"Virginia Tech Computer Science undergraduate data-centric computing track requirements\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 5.809
+      },
+      {
+        "kind": "planner",
+        "id": "multipart_three_parts",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science minor declaration process\",\"Virginia Tech Computer Science minor required courses\",\"Virginia Tech Computer Science minor advisor\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 4.046
+      },
+      {
+        "kind": "planner",
+        "id": "history_pronoun_resolution",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Dr. Priya Raman office hours\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 3.473
+      },
+      {
+        "kind": "planner",
+        "id": "history_topic_shift_no_injection",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science department head\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 5.641
+      },
+      {
+        "kind": "planner",
+        "id": "history_constraint_swap",
+        "output": "{\"intent\":\"search\",\"queries\":[\"Virginia Tech Computer Science master's students funding opportunities\"],\"clarification\":null}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 3.151
+      },
+      {
+        "kind": "planner",
+        "id": "ambiguous_missing_target",
+        "output": "{\"intent\":\"clarify\",\"queries\":[],\"clarification\":\"Which deadline are you asking about?\"}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 1.649
+      },
+      {
+        "kind": "planner",
+        "id": "ambiguous_unresolvable_reference",
+        "output": "{\"intent\":\"clarify\",\"queries\":[],\"clarification\":\"What would you like to apply for?\"}",
+        "finish_reason": "stop",
+        "checks": {
+          "valid_schema": true,
+          "intent": true,
+          "query_count": true,
+          "constraints": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 1.462
+      },
+      {
+        "kind": "answer",
+        "id": "grounded_office_hours",
+        "output": "Dr. Quasar Lin holds office hours on **Tuesdays and Thursdays, 1:30\u20133:30 PM**, in **McBryde Hall, room 660** [1]. Students can also email qstar@synthetic.invalid to schedule an appointment [1].",
+        "finish_reason": "stop",
+        "final_answer": "Dr. Quasar Lin holds office hours on **Tuesdays and Thursdays, 1:30\u20133:30 PM**, in **McBryde Hall, room 660** [1]. Students can also email qstar@synthetic.invalid to schedule an appointment [1].",
+        "cited_ids": [
+          1
+        ],
+        "checks": {
+          "required_terms": true,
+          "no_forbidden": true,
+          "valid_citations": true
+        },
+        "passed_heuristics": true,
+        "seconds": 1.75
+      },
+      {
+        "kind": "answer",
+        "id": "grounded_minor_credits",
+        "output": "The Computational Basket Weaving minor is an 18-credit program [1].",
+        "finish_reason": "stop",
+        "final_answer": "The Computational Basket Weaving minor is an 18-credit program [1].",
+        "cited_ids": [
+          1
+        ],
+        "checks": {
+          "required_terms": true,
+          "no_forbidden": true,
+          "valid_citations": true
+        },
+        "passed_heuristics": true,
+        "seconds": 0.716
+      },
+      {
+        "kind": "answer",
+        "id": "missing_detail_refusal",
+        "output": "The supplied faculty profile for Dr. Quasar Lin does not list a phone number [1]. The only contact-related detail it provides is his office hours: Tuesdays and Thursdays, 1:30\u20133:30 PM, in McBryde Hall room 660 [1].\n\nIf you need to reach him, that office-hours information is the only contact detail available in the evidence I have.",
+        "finish_reason": "stop",
+        "requires_refusal_review": true,
+        "final_answer": "The supplied faculty profile for Dr. Quasar Lin does not list a phone number [1]. The only contact-related detail it provides is his office hours: Tuesdays and Thursdays, 1:30\u20133:30 PM, in McBryde Hall room 660 [1].\n\nIf you need to reach him, that office-hours information is the only contact detail available in the evidence I have.",
+        "cited_ids": [
+          1
+        ],
+        "checks": {
+          "required_terms": true,
+          "no_forbidden": true
+        },
+        "passed_heuristics": true,
+        "seconds": 2.365
+      },
+      {
+        "kind": "answer",
+        "id": "person_not_found_refusal",
+        "output": "I don't have any evidence about a \"Dr. Bogo Sort\" in the supplied sources. The only faculty profile provided is for Dr. Ada Cache, an associate professor in the (synthetic) VT CS department, who teaches SYN 2234 (Memory Hierarchy) and SYN 4414 (Latency Tolerant Systems) [1].\n\nI can't confirm whether Dr. Bogo Sort exists, what department they're in, or what they teach. If you can share a source or the correct name, I can help further.",
+        "finish_reason": "stop",
+        "requires_refusal_review": true,
+        "final_answer": "I don't have any evidence about a \"Dr. Bogo Sort\" in the supplied sources. The only faculty profile provided is for Dr. Ada Cache, an associate professor in the (synthetic) VT CS department, who teaches SYN 2234 (Memory Hierarchy) and SYN 4414 (Latency Tolerant Systems) [1].\n\nI can't confirm whether Dr. Bogo Sort exists, what department they're in, or what they teach. If you can share a source or the correct name, I can help further.",
+        "cited_ids": [
+          1
+        ],
+        "checks": {
+          "required_terms": true,
+          "no_forbidden": false
+        },
+        "passed_heuristics": false,
+        "seconds": 2.651
+      },
+      {
+        "kind": "answer",
+        "id": "citation_multi_source",
+        "output": "- **Applications open:** March 1 each year for fall entry, and close June 15 [1].\n- **Application fee:** $75 [2]. Fee waivers are available for synthetic bridge program participants [2].",
+        "finish_reason": "stop",
+        "final_answer": "- **Applications open:** March 1 each year for fall entry, and close June 15 [1].\n- **Application fee:** $75 [2]. Fee waivers are available for synthetic bridge program participants [2].",
+        "cited_ids": [
+          1,
+          2
+        ],
+        "checks": {
+          "required_terms": true,
+          "no_forbidden": true,
+          "valid_citations": true
+        },
+        "passed_heuristics": true,
+        "seconds": 1.395
+      }
+    ]
+  }
+}

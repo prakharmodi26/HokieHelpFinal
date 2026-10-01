@@ -1,16 +1,16 @@
-FROM --platform=linux/amd64 ghcr.io/prakharmodi26/hokiehelp-base:latest
+FROM ghcr.io/astral-sh/uv:0.11.16 AS uv
+FROM python:3.12-slim-bookworm
 
 LABEL org.opencontainers.image.source=https://github.com/prakharmodi26/HokieHelpFinal
-
+COPY --from=uv /uv /usr/local/bin/uv
 WORKDIR /app
-
-COPY pyproject.toml .
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 COPY src/ src/
-
-# Base image already has torch, sentence-transformers, qdrant-client, etc.
-# Install ollama (new dep not in base image) then the package itself.
-RUN pip install --no-cache-dir ollama && pip install --no-cache-dir --no-deps .
-
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH=/app/src \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+USER 1000:1000
 EXPOSE 8000
-
 CMD ["python", "-m", "chatbot.main"]

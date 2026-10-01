@@ -1,0 +1,64 @@
+# Does not match the live chatbot Service selector. Test via exec/localhost first.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: chatbot-quality-canary
+  namespace: test
+  labels:
+    app: hokiehelp-quality
+    managed-by: hokiehelp-pipeline
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  activeDeadlineSeconds: 14400
+  imagePullSecrets:
+    - name: ghcr-pull
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  containers:
+    - name: chatbot
+      image: ghcr.io/prakharmodi26/hokiehelp-chatbot@sha256:c544157c1fda379cc26a1a787cf77564c7ca628cf9075fd5f8b747c7632d57d3
+      imagePullPolicy: IfNotPresent
+      envFrom:
+        - configMapRef:
+            name: chatbot-quality-20260922
+      env:
+        - name: LLM_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: chatbot-arc-quality
+              key: llm-api-key
+      ports:
+        - containerPort: 8000
+      readinessProbe:
+        httpGet:
+          path: /ready
+          port: 8000
+        initialDelaySeconds: 5
+        periodSeconds: 5
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8000
+        initialDelaySeconds: 15
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: "1"
+          memory: 512Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: [ALL]
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: tmp
+      emptyDir: {}

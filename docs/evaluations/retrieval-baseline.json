@@ -1,0 +1,4429 @@
+{
+  "purpose": "Read-only live retrieval quality probe against the deployed HokieHelp stack (embeddings-service + Qdrant). Descriptive only \u2014 no invented ground truth; credit totals are NOT judged.",
+  "environment": {
+    "collection": "hokiehelp-test",
+    "points": 268330,
+    "vector_config": {
+      "dense": "1024/Cosine (named 'dense')",
+      "sparse": "lexical, idf modifier (named 'sparse')"
+    },
+    "embedding_model": "BAAI/bge-m3 (per embeddings-config configmap; verified by re-embedding stored chunks at cosine 1.000000)",
+    "reranker_model": "BAAI/bge-reranker-v2-m3",
+    "embed_text": "identity-composed (title + headings + body), embed_version=2",
+    "query_prefix": "none (raw query text, matching live chatbot)"
+  },
+  "parameters": {
+    "candidates": 30,
+    "rerank_score_floor": 0.3,
+    "top_k_variants": [
+      5,
+      12
+    ],
+    "adjacent_chunk_expansion": "disabled (matches planned search_many worker)",
+    "production_diff": "prod uses candidates=50, top_k=8; version partition is a no-op on this collection (no edition payload fields present)"
+  },
+  "embedding_compatibility": {
+    "verified_model": "BAAI/bge-m3 (configmap embeddings-config BGE_MODEL) \u2014 dense 1024-d + sparse lexical weights, served by embeddings-service POST /embed and POST /rerank (bge-reranker-v2-m3)",
+    "verification": "Re-embedded compose_embed_text(title, headings, body) of live points via the service and compared to their stored dense vectors: cosine 1.000000 / 0.999996. Body-only text scores 0.944-0.971, confirming corpus vectors are identity-composed (embed_version=2), matching the live ingestor.",
+    "query_encoding": "Live chatbot embeds the RAW query text via the embeddings-service \u2014 no 'Represent this sentence for searching relevant passages:' prefix.",
+    "checkout_mismatches": [
+      "Branch retriever.py builds SentenceTransformer(EMBEDDING_MODEL, default 'BAAI/bge-large-en-v1.5') locally and prepends BGE_QUERY_PREFIX \u2014 different model family AND different query convention than the live corpus.",
+      "Its query_points call omits using='dense'; against hokiehelp-test (named vectors) it fails with HTTP 400 'Not existing vector name error' (reproduced read-only).",
+      "Its collection default is 'hokiehelp_chunks' (live chatbot uses 'hokiehelp-test') and its min_score=0.53 is a bge-large cosine heuristic \u2014 live thresholding uses raw cross-encoder rerank scores with floor 0.3.",
+      "Its adjacent-chunk expansion parses chunk_id by rsplit('_', 1) expecting '{hash}_{seq:04d}'; live ids are '{hash}#{seq:04d}', so neighbor expansion silently no-ops.",
+      "Both bge-large-en-v1.5 and bge-m3 are 1024-dim, so a naive port would NOT fail on dimension \u2014 it would silently query a mismatched vector space."
+    ],
+    "conclusion": "Branch retrieval code must target BAAI/bge-m3 through the embeddings-service (or any client producing byte-identical vectors) and use using='dense' with the server-side sparse+RRF fusion. No reindex or model change is required or approved \u2014 the live corpus and embeddings-service are already mutually consistent."
+  },
+  "findings": [
+    "GitHub #29 exact regression reproduced: 'how many credits do i need to graduate BS in CS' ranks Data-Centric Computing and Secure Computing governance 'Supporting Docs' (2019-2020 proposal PDFs) at ranks 1-2 (rerank 0.978/0.977) above every CS checksheet. The failure originates at the dense stage (top-1 cosine 0.7189) and survives rerank.",
+    "Same query family diverges wildly: github29-p1 top-1 is the correct coe_cs_23_24 checksheet (wrong-program docs at ranks 2/4); github29-p3 returns five CS checksheets spanning four different years; the normalized phrasing returns graduate MS/PhD degree pages at ranks 1-2/4-5 (degree-level confusion).",
+    "Paraphrase consistency is poor: ZERO canonical URLs are shared across all six CS-intent variants; pairwise top-5 URL Jaccard ranges 0.000-0.429. Same-intent paraphrases retrieve materially different source sets.",
+    "Rerank score compression: right-program and wrong-program documents both score 0.96-0.99, so rerank score alone cannot separate them; the 0.3 floor only separates out-of-corpus entities.",
+    "Unknown-entity behaviour is clean: fictional faculty name max rerank 0.0575, fictional program 0.0184 \u2014 both far below the 0.3 floor (0 selected); lowest real-query top-1 in this suite was 0.5979. No abstention grey zone between ~0.06 and ~0.60 was observed.",
+    "GitHub #16 followups: raw 'What math courses does it require?' (history: CS major) retrieves MATH-department documents exclusively (MathMajorHandbook top-1, 0.9525); the context-composed variant retrieves CS pages. Pronoun-only 'What courses do they teach?' returns just 4 above-floor chunks with an Entomology page top-1 (0.5979). Context resolution must happen BEFORE retrieval.",
+    "University-scope failures: 'What are the admission requirements for Virginia Tech?' top-1 is Geography GRADUATE programs (0.9993) with the correct first-year admissions page only at rank 3; the parking query pulls vetmed student handbooks at ranks 2-4; financial aid is clean (all finaid.vt.edu).",
+    "Sibling-program staleness: for the Data-Centric Computing query, 2019-2020 governance 'Supporting Docs' (proposal documents) outrank the current cs.vt.edu checksheets/roadmaps page (rank 2, 0.933).",
+    "Math program queries are strong on topical match (MathMajorHandbook / catalog mathematics-bs) but mix graduate pages into the verbose variant's top-5 (grad-policies.pdf, future-grads, graduate-program-presentation).",
+    "top_k 5 vs 12: top-5 yields 3-5 distinct documents, top-12 yields 7-12 (adds 4-7 docs). Selected text roughly 2.4x (e.g., 9,730 -> 23,062 chars), so the planned 24,000-char evidence budget is nearly exhausted at top-12 for checksheet-heavy queries.",
+    "Latency is not a constraint at candidate_k=30: mean 0.12s embed, 0.25s for three Qdrant queries, 0.29s to rerank <=30 passages \u2014 under 1s end-to-end per query through the port-forwards.",
+    "Dense/sparse agreement: 8-12 of each final top-12 also appear in the dense-only top-30 \u2014 RRF fusion rarely contradicts the dense branch; sparse mainly adds recall breadth.",
+    "Collections: hokiehelp-test (268,330 points, embed_version=2, named dense+sparse vectors) is what the live chatbot queries; hokiehelp-6898505471 (8,690 points, catalog.vt.edu course descriptions, no embed_version -> v1 body-only vectors) is a separate corpus not referenced by the live chatbot config."
+  ],
+  "access_notes": [
+    "No cluster access failures: embeddings-service /embed, /rerank, /health and Qdrant read endpoints all reachable via kubectl port-forward (read-only usage; no writes, no index creation).",
+    "Branch retriever code as-is cannot run against the live collection (HTTP 400, unnamed vector) \u2014 documented under embedding_compatibility.checkout_mismatches.",
+    "search_many (candidate_k=30, global top_k=12, no neighbors) had not landed in the working tree at evaluation time; this probe mirrors those exact semantics against the live services instead."
+  ],
+  "results": [
+    {
+      "qid": "github29-p1",
+      "category": "github29-paraphrase",
+      "query": "how many credits do i need to complete bs in cs",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.102,
+        "qdrant_3_queries": 0.267,
+        "rerank": 0.294
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 22
+      },
+      "dense_top5": [
+        {
+          "title": "Cals Css Crgb 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/2022/cals_css_crgb_22.pdf",
+          "cosine": 0.6687
+        },
+        {
+          "title": "Cals Css Crgb 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/21-22/cals_css_crgb_21_22.pdf",
+          "cosine": 0.6641
+        },
+        {
+          "title": "Cals Css Inag 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/2022/cals_css_inag_22.pdf",
+          "cosine": 0.6623
+        },
+        {
+          "title": "Cs Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "cosine": 0.6571
+        },
+        {
+          "title": "Secure Computing Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_support",
+          "cosine": 0.6548
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "coe_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "rrf": 0.5
+        },
+        {
+          "title": "Cals Css Crgb 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/2022/cals_css_crgb_22.pdf",
+          "rrf": 0.5
+        },
+        {
+          "title": "Cals Css Crgb 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/21-22/cals_css_crgb_21_22.pdf",
+          "rrf": 0.3333
+        },
+        {
+          "title": "minor_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/23-24/minor_cs_23_24.pdf",
+          "rrf": 0.3333
+        },
+        {
+          "title": "minor_cs_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/2022/minor_cs_22.pdf",
+          "rrf": 0.25
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9845,
+        "min": 0.0316
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "coe_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "rerank": 0.9845,
+          "text_chars": 2048,
+          "dense_cosine": null,
+          "chunk_id": "5237bb1ccb3f98e3#0004",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "rerank": 0.9785,
+          "text_chars": 1893,
+          "dense_cosine": 0.6459,
+          "chunk_id": "7f611a4e5c2dd618#0021",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "coe_cs_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "rerank": 0.978,
+          "text_chars": 2023,
+          "dense_cosine": null,
+          "chunk_id": "61dde6ef62cc4161#0003",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Secure Computing Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_support",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_supporting_docs.pdf",
+          "rerank": 0.9777,
+          "text_chars": 1893,
+          "dense_cosine": 0.6548,
+          "chunk_id": "dd3514e0001255c3#0018",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "rerank": 0.9766,
+          "text_chars": 1873,
+          "dense_cosine": 0.654,
+          "chunk_id": "18d6e3efe93be998#0014",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 9730,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "rerank": 0.9755,
+          "text_chars": 1893,
+          "dense_cosine": 0.6526
+        },
+        {
+          "rank": 7,
+          "title": "Secure%20Computing%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Secure%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Secure%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "rerank": 0.975,
+          "text_chars": 1879,
+          "dense_cosine": 0.6464
+        },
+        {
+          "rank": 8,
+          "title": "Cs Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "rerank": 0.974,
+          "text_chars": 1893,
+          "dense_cosine": 0.6571
+        },
+        {
+          "rank": 9,
+          "title": "Data Centric%20Computing%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "rerank": 0.9728,
+          "text_chars": 1874,
+          "dense_cosine": 0.6391
+        },
+        {
+          "rank": 10,
+          "title": "Sc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021-22-DRAFT.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021-22-DRAFT.pdf",
+          "rerank": 0.9715,
+          "text_chars": 1893,
+          "dense_cosine": 0.6388
+        },
+        {
+          "rank": 11,
+          "title": "coe_cs_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "rerank": 0.9694,
+          "text_chars": 2012,
+          "dense_cosine": null
+        },
+        {
+          "rank": 12,
+          "title": "Dcc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "rerank": 0.9694,
+          "text_chars": 1888,
+          "dense_cosine": 0.6507
+        }
+      ],
+      "selected_top12_total_chars": 23062,
+      "selected_top12_dense_branch_hits": 9
+    },
+    {
+      "qid": "github29-p2",
+      "category": "github29-paraphrase",
+      "query": "how many credits do i need to graduate BS in CS",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.106,
+        "qdrant_3_queries": 0.246,
+        "rerank": 0.309
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 25
+      },
+      "dense_top5": [
+        {
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "cosine": 0.7189
+        },
+        {
+          "title": "Dcc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "cosine": 0.718
+        },
+        {
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "cosine": 0.7151
+        },
+        {
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "cosine": 0.715
+        },
+        {
+          "title": "Cs Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "cosine": 0.714
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "rrf": 0.55
+        },
+        {
+          "title": "Accelerated Graduate Programs  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/accelerated-programs-and-graduate-school.html",
+          "rrf": 0.5
+        },
+        {
+          "title": "Dcc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "rrf": 0.4048
+        },
+        {
+          "title": "Graduate Courses  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Courses.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "rrf": 0.3333
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.978,
+        "min": 0.028
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "rerank": 0.978,
+          "text_chars": 1893,
+          "dense_cosine": 0.7189,
+          "chunk_id": "7f611a4e5c2dd618#0021",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Secure Computing Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_support",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_supporting_docs.pdf",
+          "rerank": 0.9768,
+          "text_chars": 1893,
+          "dense_cosine": 0.7062,
+          "chunk_id": "dd3514e0001255c3#0018",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "rerank": 0.9731,
+          "text_chars": 1873,
+          "dense_cosine": 0.715,
+          "chunk_id": "18d6e3efe93be998#0014",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Cs Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "rerank": 0.9713,
+          "text_chars": 1893,
+          "dense_cosine": 0.714,
+          "chunk_id": "1eeeb88a79f795f2#0018",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Sc Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2022.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2022.pdf",
+          "rerank": 0.9713,
+          "text_chars": 1873,
+          "dense_cosine": 0.6992,
+          "chunk_id": "5d6052426f63d5fc#0014",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 9425,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "rerank": 0.9706,
+          "text_chars": 1893,
+          "dense_cosine": 0.7151
+        },
+        {
+          "rank": 7,
+          "title": "Sc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021-22-DRAFT.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021-22-DRAFT.pdf",
+          "rerank": 0.9704,
+          "text_chars": 1893,
+          "dense_cosine": 0.6979
+        },
+        {
+          "rank": 8,
+          "title": "Dcc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "rerank": 0.969,
+          "text_chars": 1888,
+          "dense_cosine": 0.718
+        },
+        {
+          "rank": 9,
+          "title": "Sc Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021.pdf",
+          "rerank": 0.9689,
+          "text_chars": 1893,
+          "dense_cosine": 0.7009
+        },
+        {
+          "rank": 10,
+          "title": "Dcc Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2022.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2022.pdf",
+          "rerank": 0.9676,
+          "text_chars": 1873,
+          "dense_cosine": 0.7089
+        },
+        {
+          "rank": 11,
+          "title": "Data Centric%20Computing%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "rerank": 0.9659,
+          "text_chars": 1874,
+          "dense_cosine": 0.7058
+        },
+        {
+          "rank": 12,
+          "title": "Secure%20Computing%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Secure%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Secure%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "rerank": 0.9656,
+          "text_chars": 1879,
+          "dense_cosine": 0.6959
+        }
+      ],
+      "selected_top12_total_chars": 22618,
+      "selected_top12_dense_branch_hits": 12
+    },
+    {
+      "qid": "github29-p3",
+      "category": "github29-paraphrase",
+      "query": "How many credits do i need to complete undergraduate in cs",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.117,
+        "qdrant_3_queries": 0.246,
+        "rerank": 0.301
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 24
+      },
+      "dense_top5": [
+        {
+          "title": "Cals Css Inag 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/21-22/cals_css_inag_21_22.pdf",
+          "cosine": 0.7001
+        },
+        {
+          "title": "Cals Css Crgb 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/21-22/cals_css_crgb_21_22.pdf",
+          "cosine": 0.6995
+        },
+        {
+          "title": "coe_cs_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "cosine": 0.6973
+        },
+        {
+          "title": "coe_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "cosine": 0.6965
+        },
+        {
+          "title": "Dcc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "cosine": 0.6959
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "coe_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "rrf": 0.7
+        },
+        {
+          "title": "Cals Css Inag 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/21-22/cals_css_inag_21_22.pdf",
+          "rrf": 0.5
+        },
+        {
+          "title": "coe_cs_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "rrf": 0.35
+        },
+        {
+          "title": "Cals Css Crgb 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/21-22/cals_css_crgb_21_22.pdf",
+          "rrf": 0.3333
+        },
+        {
+          "title": "minor_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/23-24/minor_cs_23_24.pdf",
+          "rrf": 0.3333
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9737,
+        "min": 0.0302
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "coe_cs_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf",
+          "rerank": 0.9737,
+          "text_chars": 1925,
+          "dense_cosine": 0.6949,
+          "chunk_id": "f39b91efc69bf470#0002",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "coe_cs_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "rerank": 0.9734,
+          "text_chars": 1924,
+          "dense_cosine": 0.6973,
+          "chunk_id": "b5e4bfe6a619e1c4#0002",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "coe_cs_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "rerank": 0.9706,
+          "text_chars": 1925,
+          "dense_cosine": 0.6935,
+          "chunk_id": "61dde6ef62cc4161#0004",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "rerank": 0.9704,
+          "text_chars": 1533,
+          "dense_cosine": 0.6958,
+          "chunk_id": "18d6e3efe93be998#0007",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "rerank": 0.9699,
+          "text_chars": 1533,
+          "dense_cosine": 0.6879,
+          "chunk_id": "cb7733c8e65fe86d#0007",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 8840,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Cs Major 2023 24",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+          "rerank": 0.9691,
+          "text_chars": 1524,
+          "dense_cosine": 0.6899
+        },
+        {
+          "rank": 7,
+          "title": "coe_sc_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_sc_22_23.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_sc_22_23.pdf",
+          "rerank": 0.9677,
+          "text_chars": 2023,
+          "dense_cosine": 0.6901
+        },
+        {
+          "rank": 8,
+          "title": "coe_sc_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_sc_21_22.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_sc_21_22.pdf",
+          "rerank": 0.9675,
+          "text_chars": 2024,
+          "dense_cosine": 0.6943
+        },
+        {
+          "rank": 9,
+          "title": "Cs Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "rerank": 0.9662,
+          "text_chars": 1525,
+          "dense_cosine": 0.6927
+        },
+        {
+          "rank": 10,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "rerank": 0.9567,
+          "text_chars": 2040,
+          "dense_cosine": 0.6938
+        },
+        {
+          "rank": 11,
+          "title": "coe_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "rerank": 0.9561,
+          "text_chars": 2048,
+          "dense_cosine": 0.6965
+        },
+        {
+          "rank": 12,
+          "title": "coe_sc_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_sc_23_24.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_sc_23_24.pdf",
+          "rerank": 0.9458,
+          "text_chars": 2015,
+          "dense_cosine": 0.6915
+        }
+      ],
+      "selected_top12_total_chars": 22039,
+      "selected_top12_dense_branch_hits": 12
+    },
+    {
+      "qid": "github29-normalized",
+      "category": "github29-paraphrase",
+      "query": "Virginia Tech Bachelor of Science in Computer Science graduation credit requirements",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.114,
+        "qdrant_3_queries": 0.242,
+        "rerank": 0.299
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 20
+      },
+      "dense_top5": [
+        {
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "cosine": 0.7824
+        },
+        {
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "cosine": 0.753
+        },
+        {
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "cosine": 0.7462
+        },
+        {
+          "title": "Master of Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "cosine": 0.7349
+        },
+        {
+          "title": "Master of Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "cosine": 0.7342
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rrf": 0.5833
+        },
+        {
+          "title": "Cals Dasc Btpv 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/23-24/cals_dasc_btpv_23_24.pdf",
+          "rrf": 0.5
+        },
+        {
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "rrf": 0.3409
+        },
+        {
+          "title": "Cals Dasc Dual 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cals/23-24/cals_dasc_dual_23_24.pdf",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rrf": 0.3333
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9818,
+        "min": 0.0647
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Master of Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "canonical_url": "students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "rerank": 0.9818,
+          "text_chars": 1168,
+          "dense_cosine": 0.7349,
+          "chunk_id": "6397df2be2282f59#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "canonical_url": "students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rerank": 0.9752,
+          "text_chars": 845,
+          "dense_cosine": 0.7824,
+          "chunk_id": "4f5a70393624837f#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Undergraduate Policies | Virginia Tech Academic Catalog",
+          "url": "https://catalog.vt.edu/undergraduate/undergraduate-policies/",
+          "canonical_url": "catalog.vt.edu/undergraduate/undergraduate-policies",
+          "rerank": 0.9728,
+          "text_chars": 734,
+          "dense_cosine": 0.7135,
+          "chunk_id": "166f70480c8a5cc7#0017",
+          "headings": "Graduation Requirements and Degree Conferral",
+          "page_type": "general",
+          "source_host": "catalog.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "canonical_url": "students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rerank": 0.9711,
+          "text_chars": 1376,
+          "dense_cosine": 0.753,
+          "chunk_id": "4f5a70393624837f#0001",
+          "headings": "Doctorate (PhD) > **Ph.D. in Computer Science: Program Guide for Current Students** > Degree require",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Master of Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "canonical_url": "students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "rerank": 0.9664,
+          "text_chars": 2040,
+          "dense_cosine": 0.7342,
+          "chunk_id": "6397df2be2282f59#0001",
+          "headings": "Master of Science > Program guide for current students > Degree requirements",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 6163,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Cos Stat Sdsc 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "rerank": 0.9567,
+          "text_chars": 1055,
+          "dense_cosine": 0.7109
+        },
+        {
+          "rank": 7,
+          "title": "Master of Science  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/graduate/future-grads/MSThesis.html",
+          "canonical_url": "website.cs.vt.edu/academic/graduate/future-grads/MSThesis.html",
+          "rerank": 0.9418,
+          "text_chars": 1992,
+          "dense_cosine": 0.7202
+        },
+        {
+          "rank": 8,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "canonical_url": "website.cs.vt.edu/About/accreditation.html",
+          "rerank": 0.9342,
+          "text_chars": 941,
+          "dense_cosine": 0.7462
+        },
+        {
+          "rank": 9,
+          "title": "Cos Stat 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/2022/cos_stat_22.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/2022/cos_stat_22.pdf",
+          "rerank": 0.932,
+          "text_chars": 1247,
+          "dense_cosine": 0.7111
+        },
+        {
+          "rank": 10,
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://iac.vt.edu/admissions/apply.html",
+          "canonical_url": "iac.vt.edu/admissions/apply.html",
+          "rerank": 0.9317,
+          "text_chars": 1414,
+          "dense_cosine": 0.7204
+        },
+        {
+          "rank": 11,
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://www.vt.edu/innovationcampus/admissions/apply.html",
+          "canonical_url": "vt.edu/innovationcampus/admissions/apply.html",
+          "rerank": 0.9317,
+          "text_chars": 1414,
+          "dense_cosine": 0.7204
+        },
+        {
+          "rank": 12,
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://www.vt.edu/innovationcampus/masters-degrees/apply.html",
+          "canonical_url": "vt.edu/innovationcampus/masters-degrees/apply.html",
+          "rerank": 0.9317,
+          "text_chars": 1414,
+          "dense_cosine": 0.7204
+        }
+      ],
+      "selected_top12_total_chars": 15640,
+      "selected_top12_dense_branch_hits": 12
+    },
+    {
+      "qid": "cs-major",
+      "category": "cs-program",
+      "query": "What are the requirements for the Computer Science major at Virginia Tech?",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.101,
+        "qdrant_3_queries": 0.251,
+        "rerank": 0.297
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 29
+      },
+      "dense_top5": [
+        {
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "cosine": 0.7589
+        },
+        {
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://www.vt.edu/innovationcampus/admissions/apply.html",
+          "cosine": 0.7474
+        },
+        {
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://iac.vt.edu/admissions/apply.html",
+          "cosine": 0.7474
+        },
+        {
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://www.vt.edu/innovationcampus/masters-degrees/apply.html",
+          "cosine": 0.7474
+        },
+        {
+          "title": "Course information  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "cosine": 0.7442
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "rrf": 1.0
+        },
+        {
+          "title": "Course information  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "rrf": 0.3667
+        },
+        {
+          "title": "Join Computer Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/join-computer-science.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://www.vt.edu/innovationcampus/admissions/apply.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Accelerated Graduate Programs  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/accelerated-programs-and-graduate-school.html",
+          "rrf": 0.3333
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9966,
+        "min": 0.1272
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Join Computer Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/join-computer-science.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/join-computer-science.html",
+          "rerank": 0.9966,
+          "text_chars": 2046,
+          "dense_cosine": 0.7019,
+          "chunk_id": "c54bad2aa520a9a4#0004",
+          "headings": "Join Computer Science > Adding or Changing Your Major- Students not in the College of Engineering",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "canonical_url": "website.cs.vt.edu/About/accreditation.html",
+          "rerank": 0.9961,
+          "text_chars": 941,
+          "dense_cosine": 0.7589,
+          "chunk_id": "fa19289c091169ea#0002",
+          "headings": "Accreditation > Degree requirements",
+          "page_type": "about",
+          "source_host": "website.cs.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Undergraduate Programs  | students.cs | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/undergraduate/current-undergrads-redirect.html",
+          "canonical_url": "website.cs.vt.edu/academic/undergraduate/current-undergrads-redirect.html",
+          "rerank": 0.9931,
+          "text_chars": 1192,
+          "dense_cosine": 0.7077,
+          "chunk_id": "2d09b2e02c4acedc#0003",
+          "headings": "Undergraduate Programs > Planning for a Transition To Computer Science-Current Virginia Tech Student",
+          "page_type": "general",
+          "source_host": "website.cs.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Undergraduate Programs  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs.html",
+          "rerank": 0.9931,
+          "text_chars": 1192,
+          "dense_cosine": 0.7079,
+          "chunk_id": "b5ff43757ac1f0e6#0003",
+          "headings": "Undergraduate Programs > Planning for a Transition To Computer Science-Current Virginia Tech Student",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Join Computer Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/join-computer-science.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/join-computer-science.html",
+          "rerank": 0.9914,
+          "text_chars": 1649,
+          "dense_cosine": 0.7112,
+          "chunk_id": "c54bad2aa520a9a4#0003",
+          "headings": "Join Computer Science > Adding or Changing Your Major- College of Engineering Students",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 7020,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Doctorate (PhD)  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "canonical_url": "students.cs.vt.edu/Graduate/Degrees/Doctorate.html",
+          "rerank": 0.9868,
+          "text_chars": 845,
+          "dense_cosine": 0.7441
+        },
+        {
+          "rank": 7,
+          "title": "Master of Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "canonical_url": "students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+          "rerank": 0.984,
+          "text_chars": 1168,
+          "dense_cosine": 0.7346
+        },
+        {
+          "rank": 8,
+          "title": "Computer Requirements  | Computer Requirements | Virginia Tech",
+          "url": "https://www.compreq.vt.edu",
+          "canonical_url": "compreq.vt.edu/",
+          "rerank": 0.9821,
+          "text_chars": 1901,
+          "dense_cosine": 0.7143
+        },
+        {
+          "rank": 9,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "canonical_url": "website.cs.vt.edu/About/accreditation.html",
+          "rerank": 0.9814,
+          "text_chars": 1803,
+          "dense_cosine": null
+        },
+        {
+          "rank": 10,
+          "title": "Course information  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "rerank": 0.9811,
+          "text_chars": 2035,
+          "dense_cosine": 0.7442
+        },
+        {
+          "rank": 11,
+          "title": "Major Programs and Plans of study  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "rerank": 0.9808,
+          "text_chars": 2003,
+          "dense_cosine": 0.7093
+        },
+        {
+          "rank": 12,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "canonical_url": "website.cs.vt.edu/About/accreditation.html",
+          "rerank": 0.9794,
+          "text_chars": 1659,
+          "dense_cosine": 0.7172
+        }
+      ],
+      "selected_top12_total_chars": 18434,
+      "selected_top12_dense_branch_hits": 11
+    },
+    {
+      "qid": "cs-major-short",
+      "category": "cs-program",
+      "query": "computer science major requirements",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.102,
+        "qdrant_3_queries": 0.235,
+        "rerank": 0.289
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 30
+      },
+      "dense_top5": [
+        {
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "cosine": 0.771
+        },
+        {
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "cosine": 0.7361
+        },
+        {
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "cosine": 0.7312
+        },
+        {
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "cosine": 0.7231
+        },
+        {
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "cosine": 0.723
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "rrf": 1.0
+        },
+        {
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "rrf": 0.4
+        },
+        {
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "rrf": 0.3333
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9976,
+        "min": 0.3076
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "canonical_url": "catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs",
+          "rerank": 0.9976,
+          "text_chars": 188,
+          "dense_cosine": 0.7179,
+          "chunk_id": "d3556d267f8ac571#0006",
+          "headings": "Computer Science Major > Requirements",
+          "page_type": "program",
+          "source_host": "catalog.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "canonical_url": "catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs",
+          "rerank": 0.9976,
+          "text_chars": 1098,
+          "dense_cosine": 0.7231,
+          "chunk_id": "d3556d267f8ac571#0004",
+          "headings": "Computer Science Major > Requirements",
+          "page_type": "program",
+          "source_host": "catalog.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "canonical_url": "website.cs.vt.edu/About/accreditation.html",
+          "rerank": 0.9955,
+          "text_chars": 941,
+          "dense_cosine": 0.771,
+          "chunk_id": "fa19289c091169ea#0002",
+          "headings": "Accreditation > Degree requirements",
+          "page_type": "about",
+          "source_host": "website.cs.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "rerank": 0.9954,
+          "text_chars": 1603,
+          "dense_cosine": 0.7108,
+          "chunk_id": "44624e66a3c9b30f#0010",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "rerank": 0.9948,
+          "text_chars": 1821,
+          "dense_cosine": 0.723,
+          "chunk_id": "44624e66a3c9b30f#0012",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 5651,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "rerank": 0.9947,
+          "text_chars": 1758,
+          "dense_cosine": 0.7181
+        },
+        {
+          "rank": 7,
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "rerank": 0.9944,
+          "text_chars": 1828,
+          "dense_cosine": 0.7086
+        },
+        {
+          "rank": 8,
+          "title": "Computer%20Science%20Major%20Checksheet%202022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "rerank": 0.9944,
+          "text_chars": 2026,
+          "dense_cosine": 0.7312
+        },
+        {
+          "rank": 9,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "rerank": 0.9943,
+          "text_chars": 1824,
+          "dense_cosine": 0.7164
+        },
+        {
+          "rank": 10,
+          "title": "Sc Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2022.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2022.pdf",
+          "rerank": 0.994,
+          "text_chars": 1824,
+          "dense_cosine": 0.7131
+        },
+        {
+          "rank": 11,
+          "title": "Dcc Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2022.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2022.pdf",
+          "rerank": 0.9937,
+          "text_chars": 1824,
+          "dense_cosine": 0.7104
+        },
+        {
+          "rank": 12,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "rerank": 0.9936,
+          "text_chars": 1761,
+          "dense_cosine": 0.7064
+        }
+      ],
+      "selected_top12_total_chars": 18496,
+      "selected_top12_dense_branch_hits": 12
+    },
+    {
+      "qid": "math-major",
+      "category": "math-program",
+      "query": "What are the requirements for the Mathematics major at Virginia Tech?",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.097,
+        "qdrant_3_queries": 0.241,
+        "rerank": 0.297
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 30
+      },
+      "dense_top5": [
+        {
+          "title": "Future Graduate Students  | Department of Mathematics | Virginia Tech",
+          "url": "https://www.math.vt.edu/grads-math/future-grads.html",
+          "cosine": 0.7168
+        },
+        {
+          "title": "Mathematics Education | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/mathematics-education.html",
+          "cosine": 0.7038
+        },
+        {
+          "title": "Qualifying for MATH 1225  | Department of Mathematics | Virginia Tech",
+          "url": "https://www.math.vt.edu/1225placement",
+          "cosine": 0.6985
+        },
+        {
+          "title": "Qualifying for MATH 1225  | Department of Mathematics | Virginia Tech",
+          "url": "https://math.vt.edu/undergrad-math/courses/math-1225/calc-readiness.html",
+          "cosine": 0.6985
+        },
+        {
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "cosine": 0.6836
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Future Graduate Students  | Department of Mathematics | Virginia Tech",
+          "url": "https://www.math.vt.edu/grads-math/future-grads.html",
+          "rrf": 0.6
+        },
+        {
+          "title": "minor_math_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/23-24/minor_math_23_24.pdf",
+          "rrf": 0.5909
+        },
+        {
+          "title": "Mathematics Education | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/mathematics-education.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Grad Policies",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/grad-policies.pdf",
+          "rrf": 0.2667
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.989,
+        "min": 0.3862
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank": 0.989,
+          "text_chars": 1971,
+          "dense_cosine": 0.6836,
+          "chunk_id": "56b4d0ee3ba6980c#0001",
+          "headings": "**Undergraduate Handbook for Mathematics Majors** > **Department of Mathematics, Virginia Tech**",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Grad Policies",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/grad-policies.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/grad-policies.pdf",
+          "rerank": 0.9859,
+          "text_chars": 1931,
+          "dense_cosine": 0.6779,
+          "chunk_id": "3dfab62f1c4519e6#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Future Graduate Students  | Department of Mathematics | Virginia Tech",
+          "url": "https://www.math.vt.edu/grads-math/future-grads.html",
+          "canonical_url": "math.vt.edu/grads-math/future-grads.html",
+          "rerank": 0.98,
+          "text_chars": 1913,
+          "dense_cosine": 0.7168,
+          "chunk_id": "b5331ac6d0c29a57#0008",
+          "headings": "Future Graduate Students > **Guidelines for Applying for Graduate Study in Mathematics at Virginia T",
+          "page_type": "general",
+          "source_host": "www.math.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Graduate Program Presentation",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/graduate-program-presentation.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/graduate-program-presentation.pdf",
+          "rerank": 0.9709,
+          "text_chars": 2000,
+          "dense_cosine": 0.668,
+          "chunk_id": "2a68e491546e8e63#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Mathematics  | College of Science | Virginia Tech",
+          "url": "https://science.vt.edu/academics/programs/math.html",
+          "canonical_url": "science.vt.edu/academics/programs/math.html",
+          "rerank": 0.9653,
+          "text_chars": 1762,
+          "dense_cosine": 0.6681,
+          "chunk_id": "0f07e0e5897a2d45#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "science.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 9577,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Mathematics Education | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/mathematics-education.html",
+          "canonical_url": "vt.edu/academics/majors/mathematics-education.html",
+          "rerank": 0.9627,
+          "text_chars": 1916,
+          "dense_cosine": 0.7038
+        },
+        {
+          "rank": 7,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank": 0.9578,
+          "text_chars": 1889,
+          "dense_cosine": null
+        },
+        {
+          "rank": 8,
+          "title": "Current Graduate Students  | Department of Mathematics | Virginia Tech",
+          "url": "https://www.math.vt.edu/grads-math/current-grads.html",
+          "canonical_url": "math.vt.edu/grads-math/current-grads.html",
+          "rerank": 0.9491,
+          "text_chars": 1827,
+          "dense_cosine": null
+        },
+        {
+          "rank": 9,
+          "title": "Mathematics | Virginia Tech",
+          "url": "https://www.vt.edu/academics/minors/mathematics.html",
+          "canonical_url": "vt.edu/academics/minors/mathematics.html",
+          "rerank": 0.9342,
+          "text_chars": 455,
+          "dense_cosine": 0.6827
+        },
+        {
+          "rank": 10,
+          "title": "minor_math_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/23-24/minor_math_23_24.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/23-24/minor_math_23_24.pdf",
+          "rerank": 0.9305,
+          "text_chars": 2012,
+          "dense_cosine": 0.6749
+        },
+        {
+          "rank": 11,
+          "title": "Mathematics | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/mathematics.html",
+          "canonical_url": "vt.edu/academics/majors/mathematics.html",
+          "rerank": 0.9291,
+          "text_chars": 1074,
+          "dense_cosine": 0.6666
+        },
+        {
+          "rank": 12,
+          "title": "About the Mathematics Education Teacher Preparation Program  | College of Libera",
+          "url": "https://liberalarts.vt.edu/departments-and-schools/school-of-education/academic-programs/mathematics-education/licensure-mathemati",
+          "canonical_url": "liberalarts.vt.edu/departments-and-schools/school-of-education/academic-programs/mathematics-education/licensure-mathematics-education.html",
+          "rerank": 0.9202,
+          "text_chars": 1550,
+          "dense_cosine": 0.6646
+        }
+      ],
+      "selected_top12_total_chars": 20300,
+      "selected_top12_dense_branch_hits": 10
+    },
+    {
+      "qid": "math-major-short",
+      "category": "math-program",
+      "query": "mathematics major requirements",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.097,
+        "qdrant_3_queries": 0.242,
+        "rerank": 0.283
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 27
+      },
+      "dense_top5": [
+        {
+          "title": "Mathematics Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs/",
+          "cosine": 0.691
+        },
+        {
+          "title": "Mathematics Major with Applied Computational Mathematics Option",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-applied-computational-mathematics/",
+          "cosine": 0.6751
+        },
+        {
+          "title": "Mathematics Major with Mathematics Education (Master's Track) Option",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-mathematics-education-masters-track/",
+          "cosine": 0.6697
+        },
+        {
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "cosine": 0.6607
+        },
+        {
+          "title": "Mathematics Education Major",
+          "url": "https://catalog.vt.edu/undergraduate/liberal-arts-human-sciences/education/mathematics-education-bs/",
+          "cosine": 0.6567
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Mathematics Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs/",
+          "rrf": 0.5
+        },
+        {
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rrf": 0.5
+        },
+        {
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rrf": 0.4762
+        },
+        {
+          "title": "Mathematics Major with Applied Computational Mathematics Option",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-applied-computational-mathematics/",
+          "rrf": 0.3333
+        },
+        {
+          "title": "6340",
+          "url": "https://policies.vt.edu/assets/6340.pdf",
+          "rrf": 0.2588
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9968,
+        "min": 0.0191
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank": 0.9968,
+          "text_chars": 1146,
+          "dense_cosine": 0.6607,
+          "chunk_id": "56b4d0ee3ba6980c#0007",
+          "headings": "**Undergraduate Handbook for Mathematics Majors** > **DEGREE REQUIREMENTS**",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank": 0.994,
+          "text_chars": 1927,
+          "dense_cosine": 0.6505,
+          "chunk_id": "56b4d0ee3ba6980c#0009",
+          "headings": "**Undergraduate Handbook for Mathematics Majors** > **MATH COURSE REQUIREMENTS \u2013 ALL DEGREE OPTIONS*",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Mathematics Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs/",
+          "canonical_url": "catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs",
+          "rerank": 0.9935,
+          "text_chars": 677,
+          "dense_cosine": 0.691,
+          "chunk_id": "51907e1579f0c85a#0000",
+          "headings": "",
+          "page_type": "program",
+          "source_host": "catalog.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank": 0.9912,
+          "text_chars": 1129,
+          "dense_cosine": 0.6396,
+          "chunk_id": "56b4d0ee3ba6980c#0008",
+          "headings": "**Undergraduate Handbook for Mathematics Majors** > **PROGRESS TOWARD DEGREE**",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Slides Math Course Placement",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/Slides-Math-Course-Placement.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/Slides-Math-Course-Placement.pdf",
+          "rerank": 0.9912,
+          "text_chars": 1873,
+          "dense_cosine": 0.6346,
+          "chunk_id": "26d9feb5a5a2241c#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 6752,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Mathematics Major with Mathematics Education (Master's Track) Option",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-mathematics-education-masters-track/",
+          "canonical_url": "catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-mathematics-education-masters-track",
+          "rerank": 0.9898,
+          "text_chars": 556,
+          "dense_cosine": 0.6697
+        },
+        {
+          "rank": 7,
+          "title": "Mathematics Major with Applied Computational Mathematics Option",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-applied-computational-mathematics/",
+          "canonical_url": "catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-applied-computational-mathematics",
+          "rerank": 0.9876,
+          "text_chars": 552,
+          "dense_cosine": 0.6751
+        },
+        {
+          "rank": 8,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank": 0.9824,
+          "text_chars": 1134,
+          "dense_cosine": 0.6465
+        },
+        {
+          "rank": 9,
+          "title": "Mathematics Major with Applied Discrete Mathematics Option",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-applied-discrete-mathematics/",
+          "canonical_url": "catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs-applied-discrete-mathematics",
+          "rerank": 0.982,
+          "text_chars": 873,
+          "dense_cosine": 0.6369
+        },
+        {
+          "rank": 10,
+          "title": "lahs_mthe_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/lahs/22-23/lahs_mthe_22_23.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/lahs/22-23/lahs_mthe_22_23.pdf",
+          "rerank": 0.9818,
+          "text_chars": 1595,
+          "dense_cosine": 0.6368
+        },
+        {
+          "rank": 11,
+          "title": "lahs_mthe_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/lahs/23-24/lahs_mthe_23_24.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/lahs/23-24/lahs_mthe_23_24.pdf",
+          "rerank": 0.9799,
+          "text_chars": 1595,
+          "dense_cosine": 0.6464
+        },
+        {
+          "rank": 12,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank": 0.9736,
+          "text_chars": 2028,
+          "dense_cosine": null
+        }
+      ],
+      "selected_top12_total_chars": 15085,
+      "selected_top12_dense_branch_hits": 11
+    },
+    {
+      "qid": "stats-major",
+      "category": "sibling-program",
+      "query": "statistics major requirements Virginia Tech",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.104,
+        "qdrant_3_queries": 0.243,
+        "rerank": 0.29
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 21
+      },
+      "dense_top5": [
+        {
+          "title": "Cos Stat Sdsc 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "cosine": 0.7411
+        },
+        {
+          "title": "Cos Stat 22 23",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/22-23/cos_stat_22_23.pdf",
+          "cosine": 0.7339
+        },
+        {
+          "title": "Cos Stat 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/21-22/cos_stat_21_22.pdf",
+          "cosine": 0.7335
+        },
+        {
+          "title": "Cos Stat 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/2022/cos_stat_22.pdf",
+          "cosine": 0.7292
+        },
+        {
+          "title": "Cos Stat Smth 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "cosine": 0.7261
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Cos Stat Sdsc 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "rrf": 0.5625
+        },
+        {
+          "title": "Grad Handbook 2023",
+          "url": "https://www.stat.vt.edu/content/dam/stat_vt_edu/graphics-and-pdfs/graduate-program/grad-handbook-2023.pdf",
+          "rrf": 0.5
+        },
+        {
+          "title": "Cos Stat 22 23",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/22-23/cos_stat_22_23.pdf",
+          "rrf": 0.4762
+        },
+        {
+          "title": "Admissions  | Department of Statistics | Virginia Tech",
+          "url": "https://stat.vt.edu/academics/graduate/graduate-admissions.html",
+          "rrf": 0.4242
+        },
+        {
+          "title": "Cos Stat 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/21-22/cos_stat_21_22.pdf",
+          "rrf": 0.3611
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9976,
+        "min": 0.1251
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Cos Stat Smth 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "rerank": 0.9976,
+          "text_chars": 829,
+          "dense_cosine": 0.7261,
+          "chunk_id": "f450fc4d0ccafac3#0003",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Cos Stat Sdsc 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "rerank": 0.9975,
+          "text_chars": 1055,
+          "dense_cosine": 0.7411,
+          "chunk_id": "ab91aaae2c0424d6#0005",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Cos Stat 22 23",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/22-23/cos_stat_22_23.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/22-23/cos_stat_22_23.pdf",
+          "rerank": 0.9973,
+          "text_chars": 585,
+          "dense_cosine": 0.7339,
+          "chunk_id": "3e1bf52ce566e661#0003",
+          "headings": "APPROVED University Registrar",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Cos Stat 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/21-22/cos_stat_21_22.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/21-22/cos_stat_21_22.pdf",
+          "rerank": 0.9973,
+          "text_chars": 634,
+          "dense_cosine": 0.7335,
+          "chunk_id": "8f0cb028db56befe#0003",
+          "headings": "APPROVED University Registrar",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Cos Stat 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/2022/cos_stat_22.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/2022/cos_stat_22.pdf",
+          "rerank": 0.9967,
+          "text_chars": 1247,
+          "dense_cosine": 0.7292,
+          "chunk_id": "fcc6248bde12d6ae#0002",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 4350,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Grad Handbook 2023",
+          "url": "https://www.stat.vt.edu/content/dam/stat_vt_edu/graphics-and-pdfs/graduate-program/grad-handbook-2023.pdf",
+          "canonical_url": "stat.vt.edu/content/dam/stat_vt_edu/graphics-and-pdfs/graduate-program/grad-handbook-2023.pdf",
+          "rerank": 0.9845,
+          "text_chars": 1999,
+          "dense_cosine": null
+        },
+        {
+          "rank": 7,
+          "title": "Major Requirements  | Department of Economics | Virginia Tech",
+          "url": "https://econ.vt.edu/undergraduate/major-requirements.html",
+          "canonical_url": "econ.vt.edu/undergraduate/major-requirements.html",
+          "rerank": 0.9777,
+          "text_chars": 1792,
+          "dense_cosine": 0.6909
+        },
+        {
+          "rank": 8,
+          "title": "Ph.D. Tracks  | Department of Statistics | Virginia Tech",
+          "url": "https://stat.vt.edu/academics/graduate/phd-statistics/phd-tracks.html",
+          "canonical_url": "stat.vt.edu/academics/graduate/phd-statistics/phd-tracks.html",
+          "rerank": 0.9762,
+          "text_chars": 1979,
+          "dense_cosine": null
+        },
+        {
+          "rank": 9,
+          "title": "Ph.D. Tracks  | Department of Statistics | Virginia Tech",
+          "url": "https://stat.vt.edu/academics/graduate/phd-statistics/phd-tracks.html",
+          "canonical_url": "stat.vt.edu/academics/graduate/phd-statistics/phd-tracks.html",
+          "rerank": 0.9717,
+          "text_chars": 1704,
+          "dense_cosine": null
+        },
+        {
+          "rank": 10,
+          "title": "Admissions  | Department of Statistics | Virginia Tech",
+          "url": "https://stat.vt.edu/academics/graduate/graduate-admissions.html",
+          "canonical_url": "stat.vt.edu/academics/graduate/graduate-admissions.html",
+          "rerank": 0.9604,
+          "text_chars": 1367,
+          "dense_cosine": 0.6725
+        },
+        {
+          "rank": 11,
+          "title": "Ph.D. in Statistics  | Department of Statistics | Virginia Tech",
+          "url": "https://stat.vt.edu/academics/graduate/phd-statistics.html",
+          "canonical_url": "stat.vt.edu/academics/graduate/phd-statistics.html",
+          "rerank": 0.9578,
+          "text_chars": 1822,
+          "dense_cosine": 0.6672
+        },
+        {
+          "rank": 12,
+          "title": "Ph.D. Tracks  | Department of Statistics | Virginia Tech",
+          "url": "https://stat.vt.edu/academics/graduate/phd-statistics/phd-tracks.html",
+          "canonical_url": "stat.vt.edu/academics/graduate/phd-statistics/phd-tracks.html",
+          "rerank": 0.953,
+          "text_chars": 2000,
+          "dense_cosine": null
+        }
+      ],
+      "selected_top12_total_chars": 17013,
+      "selected_top12_dense_branch_hits": 8
+    },
+    {
+      "qid": "cs-sibling-dcc",
+      "category": "sibling-program",
+      "query": "What is the Data-Centric Computing major at Virginia Tech?",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.1,
+        "qdrant_3_queries": 0.278,
+        "rerank": 0.288
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 29,
+        "dedup_dropped": 1,
+        "above_floor": 24
+      },
+      "dense_top5": [
+        {
+          "title": "Major Programs and Plans of study  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "cosine": 0.7531
+        },
+        {
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "cosine": 0.6782
+        },
+        {
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "cosine": 0.6702
+        },
+        {
+          "title": "Your CS major starts at Virginia Tech  | Computer Science | Virginia T",
+          "url": "https://website.cs.vt.edu/find-your-future-here/build-your-future-in-computer-science.html",
+          "cosine": 0.6572
+        },
+        {
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "cosine": 0.6518
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Major Programs and Plans of study  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "rrf": 0.6
+        },
+        {
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "rrf": 0.5833
+        },
+        {
+          "title": "Res 19 20 F Data Centric Computing First Read",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/res_19_20_f_data_centric",
+          "rrf": 0.537
+        },
+        {
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "rrf": 0.5
+        },
+        {
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "rrf": 0.3929
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9795,
+        "min": 0.0422
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "rerank": 0.9795,
+          "text_chars": 1935,
+          "dense_cosine": 0.6782,
+          "chunk_id": "7f611a4e5c2dd618#0001",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Major Programs and Plans of study  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "rerank": 0.9332,
+          "text_chars": 1182,
+          "dense_cosine": 0.7531,
+          "chunk_id": "0eef43d855c02271#0003",
+          "headings": "Major Programs and Plans of study > Bachelor of Science in Computer Science",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Course information  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "rerank": 0.8995,
+          "text_chars": 1629,
+          "dense_cosine": 0.6356,
+          "chunk_id": "b9568e65ff25a1c0#0026",
+          "headings": "Course information > Updates to Course Substitutions for CS 1114",
+          "page_type": "course",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Course information  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "rerank": 0.8444,
+          "text_chars": 2035,
+          "dense_cosine": 0.6368,
+          "chunk_id": "b9568e65ff25a1c0#0020",
+          "headings": "Course information > Major and Minor Restricted Courses",
+          "page_type": "course",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "rerank": 0.8427,
+          "text_chars": 1690,
+          "dense_cosine": 0.6518,
+          "chunk_id": "7f611a4e5c2dd618#0030",
+          "headings": "**Seeking approval to include COMM 4374 in BSCS checksheets**",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 8471,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "rerank": 0.8341,
+          "text_chars": 1937,
+          "dense_cosine": 0.6702
+        },
+        {
+          "rank": 7,
+          "title": "Dcc Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021.pdf",
+          "rerank": 0.798,
+          "text_chars": 1636,
+          "dense_cosine": null
+        },
+        {
+          "rank": 8,
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "rerank": 0.7812,
+          "text_chars": 1636,
+          "dense_cosine": null
+        },
+        {
+          "rank": 9,
+          "title": "Secure Computing Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_support",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_supporting_docs.pdf",
+          "rerank": 0.7135,
+          "text_chars": 1729,
+          "dense_cosine": 0.6309
+        },
+        {
+          "rank": 10,
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "rerank": 0.7038,
+          "text_chars": 1965,
+          "dense_cosine": 0.6148
+        },
+        {
+          "rank": 11,
+          "title": "Your CS major starts at Virginia Tech  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/find-your-future-here/build-your-future-in-computer-science.html",
+          "canonical_url": "website.cs.vt.edu/find-your-future-here/build-your-future-in-computer-science.html",
+          "rerank": 0.6927,
+          "text_chars": 1770,
+          "dense_cosine": 0.6572
+        },
+        {
+          "rank": 12,
+          "title": "Data Centric Computing Major 2023 24",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "canonical_url": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf",
+          "rerank": 0.6154,
+          "text_chars": 1996,
+          "dense_cosine": null
+        }
+      ],
+      "selected_top12_total_chars": 21140,
+      "selected_top12_dense_branch_hits": 9
+    },
+    {
+      "qid": "cs-vs-cpe",
+      "category": "cross-program",
+      "query": "difference between computer science and computer engineering at Virginia Tech",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.115,
+        "qdrant_3_queries": 0.241,
+        "rerank": 0.292
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 25
+      },
+      "dense_top5": [
+        {
+          "title": "Computer Science  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/undergraduate/explore-engineering/computer-science.html",
+          "cosine": 0.7313
+        },
+        {
+          "title": "Computer Science | Virginia Tech",
+          "url": "https://www.vt.edu/academics/minors/computer-science.html",
+          "cosine": 0.7034
+        },
+        {
+          "title": "Computer Science | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/computer-science.html",
+          "cosine": 0.699
+        },
+        {
+          "title": "Your CS major starts at Virginia Tech  | Computer Science | Virginia T",
+          "url": "https://website.cs.vt.edu/find-your-future-here/build-your-future-in-computer-science.html",
+          "cosine": 0.6921
+        },
+        {
+          "title": "Departments  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/about/departments.html",
+          "cosine": 0.6913
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Computer Science | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/computer-science.html",
+          "rrf": 0.75
+        },
+        {
+          "title": "Computer Science  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/undergraduate/explore-engineering/computer-science.html",
+          "rrf": 0.5625
+        },
+        {
+          "title": "Computer Science | Virginia Tech",
+          "url": "https://www.vt.edu/academics/minors/computer-science.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Master of Engineering - Computer Science and Applications  | iac | Vir",
+          "url": "https://www.vt.edu/innovationcampus/masters-degrees/meng-cs.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Master of Engineering - Computer Science and Applications  | iac | Vir",
+          "url": "https://iac.vt.edu/masters-degrees/meng-cs.html",
+          "rrf": 0.25
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9869,
+        "min": 0.0514
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Computer Science  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/undergraduate/explore-engineering/computer-science.html",
+          "canonical_url": "eng.vt.edu/undergraduate/explore-engineering/computer-science.html",
+          "rerank": 0.9869,
+          "text_chars": 1445,
+          "dense_cosine": 0.7313,
+          "chunk_id": "723b904e04aa5df3#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "eng.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Computer Science | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/computer-science.html",
+          "canonical_url": "vt.edu/academics/majors/computer-science.html",
+          "rerank": 0.9626,
+          "text_chars": 1704,
+          "dense_cosine": 0.699,
+          "chunk_id": "889709dfade721d4#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Engineering Degrees At A Glance  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/undergraduate/resources-support/how-to/explore-majors/engineering-majors-at-a-glance.html",
+          "canonical_url": "eng.vt.edu/undergraduate/resources-support/how-to/explore-majors/engineering-majors-at-a-glance.html",
+          "rerank": 0.9271,
+          "text_chars": 1782,
+          "dense_cosine": 0.6866,
+          "chunk_id": "2e43d3d8087b3a14#0004",
+          "headings": "Engineering Degrees At A Glance > [Computer Science](https://eng.vt.edu/undergraduate/explore-engine",
+          "page_type": "general",
+          "source_host": "eng.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Join Computer Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/join-computer-science.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/join-computer-science.html",
+          "rerank": 0.9256,
+          "text_chars": 1666,
+          "dense_cosine": 0.687,
+          "chunk_id": "c54bad2aa520a9a4#0002",
+          "headings": "Join Computer Science > Ready Join CS?",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Computer Science  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/undergraduate/explore-engineering/computer-science.html",
+          "canonical_url": "eng.vt.edu/undergraduate/explore-engineering/computer-science.html",
+          "rerank": 0.9208,
+          "text_chars": 1597,
+          "dense_cosine": null,
+          "chunk_id": "723b904e04aa5df3#0004",
+          "headings": "Computer Science > Interest Areas and Related Degrees/Minors",
+          "page_type": "general",
+          "source_host": "eng.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 8194,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "canonical_url": "cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "rerank": 0.9176,
+          "text_chars": 2032,
+          "dense_cosine": 0.6866
+        },
+        {
+          "rank": 7,
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "canonical_url": "website.cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "rerank": 0.9176,
+          "text_chars": 2032,
+          "dense_cosine": 0.6865
+        },
+        {
+          "rank": 8,
+          "title": "Computer Engineering  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/undergraduate/explore-engineering/computer-engineering.html",
+          "canonical_url": "eng.vt.edu/undergraduate/explore-engineering/computer-engineering.html",
+          "rerank": 0.9176,
+          "text_chars": 1514,
+          "dense_cosine": 0.6882
+        },
+        {
+          "rank": 9,
+          "title": "Graduate Programs  | iac | Virginia Tech",
+          "url": "https://iac.vt.edu/graduate-programs.html",
+          "canonical_url": "iac.vt.edu/graduate-programs.html",
+          "rerank": 0.9172,
+          "text_chars": 1500,
+          "dense_cosine": null
+        },
+        {
+          "rank": 10,
+          "title": "Departments  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/about/departments.html",
+          "canonical_url": "eng.vt.edu/about/departments.html",
+          "rerank": 0.9158,
+          "text_chars": 1770,
+          "dense_cosine": 0.6913
+        },
+        {
+          "rank": 11,
+          "title": "Master of Engineering  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/graduate/future-grads/MENG.html",
+          "canonical_url": "website.cs.vt.edu/academic/graduate/future-grads/MENG.html",
+          "rerank": 0.8856,
+          "text_chars": 1538,
+          "dense_cosine": 0.6871
+        },
+        {
+          "rank": 12,
+          "title": "Computer Science | Virginia Tech",
+          "url": "https://www.vt.edu/academics/minors/computer-science.html",
+          "canonical_url": "vt.edu/academics/minors/computer-science.html",
+          "rerank": 0.8508,
+          "text_chars": 1018,
+          "dense_cosine": 0.7034
+        }
+      ],
+      "selected_top12_total_chars": 19598,
+      "selected_top12_dense_branch_hits": 10
+    },
+    {
+      "qid": "followup-raw",
+      "category": "followup",
+      "query": "What math courses does it require?",
+      "notes": "raw followup; live system relies on LLM condensation to resolve 'it'",
+      "timings_s": {
+        "embed": 0.096,
+        "qdrant_3_queries": 0.256,
+        "rerank": 0.297
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 19
+      },
+      "dense_top5": [
+        {
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "cosine": 0.6889
+        },
+        {
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "cosine": 0.6838
+        },
+        {
+          "title": "Cos Stat Smth 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "cosine": 0.6766
+        },
+        {
+          "title": "Math Coursework Table",
+          "url": "https://liberalarts.vt.edu/content/dam/liberalarts_vt_edu/departments-and-schools/school-of-education/forms-and-documents/teacher-",
+          "cosine": 0.6764
+        },
+        {
+          "title": "Cos Stat Sdsc 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_sdsc_23_24.pdf",
+          "cosine": 0.6718
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rrf": 1.0
+        },
+        {
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rrf": 0.3333
+        },
+        {
+          "title": "The Role of Math Courses in Engineering Education: Examining How Math ",
+          "url": "https://hdl.handle.net/10919/143169",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Cos Math Acm 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/21-22/cos_math_acm_21_22.pdf",
+          "rrf": 0.3
+        },
+        {
+          "title": "Cos Stat Smth 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "rrf": 0.25
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9525,
+        "min": 0.0882
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank": 0.9525,
+          "text_chars": 1927,
+          "dense_cosine": 0.6889,
+          "chunk_id": "56b4d0ee3ba6980c#0009",
+          "headings": "**Undergraduate Handbook for Mathematics Majors** > **MATH COURSE REQUIREMENTS \u2013 ALL DEGREE OPTIONS*",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank": 0.8517,
+          "text_chars": 670,
+          "dense_cosine": 0.6691,
+          "chunk_id": "56b4d0ee3ba6980c#0011",
+          "headings": "**Undergraduate Handbook for Mathematics Majors** > **MATH COURSE REQUIREMENTS \u2013 ALL DEGREE OPTIONS*",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Grad Policies",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/grad-policies.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/grad-policies.pdf",
+          "rerank": 0.8433,
+          "text_chars": 1802,
+          "dense_cosine": 0.6623,
+          "chunk_id": "3dfab62f1c4519e6#0008",
+          "headings": "Graduate Programs in Mathematics Policies and Degree Requirements > **Course Requirements**",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank": 0.7942,
+          "text_chars": 1134,
+          "dense_cosine": 0.6838,
+          "chunk_id": "56b4d0ee3ba6980c#0005",
+          "headings": "**Undergraduate Handbook for Mathematics Majors** > **INTRODUCTION**",
+          "page_type": "general",
+          "source_host": "math.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "minor_math_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/22-23/minor_math_22_23.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/22-23/minor_math_22_23.pdf",
+          "rerank": 0.7294,
+          "text_chars": 1813,
+          "dense_cosine": 0.6575,
+          "chunk_id": "a1b4a41b14eb36d7#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 7346,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Sbes%20Handbook%205.23.24%20Final",
+          "url": "https://bme.vt.edu/content/dam/bme_vt_edu/graduate/sbes-handbooks/SBES%20Handbook%205.23.24%20FINAL.pdf",
+          "canonical_url": "bme.vt.edu/content/dam/bme_vt_edu/graduate/sbes-handbooks/SBES%20Handbook%205.23.24%20FINAL.pdf",
+          "rerank": 0.6756,
+          "text_chars": 1995,
+          "dense_cosine": null
+        },
+        {
+          "rank": 7,
+          "title": "Sbes%20Handbook%205.28.25%20Final",
+          "url": "https://bme.vt.edu/content/dam/bme_vt_edu/graduate/SBES%20Handbook%205.28.25%20FINAL.pdf",
+          "canonical_url": "bme.vt.edu/content/dam/bme_vt_edu/graduate/SBES%20Handbook%205.28.25%20FINAL.pdf",
+          "rerank": 0.6718,
+          "text_chars": 2011,
+          "dense_cosine": null
+        },
+        {
+          "rank": 8,
+          "title": "Minor Math 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/21-22/minor_math_21_22.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/21-22/minor_math_21_22.pdf",
+          "rerank": 0.6009,
+          "text_chars": 1965,
+          "dense_cosine": 0.6678
+        },
+        {
+          "rank": 9,
+          "title": "Slides Math Course Placement",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/Slides-Math-Course-Placement.pdf",
+          "canonical_url": "math.vt.edu/content/dam/math_vt_edu/documents/Slides-Math-Course-Placement.pdf",
+          "rerank": 0.5508,
+          "text_chars": 1873,
+          "dense_cosine": 0.6658
+        },
+        {
+          "rank": 10,
+          "title": "Mathematics%20Roadmap",
+          "url": "https://vt.edu/content/dam/vt_edu/admissions/pr/Transfer-Roadmaps-2025%E2%80%932026/science/Mathematics%20Roadmap.pdf",
+          "canonical_url": "vt.edu/content/dam/vt_edu/admissions/pr/Transfer-Roadmaps-2025%E2%80%932026/science/Mathematics%20Roadmap.pdf",
+          "rerank": 0.4733,
+          "text_chars": 1750,
+          "dense_cosine": 0.6654
+        },
+        {
+          "rank": 11,
+          "title": "Mathematics%20Roadmap",
+          "url": "https://vt.edu/content/dam/vt_edu/admissions/pr/2022/transfer-roadmaps/Mathematics%20Roadmap.pdf",
+          "canonical_url": "vt.edu/content/dam/vt_edu/admissions/pr/2022/transfer-roadmaps/Mathematics%20Roadmap.pdf",
+          "rerank": 0.4717,
+          "text_chars": 515,
+          "dense_cosine": 0.6638
+        },
+        {
+          "rank": 12,
+          "title": "Cos Stat Smth 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "rerank": 0.43,
+          "text_chars": 1864,
+          "dense_cosine": 0.6766
+        }
+      ],
+      "selected_top12_total_chars": 19319,
+      "selected_top12_dense_branch_hits": 10
+    },
+    {
+      "qid": "followup-composed",
+      "category": "followup",
+      "query": "What math courses does the Computer Science major at Virginia Tech require?",
+      "notes": "context-composed variant of the same followup",
+      "timings_s": {
+        "embed": 0.106,
+        "qdrant_3_queries": 0.248,
+        "rerank": 0.296
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 25
+      },
+      "dense_top5": [
+        {
+          "title": "Course information  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "cosine": 0.7244
+        },
+        {
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "cosine": 0.7104
+        },
+        {
+          "title": "Your CS major starts at Virginia Tech  | Computer Science | Virginia T",
+          "url": "https://website.cs.vt.edu/find-your-future-here/build-your-future-in-computer-science.html",
+          "cosine": 0.6903
+        },
+        {
+          "title": "Computer Science | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/computer-science.html",
+          "cosine": 0.6812
+        },
+        {
+          "title": "Graduate Courses  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Courses.html",
+          "cosine": 0.6806
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Course information  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "rrf": 1.0
+        },
+        {
+          "title": "Computer Science | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/computer-science.html",
+          "rrf": 0.4
+        },
+        {
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Your CS major starts at Virginia Tech  | Computer Science | Virginia T",
+          "url": "https://website.cs.vt.edu/find-your-future-here/build-your-future-in-computer-science.html",
+          "rrf": 0.25
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9767,
+        "min": 0.0104
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Join Computer Science  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/join-computer-science.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/join-computer-science.html",
+          "rerank": 0.9767,
+          "text_chars": 1649,
+          "dense_cosine": 0.6709,
+          "chunk_id": "c54bad2aa520a9a4#0003",
+          "headings": "Join Computer Science > Adding or Changing Your Major- College of Engineering Students",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "canonical_url": "website.cs.vt.edu/About/accreditation.html",
+          "rerank": 0.8968,
+          "text_chars": 1659,
+          "dense_cosine": 0.6722,
+          "chunk_id": "fa19289c091169ea#0000",
+          "headings": "",
+          "page_type": "about",
+          "source_host": "website.cs.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "canonical_url": "website.cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "rerank": 0.892,
+          "text_chars": 1671,
+          "dense_cosine": null,
+          "chunk_id": "62d692d3ea38be0e#0001",
+          "headings": "Future > AI is opening new possibilities for students who want to build technologies for a better fu",
+          "page_type": "general",
+          "source_host": "website.cs.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "canonical_url": "cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "rerank": 0.892,
+          "text_chars": 1671,
+          "dense_cosine": null,
+          "chunk_id": "a1e682be5a1d6f5f#0001",
+          "headings": "Future > AI is opening new possibilities for students who want to build technologies for a better fu",
+          "page_type": "general",
+          "source_host": "cs.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Major Programs and Plans of study  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "rerank": 0.8656,
+          "text_chars": 2003,
+          "dense_cosine": 0.6748,
+          "chunk_id": "0eef43d855c02271#0001",
+          "headings": "Major Programs and Plans of study > Bachelor of Science in Computer Science",
+          "page_type": "general",
+          "source_host": "students.cs.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 8653,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "canonical_url": "website.cs.vt.edu/About/accreditation.html",
+          "rerank": 0.854,
+          "text_chars": 941,
+          "dense_cosine": 0.7104
+        },
+        {
+          "rank": 7,
+          "title": "Course information  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "rerank": 0.8444,
+          "text_chars": 2035,
+          "dense_cosine": 0.7244
+        },
+        {
+          "rank": 8,
+          "title": "Course information  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "canonical_url": "students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "rerank": 0.8067,
+          "text_chars": 1817,
+          "dense_cosine": null
+        },
+        {
+          "rank": 9,
+          "title": "Computer Science | Virginia Tech",
+          "url": "https://www.vt.edu/academics/majors/computer-science.html",
+          "canonical_url": "vt.edu/academics/majors/computer-science.html",
+          "rerank": 0.7865,
+          "text_chars": 1704,
+          "dense_cosine": 0.6812
+        },
+        {
+          "rank": 10,
+          "title": "Math Major Guide for Choosing First-Semester Courses  | Department of Mathematic",
+          "url": "https://math.vt.edu/undergrad-math/advising/orientation-info/choosing-courses.html",
+          "canonical_url": "math.vt.edu/undergrad-math/advising/orientation-info/choosing-courses.html",
+          "rerank": 0.7693,
+          "text_chars": 1793,
+          "dense_cosine": null
+        },
+        {
+          "rank": 11,
+          "title": "Graduate Courses  | students.cs | Virginia Tech",
+          "url": "https://students.cs.vt.edu/Graduate/Courses.html",
+          "canonical_url": "students.cs.vt.edu/Graduate/Courses.html",
+          "rerank": 0.7435,
+          "text_chars": 1299,
+          "dense_cosine": 0.6806
+        },
+        {
+          "rank": 12,
+          "title": "How to apply  | iac | Virginia Tech",
+          "url": "https://www.vt.edu/innovationcampus/masters-degrees/apply.html",
+          "canonical_url": "vt.edu/innovationcampus/masters-degrees/apply.html",
+          "rerank": 0.7377,
+          "text_chars": 1414,
+          "dense_cosine": 0.6745
+        }
+      ],
+      "selected_top12_total_chars": 19656,
+      "selected_top12_dense_branch_hits": 8
+    },
+    {
+      "qid": "faculty-cs-head",
+      "category": "faculty",
+      "query": "Who is the head of the Computer Science department at Virginia Tech?",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.116,
+        "qdrant_3_queries": 0.243,
+        "rerank": 0.301
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 17
+      },
+      "dense_top5": [
+        {
+          "title": "Department of Computer Science  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/index.html",
+          "cosine": 0.6754
+        },
+        {
+          "title": "Department of Computer Science  | Computer Science | Virginia Tech",
+          "url": "http://cs.vt.edu/",
+          "cosine": 0.6711
+        },
+        {
+          "title": "Your CS major starts at Virginia Tech  | Computer Science | Virginia T",
+          "url": "https://website.cs.vt.edu/find-your-future-here/build-your-future-in-computer-science.html",
+          "cosine": 0.6668
+        },
+        {
+          "title": "Explore Our Grad Programs  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/graduate/graduate-programs.html",
+          "cosine": 0.6609
+        },
+        {
+          "title": "Explore Our Grad Programs  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/graduate/get-started/explore-our-grad-programs.html",
+          "cosine": 0.6609
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "rrf": 0.5909
+        },
+        {
+          "title": "Department of Computer Science  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/index.html",
+          "rrf": 0.5
+        },
+        {
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "rrf": 0.4167
+        },
+        {
+          "title": "Your CS major starts at Virginia Tech  | Computer Science | Virginia T",
+          "url": "https://website.cs.vt.edu/find-your-future-here/build-your-future-in-computer-science.html",
+          "rrf": 0.4167
+        },
+        {
+          "title": "What department do you need help for?  | Engineering Information Techn",
+          "url": "https://it.eng.vt.edu/contact",
+          "rrf": 0.375
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9968,
+        "min": 0.0091
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Your CS major starts at Virginia Tech  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/find-your-future-here/build-your-future-in-computer-science.html",
+          "canonical_url": "website.cs.vt.edu/find-your-future-here/build-your-future-in-computer-science.html",
+          "rerank": 0.9968,
+          "text_chars": 1770,
+          "dense_cosine": 0.6668,
+          "chunk_id": "ec4fb78c6ae307c8#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "website.cs.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "canonical_url": "cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "rerank": 0.9946,
+          "text_chars": 2032,
+          "dense_cosine": 0.6517,
+          "chunk_id": "a1e682be5a1d6f5f#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "cs.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "canonical_url": "website.cs.vt.edu/academic/undergraduate/future-undergrads.html",
+          "rerank": 0.9946,
+          "text_chars": 2032,
+          "dense_cosine": 0.6516,
+          "chunk_id": "62d692d3ea38be0e#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "website.cs.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "canonical_url": "website.cs.vt.edu/About/accreditation.html",
+          "rerank": 0.9581,
+          "text_chars": 1965,
+          "dense_cosine": null,
+          "chunk_id": "fa19289c091169ea#0005",
+          "headings": "Accreditation > Faculty",
+          "page_type": "about",
+          "source_host": "website.cs.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "People  | Center for Future Work Places and Practices | Virginia Tech",
+          "url": "https://cfwpp.icat.vt.edu/people.html",
+          "canonical_url": "cfwpp.icat.vt.edu/people.html",
+          "rerank": 0.9045,
+          "text_chars": 1987,
+          "dense_cosine": 0.6586,
+          "chunk_id": "71b86cc38ed3c283#0003",
+          "headings": "People > Faculty affiliates",
+          "page_type": "general",
+          "source_host": "cfwpp.icat.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 9786,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "What department do you need help for?  | Engineering Information Technology | Vi",
+          "url": "https://it.eng.vt.edu/contact",
+          "canonical_url": "it.eng.vt.edu/contact",
+          "rerank": 0.7957,
+          "text_chars": 1873,
+          "dense_cosine": 0.6528
+        },
+        {
+          "rank": 7,
+          "title": "What department do you need help for?  | Engineering Information Technology | Vi",
+          "url": "https://it.eng.vt.edu/departmental-contacts.html",
+          "canonical_url": "it.eng.vt.edu/departmental-contacts.html",
+          "rerank": 0.7957,
+          "text_chars": 1873,
+          "dense_cosine": 0.6528
+        },
+        {
+          "rank": 8,
+          "title": "CHREC@VT | People",
+          "url": "https://chrec.cs.vt.edu/people.php",
+          "canonical_url": "chrec.cs.vt.edu/people.php",
+          "rerank": 0.6992,
+          "text_chars": 1711,
+          "dense_cosine": 0.6469
+        },
+        {
+          "rank": 9,
+          "title": "Kirk Cameron  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/people/faculty/kirk-cameron.html",
+          "canonical_url": "website.cs.vt.edu/people/faculty/kirk-cameron.html",
+          "rerank": 0.688,
+          "text_chars": 780,
+          "dense_cosine": 0.6518
+        },
+        {
+          "rank": 10,
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/academic/graduate/future-grads.html",
+          "canonical_url": "website.cs.vt.edu/academic/graduate/future-grads.html",
+          "rerank": 0.6675,
+          "text_chars": 1855,
+          "dense_cosine": 0.6434
+        },
+        {
+          "rank": 11,
+          "title": "Future  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/find-your-future-here/future-you-is-in-grad-school--computer-science-at-virginia-tech.html",
+          "canonical_url": "website.cs.vt.edu/find-your-future-here/future-you-is-in-grad-school--computer-science-at-virginia-tech.html",
+          "rerank": 0.6675,
+          "text_chars": 1855,
+          "dense_cosine": 0.6435
+        },
+        {
+          "rank": 12,
+          "title": "High-performance computing and computational science  | Computer Science | Virgi",
+          "url": "https://website.cs.vt.edu/research/research-areas/hpc-and-computational-science.html",
+          "canonical_url": "website.cs.vt.edu/research/research-areas/hpc-and-computational-science.html",
+          "rerank": 0.6068,
+          "text_chars": 602,
+          "dense_cosine": 0.6476
+        }
+      ],
+      "selected_top12_total_chars": 20335,
+      "selected_top12_dense_branch_hits": 11
+    },
+    {
+      "qid": "faculty-followup-raw",
+      "category": "followup",
+      "query": "What courses do they teach?",
+      "notes": "raw followup after faculty-cs-head; pronoun-only, no program tokens",
+      "timings_s": {
+        "embed": 0.113,
+        "qdrant_3_queries": 0.226,
+        "rerank": 0.304
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 4
+      },
+      "dense_top5": [
+        {
+          "title": "2020%20Student%20Guide",
+          "url": "https://cired.vt.edu/content/dam/cired_vt_edu/2020%20Student%20Guide.pdf",
+          "cosine": 0.6018
+        },
+        {
+          "title": "2020 Student Guide",
+          "url": "https://cired.vt.edu/content/dam/cired_vt_edu/2020_Student_Guide.pdf",
+          "cosine": 0.6018
+        },
+        {
+          "title": "Academics  | Department of Entomology | Virginia Tech",
+          "url": "https://ento.vt.edu/academic-programs.html",
+          "cosine": 0.5855
+        },
+        {
+          "title": "Difeliceantoniocv2026 Web",
+          "url": "https://fbri.vtc.vt.edu/content/dam/fbri_vtc_vt_edu/pi-resumes/DiFeliceantonioCV2026_web.pdf",
+          "cosine": 0.5774
+        },
+        {
+          "title": "Graduate School Courses  | Graduate School | Virginia Tech",
+          "url": "http://graduateschool.vt.edu/academics/courses-and-scheduling/graduate-school-courses.html",
+          "cosine": 0.5765
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "4072",
+          "url": "https://policies.vt.edu/assets/4072.pdf",
+          "rrf": 0.5
+        },
+        {
+          "title": "2020%20Student%20Guide",
+          "url": "https://cired.vt.edu/content/dam/cired_vt_edu/2020%20Student%20Guide.pdf",
+          "rrf": 0.5
+        },
+        {
+          "title": "Minutes April%2013 14,%202026 564",
+          "url": "https://bov.vt.edu/assets/Minutes-April%2013-14,%202026-564.pdf",
+          "rrf": 0.3333
+        },
+        {
+          "title": "2020 Student Guide",
+          "url": "https://cired.vt.edu/content/dam/cired_vt_edu/2020_Student_Guide.pdf",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Faculty Qualifications for Teaching  | Faculty Affairs | Virginia Tech",
+          "url": "https://faculty.vt.edu/academic-personnel/academic-faculty-personnel-actions/faculty-qualifications-for-teaching.html",
+          "rrf": 0.25
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.5979,
+        "min": 0.0133
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Academics  | Department of Entomology | Virginia Tech",
+          "url": "https://ento.vt.edu/academic-programs.html",
+          "canonical_url": "ento.vt.edu/academic-programs.html",
+          "rerank": 0.5979,
+          "text_chars": 1255,
+          "dense_cosine": 0.5855,
+          "chunk_id": "aa85273881a00ed0#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "ento.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "2020%20Student%20Guide",
+          "url": "https://cired.vt.edu/content/dam/cired_vt_edu/2020%20Student%20Guide.pdf",
+          "canonical_url": "cired.vt.edu/content/dam/cired_vt_edu/2020%20Student%20Guide.pdf",
+          "rerank": 0.4597,
+          "text_chars": 1978,
+          "dense_cosine": null,
+          "chunk_id": "5edf021f9780be43#0006",
+          "headings": "**P EACE C ORPS P REP S TUDENT G UIDE** > **1. Training and experience in a specific work sector**",
+          "page_type": "general",
+          "source_host": "cired.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "2020 Student Guide",
+          "url": "https://cired.vt.edu/content/dam/cired_vt_edu/2020_Student_Guide.pdf",
+          "canonical_url": "cired.vt.edu/content/dam/cired_vt_edu/2020_Student_Guide.pdf",
+          "rerank": 0.4597,
+          "text_chars": 1978,
+          "dense_cosine": null,
+          "chunk_id": "f34663993c5a4424#0006",
+          "headings": "**P EACE C ORPS P REP S TUDENT G UIDE** > **1. Training and experience in a specific work sector**",
+          "page_type": "general",
+          "source_host": "cired.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Website of Jeff Borggaard",
+          "url": "https://personal.math.vt.edu/borggajt/teaching/index.html",
+          "canonical_url": "personal.math.vt.edu/borggajt/teaching",
+          "rerank": 0.3054,
+          "text_chars": 1714,
+          "dense_cosine": null,
+          "chunk_id": "3e01af1c8c974c92#0002",
+          "headings": "[Jeff Borggaard](https://personal.math.vt.edu/borggajt/teaching/index.html) > Interdisciplinary Cent",
+          "page_type": "general",
+          "source_host": "personal.math.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 6925,
+      "selected_top12_beyond_top5": [],
+      "selected_top12_total_chars": 6925,
+      "selected_top12_dense_branch_hits": 1
+    },
+    {
+      "qid": "scope-financial-aid",
+      "category": "university-scope",
+      "query": "How do I apply for financial aid at Virginia Tech?",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.085,
+        "qdrant_3_queries": 0.268,
+        "rerank": 0.276
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 27,
+        "dedup_dropped": 3,
+        "above_floor": 26
+      },
+      "dense_top5": [
+        {
+          "title": "How to Apply for Aid   | Office of University Scholarships and Financi",
+          "url": "https://finaid.vt.edu/undergraduate/how-to-apply.html",
+          "cosine": 0.8076
+        },
+        {
+          "title": "Financial Aid  | Bursar's Office | Virginia Tech",
+          "url": "https://bursar.vt.edu/payments/financial-aid.html",
+          "cosine": 0.8002
+        },
+        {
+          "title": "Financial Aid and Scholarships  | Academic Advising & Transition Suppo",
+          "url": "https://advising.vt.edu/transfer-student-advising/getting-prepared/financial-aid-scholarships.html",
+          "cosine": 0.7984
+        },
+        {
+          "title": "Apply to Virginia Tech",
+          "url": "https://www.vt.edu/admissions/commonapp.html",
+          "cosine": 0.7831
+        },
+        {
+          "title": "Office of University Scholarships and Financial Aid  | Office of Unive",
+          "url": "https://www.finaid.vt.edu",
+          "cosine": 0.7804
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Apply to Virginia Tech",
+          "url": "https://www.vt.edu/admissions/commonapp.html",
+          "rrf": 0.7
+        },
+        {
+          "title": "How to Apply for Aid   | Office of University Scholarships and Financi",
+          "url": "https://finaid.vt.edu/undergraduate/how-to-apply.html",
+          "rrf": 0.5
+        },
+        {
+          "title": "Financial Aid  | Bursar's Office | Virginia Tech",
+          "url": "https://bursar.vt.edu/payments/financial-aid.html",
+          "rrf": 0.4167
+        },
+        {
+          "title": "Financial Matters  | Steger Center | Virginia Tech",
+          "url": "https://stegercenter.vt.edu/students/costs.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Financial Aid and Scholarships  | Academic Advising & Transition Suppo",
+          "url": "https://advising.vt.edu/transfer-student-advising/getting-prepared/financial-aid-scholarships.html",
+          "rrf": 0.2976
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9987,
+        "min": 0.285
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Virginia Tech Scholarships   | Office of University Scholarships and Financial A",
+          "url": "https://finaid.vt.edu/university-scholarships-and-financial-aid-home-page-Virginia-Tech-Scholarships.html",
+          "canonical_url": "finaid.vt.edu/university-scholarships-and-financial-aid-home-page-Virginia-Tech-Scholarships.html",
+          "rerank": 0.9987,
+          "text_chars": 1841,
+          "dense_cosine": 0.7606,
+          "chunk_id": "1576c1e2323be6fb#0001",
+          "headings": "Virginia Tech Scholarships > **APPLY FOR SCHOLARSHIPS AT VIRGINIA TECH** > **Incoming students, do n",
+          "page_type": "general",
+          "source_host": "finaid.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "FAFSA  | Office of University Scholarships and Financial Aid | Virginia Tech",
+          "url": "https://finaid.vt.edu/undergraduate/how-to-apply/fafsa.html",
+          "canonical_url": "finaid.vt.edu/undergraduate/how-to-apply/fafsa.html",
+          "rerank": 0.9985,
+          "text_chars": 1577,
+          "dense_cosine": 0.7732,
+          "chunk_id": "3f9c3ddb2d116534#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "finaid.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Financial Aid  | Bursar's Office | Virginia Tech",
+          "url": "https://bursar.vt.edu/payments/financial-aid.html",
+          "canonical_url": "bursar.vt.edu/payments/financial-aid.html",
+          "rerank": 0.9983,
+          "text_chars": 1711,
+          "dense_cosine": 0.8002,
+          "chunk_id": "fd3cf35fc6e617ab#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "bursar.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "International Students  | Office of University Scholarships and Financial Aid | ",
+          "url": "https://finaid.vt.edu/undergraduate/international-students.html",
+          "canonical_url": "finaid.vt.edu/undergraduate/international-students.html",
+          "rerank": 0.9978,
+          "text_chars": 894,
+          "dense_cosine": 0.7664,
+          "chunk_id": "92595375061460e8#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "finaid.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "Financial Aid and Scholarships  | Academic Advising & Transition Support | Virgi",
+          "url": "https://advising.vt.edu/transfer-student-advising/getting-prepared/financial-aid-scholarships.html",
+          "canonical_url": "advising.vt.edu/transfer-student-advising/getting-prepared/financial-aid-scholarships.html",
+          "rerank": 0.9966,
+          "text_chars": 1755,
+          "dense_cosine": 0.7984,
+          "chunk_id": "8dc569a7593a394b#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "advising.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 7778,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "How to Apply for Aid   | Office of University Scholarships and Financial Aid | V",
+          "url": "https://finaid.vt.edu/undergraduate/how-to-apply.html",
+          "canonical_url": "finaid.vt.edu/undergraduate/how-to-apply.html",
+          "rerank": 0.9959,
+          "text_chars": 1813,
+          "dense_cosine": 0.8076
+        },
+        {
+          "rank": 7,
+          "title": "Graduate  | Office of University Scholarships and Financial Aid | Virginia Tech",
+          "url": "https://finaid.vt.edu/graduate-students.html",
+          "canonical_url": "finaid.vt.edu/graduate-students.html",
+          "rerank": 0.9938,
+          "text_chars": 1663,
+          "dense_cosine": 0.7678
+        },
+        {
+          "rank": 8,
+          "title": "Undergraduate  | Office of University Scholarships and Financial Aid | Virginia ",
+          "url": "https://finaid.vt.edu/undergraduate.html",
+          "canonical_url": "finaid.vt.edu/undergraduate.html",
+          "rerank": 0.9906,
+          "text_chars": 1641,
+          "dense_cosine": 0.7495
+        },
+        {
+          "rank": 9,
+          "title": "Scholarship support from Virginia Tech Advantage | Virginia Tech",
+          "url": "https://www.vt.edu/advantage/scholarships.html",
+          "canonical_url": "vt.edu/advantage/scholarships.html",
+          "rerank": 0.9899,
+          "text_chars": 1775,
+          "dense_cosine": 0.7656
+        },
+        {
+          "rank": 10,
+          "title": "Money Matters Informational Sessions   | Office of University Scholarships and F",
+          "url": "https://finaid.vt.edu/index/InfoSessions.html",
+          "canonical_url": "finaid.vt.edu/index/InfoSessions.html",
+          "rerank": 0.9875,
+          "text_chars": 1740,
+          "dense_cosine": null
+        },
+        {
+          "rank": 11,
+          "title": "Office of University Scholarships and Financial Aid  | Office of University Scho",
+          "url": "https://www.finaid.vt.edu",
+          "canonical_url": "finaid.vt.edu/",
+          "rerank": 0.9831,
+          "text_chars": 881,
+          "dense_cosine": 0.7804
+        },
+        {
+          "rank": 12,
+          "title": "Tuition and Financial Aid  | Doctor of Veterinary Medicine Program | Virginia Te",
+          "url": "https://dvm.vetmed.vt.edu/dvm-admissions/tuition-financial-aid.html",
+          "canonical_url": "dvm.vetmed.vt.edu/dvm-admissions/tuition-financial-aid.html",
+          "rerank": 0.9809,
+          "text_chars": 1784,
+          "dense_cosine": 0.7639
+        }
+      ],
+      "selected_top12_total_chars": 19075,
+      "selected_top12_dense_branch_hits": 11
+    },
+    {
+      "qid": "scope-parking",
+      "category": "university-scope",
+      "query": "Where can I park on campus as a student?",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.32,
+        "qdrant_3_queries": 0.258,
+        "rerank": 0.303
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 24
+      },
+      "dense_top5": [
+        {
+          "title": "Student Parking  | Parking Services | Virginia Tech",
+          "url": "https://parking.vt.edu/parking/students.html",
+          "cosine": 0.7357
+        },
+        {
+          "title": "Guide To Student Support And Services",
+          "url": "https://dvm.vetmed.vt.edu/content/dam/dvm_vetmed_vt_edu/documents/guide-to-student-support-and-services.pdf",
+          "cosine": 0.6782
+        },
+        {
+          "title": "Guide To Student Support And Services",
+          "url": "https://vetmed.vt.edu/content/dam/dvm_vetmed_vt_edu/documents/guide-to-student-support-and-services.pdf",
+          "cosine": 0.6782
+        },
+        {
+          "title": "Transportation and Parking Services  | Academic Advising & Transition ",
+          "url": "https://advising.vt.edu/transfer-student-advising/student-life/transportation-parking.html",
+          "cosine": 0.6774
+        },
+        {
+          "title": "Cms Tpc Mins 12 02 2020",
+          "url": "https://www.governance.vt.edu/assets/cms_TPC_mins_12-02-2020.pdf",
+          "cosine": 0.6741
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Student Parking  | Parking Services | Virginia Tech",
+          "url": "https://parking.vt.edu/parking/students.html",
+          "rrf": 0.6429
+        },
+        {
+          "title": "Visitor Parking  | Parking Services | Virginia Tech",
+          "url": "https://parking.vt.edu/parking/visitors.html",
+          "rrf": 0.5714
+        },
+        {
+          "title": "Guide To Student Support And Services",
+          "url": "https://dvm.vetmed.vt.edu/content/dam/dvm_vetmed_vt_edu/documents/guide-to-student-support-and-services.pdf",
+          "rrf": 0.3833
+        },
+        {
+          "title": "22Ts008%20Parking%20Operation%20Manual%200106",
+          "url": "https://parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "rrf": 0.3768
+        },
+        {
+          "title": "Cms Tpc Mins 12 02 2020",
+          "url": "https://www.governance.vt.edu/assets/cms_TPC_mins_12-02-2020.pdf",
+          "rrf": 0.3333
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9798,
+        "min": 0.1561
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Student Parking  | Parking Services | Virginia Tech",
+          "url": "https://parking.vt.edu/parking/students.html",
+          "canonical_url": "parking.vt.edu/parking/students.html",
+          "rerank": 0.9798,
+          "text_chars": 1773,
+          "dense_cosine": 0.7357,
+          "chunk_id": "08ce55f335a66e3a#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "parking.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Guide To Student Support And Services",
+          "url": "https://dvm.vetmed.vt.edu/content/dam/dvm_vetmed_vt_edu/documents/guide-to-student-support-and-services.pdf",
+          "canonical_url": "dvm.vetmed.vt.edu/content/dam/dvm_vetmed_vt_edu/documents/guide-to-student-support-and-services.pdf",
+          "rerank": 0.9405,
+          "text_chars": 1427,
+          "dense_cosine": 0.6782,
+          "chunk_id": "35348420f2fa0986#0029",
+          "headings": "Guide to Student Support > IV. GETTING AROUND CAMPUS",
+          "page_type": "general",
+          "source_host": "dvm.vetmed.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "Guide To Student Support And Services",
+          "url": "https://vetmed.vt.edu/content/dam/dvm_vetmed_vt_edu/documents/guide-to-student-support-and-services.pdf",
+          "canonical_url": "vetmed.vt.edu/content/dam/dvm_vetmed_vt_edu/documents/guide-to-student-support-and-services.pdf",
+          "rerank": 0.9405,
+          "text_chars": 1427,
+          "dense_cosine": 0.6782,
+          "chunk_id": "d954e091dafcf3e0#0029",
+          "headings": "Guide to Student Support > IV. GETTING AROUND CAMPUS",
+          "page_type": "general",
+          "source_host": "vetmed.vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Section 3: Classrooms, Facilities, and Personnel  | Doctor of Veterinary Medicin",
+          "url": "https://www.dvm.vetmed.vt.edu/current-students/dvm-student-handbook/classrooms-facilities-personnel.html/",
+          "canonical_url": "dvm.vetmed.vt.edu/current-students/dvm-student-handbook/classrooms-facilities-personnel.html",
+          "rerank": 0.9362,
+          "text_chars": 1856,
+          "dense_cosine": 0.6682,
+          "chunk_id": "2ded1b0df2ca51f8#0007",
+          "headings": "Section 3: Classrooms, Facilities, and Personnel > **3.9 Motor Vehicles and Parking**",
+          "page_type": "general",
+          "source_host": "www.dvm.vetmed.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "22Ts008%20Parking%20Operation%20Manual%200106",
+          "url": "https://parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "canonical_url": "parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "rerank": 0.9323,
+          "text_chars": 1934,
+          "dense_cosine": 0.6568,
+          "chunk_id": "033a0626cb3f3631#0010",
+          "headings": "Parking and Traffic Operational Manual > 2 0 2 2 - 2 3 A C A D E M I C Y E A R V O L U M E 3 0",
+          "page_type": "general",
+          "source_host": "parking.vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 8417,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "Student Parking  | Parking Services | Virginia Tech",
+          "url": "https://parking.vt.edu/parking/students.html",
+          "canonical_url": "parking.vt.edu/parking/students.html",
+          "rerank": 0.9212,
+          "text_chars": 1934,
+          "dense_cosine": 0.6687
+        },
+        {
+          "rank": 7,
+          "title": "22Ts008%20Parking%20Operation%20Manual%200106",
+          "url": "https://parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "canonical_url": "parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "rerank": 0.9102,
+          "text_chars": 1931,
+          "dense_cosine": 0.659
+        },
+        {
+          "rank": 8,
+          "title": "Cmt Tpc Mins 10 21 14",
+          "url": "https://www.governance.vt.edu/assets/cmt_tpc_mins_10-21-14.pdf",
+          "canonical_url": "governance.vt.edu/assets/cmt_tpc_mins_10-21-14.pdf",
+          "rerank": 0.8526,
+          "text_chars": 2023,
+          "dense_cosine": null
+        },
+        {
+          "rank": 9,
+          "title": "Visitor Parking  | Parking Services | Virginia Tech",
+          "url": "https://parking.vt.edu/parking/visitors.html",
+          "canonical_url": "parking.vt.edu/parking/visitors.html",
+          "rerank": 0.8498,
+          "text_chars": 1565,
+          "dense_cosine": null
+        },
+        {
+          "rank": 10,
+          "title": "22Ts008%20Parking%20Operation%20Manual%200106",
+          "url": "https://parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "canonical_url": "parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "rerank": 0.834,
+          "text_chars": 1917,
+          "dense_cosine": 0.6521
+        },
+        {
+          "rank": 11,
+          "title": "22Ts008%20Parking%20Operation%20Manual%200106",
+          "url": "https://parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "canonical_url": "parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf",
+          "rerank": 0.826,
+          "text_chars": 1935,
+          "dense_cosine": 0.6686
+        },
+        {
+          "rank": 12,
+          "title": "Transportation and Parking Services  | Academic Advising & Transition Support | ",
+          "url": "https://advising.vt.edu/transfer-student-advising/student-life/transportation-parking.html",
+          "canonical_url": "advising.vt.edu/transfer-student-advising/student-life/transportation-parking.html",
+          "rerank": 0.8148,
+          "text_chars": 453,
+          "dense_cosine": 0.6774
+        }
+      ],
+      "selected_top12_total_chars": 20175,
+      "selected_top12_dense_branch_hits": 10
+    },
+    {
+      "qid": "scope-admission",
+      "category": "university-scope",
+      "query": "What are the admission requirements for Virginia Tech?",
+      "notes": "",
+      "timings_s": {
+        "embed": 0.109,
+        "qdrant_3_queries": 0.263,
+        "rerank": 0.291
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 30
+      },
+      "dense_top5": [
+        {
+          "title": "Admissions Requirements  | Biomedical and Veterinary Sciences | Virgin",
+          "url": "https://bmvs.vetmed.vt.edu/prospective-students/admissions-requirements.html",
+          "cosine": 0.7295
+        },
+        {
+          "title": "How to Apply?  | College of Liberal Arts and Human Sciences | Virginia",
+          "url": "https://liberalarts.vt.edu/departments-and-schools/department-of-english/academic-programs/master-of-arts-in-english/admissions-re",
+          "cosine": 0.7293
+        },
+        {
+          "title": "Graduate Programs  | Geography | Virginia Tech",
+          "url": "https://geography.vt.edu/academics/gradprograms.html",
+          "cosine": 0.728
+        },
+        {
+          "title": "How to Apply?  | College of Liberal Arts and Human Sciences | Virginia",
+          "url": "https://liberalarts.vt.edu/departments-and-schools/department-of-english/academic-programs/phd-rhetoric-and-writing/admissions-req",
+          "cosine": 0.7244
+        },
+        {
+          "title": "First-year Admissions Requirements | Virginia Tech",
+          "url": "https://vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "cosine": 0.7203
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Graduate Programs  | Geography | Virginia Tech",
+          "url": "https://geography.vt.edu/academics/gradprograms.html",
+          "rrf": 0.75
+        },
+        {
+          "title": "Admissions Requirements  | Biomedical and Veterinary Sciences | Virgin",
+          "url": "https://bmvs.vetmed.vt.edu/prospective-students/admissions-requirements.html",
+          "rrf": 0.5
+        },
+        {
+          "title": "How to Apply?  | College of Liberal Arts and Human Sciences | Virginia",
+          "url": "https://liberalarts.vt.edu/departments-and-schools/department-of-english/academic-programs/master-of-arts-in-english/admissions-re",
+          "rrf": 0.3333
+        },
+        {
+          "title": "First-Year Applicant FAQ | Virginia Tech",
+          "url": "https://www.vt.edu/admissions/frequently-asked-questions/first-year-applicant-faq.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Admission Requirements  | Language and Culture Institute | Virginia Te",
+          "url": "https://lci.vt.edu/Programs/AdvantageVT/admission-requirements.html",
+          "rrf": 0.3269
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.9993,
+        "min": 0.8668
+      },
+      "selected_top5": [
+        {
+          "rank": 1,
+          "title": "Graduate Programs  | Geography | Virginia Tech",
+          "url": "https://geography.vt.edu/academics/gradprograms.html",
+          "canonical_url": "geography.vt.edu/academics/gradprograms.html",
+          "rerank": 0.9993,
+          "text_chars": 1510,
+          "dense_cosine": 0.728,
+          "chunk_id": "95b5f05ab560b250#0004",
+          "headings": "Graduate Programs > Admission Requirements",
+          "page_type": "general",
+          "source_host": "geography.vt.edu"
+        },
+        {
+          "rank": 2,
+          "title": "Non-Degree Admission Requirements | Virginia Tech",
+          "url": "https://www.vt.edu/admissions/undergraduate/apply/non-degree-requirements.html",
+          "canonical_url": "vt.edu/admissions/undergraduate/apply/non-degree-requirements.html",
+          "rerank": 0.9979,
+          "text_chars": 1964,
+          "dense_cosine": 0.7199,
+          "chunk_id": "9fe6c4e11e86213e#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.vt.edu"
+        },
+        {
+          "rank": 3,
+          "title": "First-year Admissions Requirements | Virginia Tech",
+          "url": "https://vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "canonical_url": "vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "rerank": 0.9969,
+          "text_chars": 1428,
+          "dense_cosine": 0.7203,
+          "chunk_id": "c74d975ba6b2c10d#0004",
+          "headings": "First-year Admissions Requirements > Home-Schooled, Home-Educated, and Others in Non-Accredited Prog",
+          "page_type": "general",
+          "source_host": "vt.edu"
+        },
+        {
+          "rank": 4,
+          "title": "Ug%20Catalog%20Changes%2026 27%202",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/UG%20Catalog%20Changes%2026-27%20",
+          "canonical_url": "registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2025-2026/UG%20Catalog%20Changes%2026-27%202.pdf",
+          "rerank": 0.9968,
+          "text_chars": 1773,
+          "dense_cosine": 0.7068,
+          "chunk_id": "979a46c9d003516a#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "www.registrar.vt.edu"
+        },
+        {
+          "rank": 5,
+          "title": "First-year Admissions Requirements | Virginia Tech",
+          "url": "https://vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "canonical_url": "vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "rerank": 0.9963,
+          "text_chars": 891,
+          "dense_cosine": 0.7192,
+          "chunk_id": "c74d975ba6b2c10d#0000",
+          "headings": "",
+          "page_type": "general",
+          "source_host": "vt.edu"
+        }
+      ],
+      "selected_top5_total_chars": 7566,
+      "selected_top12_beyond_top5": [
+        {
+          "rank": 6,
+          "title": "International Admissions Requirements | Virginia Tech",
+          "url": "https://vt.edu/admissions/international/requirements.html",
+          "canonical_url": "vt.edu/admissions/international/requirements.html",
+          "rerank": 0.9958,
+          "text_chars": 970,
+          "dense_cosine": null
+        },
+        {
+          "rank": 7,
+          "title": "Admissions Requirements  | Biomedical and Veterinary Sciences | Virginia Tech",
+          "url": "https://bmvs.vetmed.vt.edu/prospective-students/admissions-requirements.html",
+          "canonical_url": "bmvs.vetmed.vt.edu/prospective-students/admissions-requirements.html",
+          "rerank": 0.9924,
+          "text_chars": 1037,
+          "dense_cosine": 0.7295
+        },
+        {
+          "rank": 8,
+          "title": "First-year Admissions Requirements | Virginia Tech",
+          "url": "https://vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "canonical_url": "vt.edu/admissions/undergraduate/apply/freshman-requirements.html",
+          "rerank": 0.9909,
+          "text_chars": 1882,
+          "dense_cosine": 0.7196
+        },
+        {
+          "rank": 9,
+          "title": "Admissions Frequently Asked Questions  | Graduate School | Virginia Tech",
+          "url": "https://www.vt.edu/admissions/frequently-asked-questions/graduate-school-admissions-faq.html",
+          "canonical_url": "vt.edu/admissions/frequently-asked-questions/graduate-school-admissions-faq.html",
+          "rerank": 0.988,
+          "text_chars": 1554,
+          "dense_cosine": 0.7191
+        },
+        {
+          "rank": 10,
+          "title": "How to Apply?  | College of Liberal Arts and Human Sciences | Virginia Tech",
+          "url": "https://liberalarts.vt.edu/departments-and-schools/department-of-english/academic-programs/master-of-arts-in-english/admissions-re",
+          "canonical_url": "liberalarts.vt.edu/departments-and-schools/department-of-english/academic-programs/master-of-arts-in-english/admissions-requirements.html",
+          "rerank": 0.9863,
+          "text_chars": 430,
+          "dense_cosine": 0.7293
+        },
+        {
+          "rank": 11,
+          "title": "Engineering Education Ph.D.  | Engineering Education | Virginia Tech",
+          "url": "https://enge.vt.edu/graduateprogram/phd.html",
+          "canonical_url": "enge.vt.edu/graduateprogram/phd.html",
+          "rerank": 0.9862,
+          "text_chars": 2047,
+          "dense_cosine": null
+        },
+        {
+          "rank": 12,
+          "title": "Admissions  | Department of Statistics | Virginia Tech",
+          "url": "https://stat.vt.edu/academics/graduate/graduate-admissions.html",
+          "canonical_url": "stat.vt.edu/academics/graduate/graduate-admissions.html",
+          "rerank": 0.9858,
+          "text_chars": 1367,
+          "dense_cosine": null
+        }
+      ],
+      "selected_top12_total_chars": 16853,
+      "selected_top12_dense_branch_hits": 9
+    },
+    {
+      "qid": "unknown-faculty",
+      "category": "unknown-entity",
+      "query": "Tell me about Professor Maribel Quentin in the Virginia Tech Computer Science department",
+      "notes": "fictional name (synthetic)",
+      "timings_s": {
+        "embed": 0.103,
+        "qdrant_3_queries": 0.247,
+        "rerank": 0.289
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 29,
+        "dedup_dropped": 1,
+        "above_floor": 0
+      },
+      "dense_top5": [
+        {
+          "title": "Cal Ribbens  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/people/faculty/cal-ribbens.html",
+          "cosine": 0.6099
+        },
+        {
+          "title": "Christine Julien  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/people/faculty/christine-julien.html",
+          "cosine": 0.6097
+        },
+        {
+          "title": "Caleb Stine  | Research and Innovation | Virginia Tech",
+          "url": "https://www.research.vt.edu/about/postdoctoral-associates/virginia-tech-presidential-postdoctoral-fellowships/current-fellows/stin",
+          "cosine": 0.6092
+        },
+        {
+          "title": "Faculty Mentor of the Month  | Graduate School | Virginia Tech",
+          "url": "https://graduateschool.vt.edu/about/awards/outstanding-mentor-award/Mentor_of_the_Month.html",
+          "cosine": 0.6082
+        },
+        {
+          "title": "High Performance Computing  | Department of Mathematics | Virginia Tec",
+          "url": "https://www.math.vt.edu/research/computing.html",
+          "cosine": 0.604
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Cal Ribbens  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/people/faculty/cal-ribbens.html",
+          "rrf": 0.5
+        },
+        {
+          "title": "News Archive  | foodsystems.centers | Virginia Tech",
+          "url": "https://foodsystems.centers.vt.edu/ResourcesandPartners/NewsFeed.html",
+          "rrf": 0.5
+        },
+        {
+          "title": "News Archive  | foodsystems.centers | Virginia Tech",
+          "url": "https://foodsystems.centers.vt.edu/ResourcesandPartners/NewsFeed.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Christine Julien  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/people/faculty/christine-julien.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Chris Zobel  | Business Information Technology | Virginia Tech",
+          "url": "https://bit.vt.edu/faculty/directory/zobel.html",
+          "rrf": 0.25
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.0575,
+        "min": 0.0002
+      },
+      "selected_top5": [],
+      "selected_top5_total_chars": 0,
+      "selected_top12_beyond_top5": [],
+      "selected_top12_total_chars": 0,
+      "selected_top12_dense_branch_hits": 0
+    },
+    {
+      "qid": "unknown-program",
+      "category": "unknown-entity",
+      "query": "What is the Underwater Basket Weaving major at Virginia Tech?",
+      "notes": "fictional program (synthetic)",
+      "timings_s": {
+        "embed": 0.111,
+        "qdrant_3_queries": 0.249,
+        "rerank": 0.284
+      },
+      "candidate_counts": {
+        "prefetch_limit_per_branch": 30,
+        "dense_branch_returned": 30,
+        "sparse_branch_returned": 30,
+        "fused_returned": 30,
+        "after_dedup": 30,
+        "dedup_dropped": 0,
+        "above_floor": 0
+      },
+      "dense_top5": [
+        {
+          "title": "Undergraduate Minors \u2013 Virginia Water Resources Research Center",
+          "url": "http://www.vwrrc.vt.edu/undergraduate-minor-in-watershed-management",
+          "cosine": 0.6052
+        },
+        {
+          "title": "Virginia Tech Post Graduation Report: 2020-2021 Employer & Job Report:",
+          "url": "https://fds.career.vt.edu/EmployerList?cohort=2020-2021&isAsc=false&sortby=S",
+          "cosine": 0.6048
+        },
+        {
+          "title": "Virginia Tech Special Collections and University Archives \u2013 News from ",
+          "url": "https://scuablog.lib.vt.edu/",
+          "cosine": 0.598
+        },
+        {
+          "title": "New MS Degree Program in Water Resources at Virginia Tech is Approved\u00a0",
+          "url": "https://www.vwrrc.vt.edu/2026/04/01/new-ms-degree-program-in-water-resources-at-virginia-tech-is-approved/",
+          "cosine": 0.5965
+        },
+        {
+          "title": "Bradley Electrical And Computer Engineering Annual%20Report 2025",
+          "url": "https://ece.vt.edu/content/dam/ece_vt_edu/research/annual-report/2024/Bradley-Electrical-and-Computer-Engineering-Annual%20Report-",
+          "cosine": 0.5845
+        }
+      ],
+      "rrf_top5": [
+        {
+          "title": "Identifying the Association Between Level of Safety of the Events and ",
+          "url": "https://doi.org/10.15787/VTT1/59LUU1",
+          "rrf": 0.5
+        },
+        {
+          "title": "Undergraduate Minors \u2013 Virginia Water Resources Research Center",
+          "url": "http://www.vwrrc.vt.edu/undergraduate-minor-in-watershed-management",
+          "rrf": 0.5
+        },
+        {
+          "title": "Sarah Misyak, PhD, MPH  | Department of Human Nutrition, Foods, and Ex",
+          "url": "https://hnfe.vt.edu/people/faculty/sarah-misyak.html",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Virginia Tech Post Graduation Report: 2020-2021 Employer & Job Report:",
+          "url": "https://fds.career.vt.edu/EmployerList?cohort=2020-2021&isAsc=false&sortby=S",
+          "rrf": 0.3333
+        },
+        {
+          "title": "Facebook  | Police Department | Virginia Tech",
+          "url": "https://police.vt.edu/safety-security/safety-tips/facebook.html",
+          "rrf": 0.25
+        }
+      ],
+      "rerank_score_range": {
+        "max": 0.0184,
+        "min": 0.0
+      },
+      "selected_top5": [],
+      "selected_top5_total_chars": 0,
+      "selected_top12_beyond_top5": [],
+      "selected_top12_total_chars": 0,
+      "selected_top12_dense_branch_hits": 0
+    }
+  ],
+  "aggregate": {
+    "paraphrase_top5_url_jaccard": {
+      "cs-major vs cs-major-short": 0.167,
+      "cs-major vs github29-normalized": 0.0,
+      "cs-major vs github29-p1": 0.0,
+      "cs-major vs github29-p2": 0.0,
+      "cs-major vs github29-p3": 0.0,
+      "cs-major-short vs github29-normalized": 0.0,
+      "cs-major-short vs github29-p1": 0.0,
+      "cs-major-short vs github29-p2": 0.0,
+      "cs-major-short vs github29-p3": 0.0,
+      "github29-normalized vs github29-p1": 0.0,
+      "github29-normalized vs github29-p2": 0.0,
+      "github29-normalized vs github29-p3": 0.0,
+      "github29-p1 vs github29-p2": 0.429,
+      "github29-p1 vs github29-p3": 0.25,
+      "github29-p2 vs github29-p3": 0.111
+    },
+    "paraphrase_shared_urls_all_variants": [],
+    "wrong_program_flags_cs_queries": {
+      "github29-p1": {
+        "top5": [
+          {
+            "rank": 2,
+            "marker": "data centric",
+            "title": "Data Centric Supporting Docs",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+            "rerank": 0.9785
+          },
+          {
+            "rank": 4,
+            "marker": "secure computing",
+            "title": "Secure Computing Supporting Docs",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_support",
+            "rerank": 0.9777
+          }
+        ],
+        "top12": [
+          {
+            "rank": 2,
+            "marker": "data centric",
+            "title": "Data Centric Supporting Docs",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+            "rerank": 0.9785
+          },
+          {
+            "rank": 4,
+            "marker": "secure computing",
+            "title": "Secure Computing Supporting Docs",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_support",
+            "rerank": 0.9777
+          },
+          {
+            "rank": 9,
+            "marker": "data-centric",
+            "title": "Data Centric%20Computing%20Major%20Checksheet%202022 2023",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+            "rerank": 0.9728
+          }
+        ]
+      },
+      "github29-p2": {
+        "top5": [
+          {
+            "rank": 1,
+            "marker": "data centric",
+            "title": "Data Centric Supporting Docs",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+            "rerank": 0.978
+          },
+          {
+            "rank": 2,
+            "marker": "secure computing",
+            "title": "Secure Computing Supporting Docs",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_support",
+            "rerank": 0.9768
+          }
+        ],
+        "top12": [
+          {
+            "rank": 1,
+            "marker": "data centric",
+            "title": "Data Centric Supporting Docs",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_",
+            "rerank": 0.978
+          },
+          {
+            "rank": 2,
+            "marker": "secure computing",
+            "title": "Secure Computing Supporting Docs",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_support",
+            "rerank": 0.9768
+          },
+          {
+            "rank": 11,
+            "marker": "data-centric",
+            "title": "Data Centric%20Computing%20Major%20Checksheet%202022 2023",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+            "rerank": 0.9659
+          }
+        ]
+      },
+      "github29-p3": {
+        "top5": [],
+        "top12": []
+      },
+      "github29-normalized": {
+        "top5": [
+          {
+            "rank": 1,
+            "marker": "master of science",
+            "title": "Master of Science  | students.cs | Virginia Tech",
+            "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+            "rerank": 0.9818
+          },
+          {
+            "rank": 5,
+            "marker": "master of science",
+            "title": "Master of Science  | students.cs | Virginia Tech",
+            "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+            "rerank": 0.9664
+          }
+        ],
+        "top12": [
+          {
+            "rank": 1,
+            "marker": "master of science",
+            "title": "Master of Science  | students.cs | Virginia Tech",
+            "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+            "rerank": 0.9818
+          },
+          {
+            "rank": 5,
+            "marker": "master of science",
+            "title": "Master of Science  | students.cs | Virginia Tech",
+            "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+            "rerank": 0.9664
+          },
+          {
+            "rank": 7,
+            "marker": "master of science",
+            "title": "Master of Science  | Computer Science | Virginia Tech",
+            "url": "https://website.cs.vt.edu/academic/graduate/future-grads/MSThesis.html",
+            "rerank": 0.9418
+          },
+          {
+            "rank": 12,
+            "marker": "masters",
+            "title": "How to apply  | iac | Virginia Tech",
+            "url": "https://www.vt.edu/innovationcampus/masters-degrees/apply.html",
+            "rerank": 0.9317
+          }
+        ]
+      },
+      "cs-major": {
+        "top5": [],
+        "top12": [
+          {
+            "rank": 7,
+            "marker": "master of science",
+            "title": "Master of Science  | students.cs | Virginia Tech",
+            "url": "https://students.cs.vt.edu/Graduate/Degrees/MSThesis.html",
+            "rerank": 0.984
+          }
+        ]
+      },
+      "cs-major-short": {
+        "top5": [],
+        "top12": []
+      },
+      "followup-composed": {
+        "top5": [],
+        "top12": [
+          {
+            "rank": 12,
+            "marker": "masters",
+            "title": "How to apply  | iac | Virginia Tech",
+            "url": "https://www.vt.edu/innovationcampus/masters-degrees/apply.html",
+            "rerank": 0.7377
+          }
+        ]
+      },
+      "followup-raw": {
+        "top5": [
+          {
+            "rank": 5,
+            "marker": "minor",
+            "title": "minor_math_22_23.pdf",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/22-23/minor_math_22_23.pdf",
+            "rerank": 0.7294
+          }
+        ],
+        "top12": [
+          {
+            "rank": 5,
+            "marker": "minor",
+            "title": "minor_math_22_23.pdf",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/22-23/minor_math_22_23.pdf",
+            "rerank": 0.7294
+          },
+          {
+            "rank": 8,
+            "marker": "minor",
+            "title": "Minor Math 21 22",
+            "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/21-22/minor_math_21_22.pdf",
+            "rerank": 0.6009
+          }
+        ]
+      }
+    },
+    "wrong_program_flags_math_queries": {
+      "math-major": {
+        "top5": [],
+        "top12": []
+      },
+      "math-major-short": {
+        "top5": [],
+        "top12": []
+      }
+    },
+    "followup_raw_vs_composed_top5_url_jaccard": 0.0,
+    "faculty_followup_raw": {
+      "above_floor": 4,
+      "max_rerank": 0.5979
+    },
+    "unknown_entity_max_rerank_scores": {
+      "unknown-faculty": 0.0575,
+      "unknown-program": 0.0184
+    },
+    "unknown_entity_above_floor": {
+      "unknown-faculty": 0,
+      "unknown-program": 0
+    },
+    "top5_vs_top12_docs": {
+      "github29-p1": {
+        "top5_distinct_docs": 5,
+        "top12_distinct_docs": 12,
+        "docs_added_by_top12": 7
+      },
+      "github29-p2": {
+        "top5_distinct_docs": 5,
+        "top12_distinct_docs": 12,
+        "docs_added_by_top12": 7
+      },
+      "github29-p3": {
+        "top5_distinct_docs": 5,
+        "top12_distinct_docs": 11,
+        "docs_added_by_top12": 6
+      },
+      "github29-normalized": {
+        "top5_distinct_docs": 3,
+        "top12_distinct_docs": 10,
+        "docs_added_by_top12": 7
+      },
+      "cs-major": {
+        "top5_distinct_docs": 4,
+        "top12_distinct_docs": 9,
+        "docs_added_by_top12": 5
+      },
+      "cs-major-short": {
+        "top5_distinct_docs": 3,
+        "top12_distinct_docs": 7,
+        "docs_added_by_top12": 4
+      },
+      "math-major": {
+        "top5_distinct_docs": 5,
+        "top12_distinct_docs": 11,
+        "docs_added_by_top12": 6
+      },
+      "math-major-short": {
+        "top5_distinct_docs": 3,
+        "top12_distinct_docs": 8,
+        "docs_added_by_top12": 5
+      },
+      "stats-major": {
+        "top5_distinct_docs": 5,
+        "top12_distinct_docs": 10,
+        "docs_added_by_top12": 5
+      },
+      "cs-sibling-dcc": {
+        "top5_distinct_docs": 3,
+        "top12_distinct_docs": 7,
+        "docs_added_by_top12": 4
+      },
+      "cs-vs-cpe": {
+        "top5_distinct_docs": 4,
+        "top12_distinct_docs": 11,
+        "docs_added_by_top12": 7
+      },
+      "followup-raw": {
+        "top5_distinct_docs": 3,
+        "top12_distinct_docs": 10,
+        "docs_added_by_top12": 7
+      },
+      "followup-composed": {
+        "top5_distinct_docs": 5,
+        "top12_distinct_docs": 10,
+        "docs_added_by_top12": 5
+      },
+      "faculty-cs-head": {
+        "top5_distinct_docs": 5,
+        "top12_distinct_docs": 12,
+        "docs_added_by_top12": 7
+      },
+      "faculty-followup-raw": {
+        "top5_distinct_docs": 4,
+        "top12_distinct_docs": 4,
+        "docs_added_by_top12": 0
+      },
+      "scope-financial-aid": {
+        "top5_distinct_docs": 5,
+        "top12_distinct_docs": 12,
+        "docs_added_by_top12": 7
+      },
+      "scope-parking": {
+        "top5_distinct_docs": 5,
+        "top12_distinct_docs": 8,
+        "docs_added_by_top12": 3
+      },
+      "scope-admission": {
+        "top5_distinct_docs": 4,
+        "top12_distinct_docs": 10,
+        "docs_added_by_top12": 6
+      },
+      "unknown-faculty": {
+        "top5_distinct_docs": 0,
+        "top12_distinct_docs": 0,
+        "docs_added_by_top12": 0
+      },
+      "unknown-program": {
+        "top5_distinct_docs": 0,
+        "top12_distinct_docs": 0,
+        "docs_added_by_top12": 0
+      }
+    },
+    "selected_chars_per_query": {
+      "github29-p1": {
+        "top5_total_chars": 9730,
+        "top12_total_chars": 23062
+      },
+      "github29-p2": {
+        "top5_total_chars": 9425,
+        "top12_total_chars": 22618
+      },
+      "github29-p3": {
+        "top5_total_chars": 8840,
+        "top12_total_chars": 22039
+      },
+      "github29-normalized": {
+        "top5_total_chars": 6163,
+        "top12_total_chars": 15640
+      },
+      "cs-major": {
+        "top5_total_chars": 7020,
+        "top12_total_chars": 18434
+      },
+      "cs-major-short": {
+        "top5_total_chars": 5651,
+        "top12_total_chars": 18496
+      },
+      "math-major": {
+        "top5_total_chars": 9577,
+        "top12_total_chars": 20300
+      },
+      "math-major-short": {
+        "top5_total_chars": 6752,
+        "top12_total_chars": 15085
+      },
+      "stats-major": {
+        "top5_total_chars": 4350,
+        "top12_total_chars": 17013
+      },
+      "cs-sibling-dcc": {
+        "top5_total_chars": 8471,
+        "top12_total_chars": 21140
+      },
+      "cs-vs-cpe": {
+        "top5_total_chars": 8194,
+        "top12_total_chars": 19598
+      },
+      "followup-raw": {
+        "top5_total_chars": 7346,
+        "top12_total_chars": 19319
+      },
+      "followup-composed": {
+        "top5_total_chars": 8653,
+        "top12_total_chars": 19656
+      },
+      "faculty-cs-head": {
+        "top5_total_chars": 9786,
+        "top12_total_chars": 20335
+      },
+      "faculty-followup-raw": {
+        "top5_total_chars": 6925,
+        "top12_total_chars": 6925
+      },
+      "scope-financial-aid": {
+        "top5_total_chars": 7778,
+        "top12_total_chars": 19075
+      },
+      "scope-parking": {
+        "top5_total_chars": 8417,
+        "top12_total_chars": 20175
+      },
+      "scope-admission": {
+        "top5_total_chars": 7566,
+        "top12_total_chars": 16853
+      },
+      "unknown-faculty": {
+        "top5_total_chars": 0,
+        "top12_total_chars": 0
+      },
+      "unknown-program": {
+        "top5_total_chars": 0,
+        "top12_total_chars": 0
+      }
+    },
+    "selected_top12_dense_branch_hits": {
+      "github29-p1": 9,
+      "github29-p2": 12,
+      "github29-p3": 12,
+      "github29-normalized": 12,
+      "cs-major": 11,
+      "cs-major-short": 12,
+      "math-major": 10,
+      "math-major-short": 11,
+      "stats-major": 8,
+      "cs-sibling-dcc": 9,
+      "cs-vs-cpe": 10,
+      "followup-raw": 10,
+      "followup-composed": 8,
+      "faculty-cs-head": 11,
+      "faculty-followup-raw": 1,
+      "scope-financial-aid": 11,
+      "scope-parking": 10,
+      "scope-admission": 9,
+      "unknown-faculty": 0,
+      "unknown-program": 0
+    }
+  },
+  "limitations": [
+    "Single run per query; no repeat-variance estimate (GPU rerank scores are deterministic to ~1e-4, but service load varies).",
+    "Scores are descriptive; no golden relevance judgments \u2014 wrong-program flags are title/heading keyword heuristics, not verified labels.",
+    "Followup queries are tested as standalone retrievals (raw) and as hand-composed variants; the live condenser LLM was not exercised.",
+    "Candidate count fixed at 30 per branch (prod: 50); only the planned search_many configuration was probed."
+  ]
+}

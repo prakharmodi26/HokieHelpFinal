@@ -1,0 +1,135 @@
+{
+  "generated_utc": "2026-09-24T03:54:14.587846+00:00",
+  "url": "http://127.0.0.1:8000",
+  "method": "Actual deployed /chat and /chat/stream; no mocked planner, retrieval, evidence or model",
+  "limitations": [
+    "Heuristic checks do not prove semantic entailment.",
+    "Single sequential pass, not a load test."
+  ],
+  "cases": [
+    {
+      "id": "unknown-person",
+      "question": "What courses does Professor Quasar Noodlewick teach?",
+      "history": [],
+      "http_status": 200,
+      "answer": "I couldn't find enough reliable information in the available Virginia Tech sources to answer that. Please clarify the program, topic, or year if relevant.",
+      "sources": [],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "no_sources": true
+      },
+      "seconds": 7.496
+    },
+    {
+      "id": "unknown-program",
+      "question": "What are the Chronoengineering degree requirements?",
+      "history": [],
+      "http_status": 200,
+      "answer": "I couldn't find enough reliable information in the available Virginia Tech sources to answer that. Please clarify the program, topic, or year if relevant.",
+      "sources": [],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "no_sources": true
+      },
+      "seconds": 13.064
+    },
+    {
+      "id": "ambiguous",
+      "question": "What does it require?",
+      "history": [],
+      "http_status": 200,
+      "answer": "What program, major, or requirement are you asking about?",
+      "sources": [],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "no_sources": true
+      },
+      "seconds": 1.103
+    },
+    {
+      "id": "parking",
+      "question": "Where can I get a Virginia Tech student parking permit?",
+      "history": [],
+      "http_status": 200,
+      "answer": "You can purchase a Virginia Tech student parking permit in two ways:\n\n- **Online** through the Parking Services portal at virginiatech.t2hosted.com [1]\n- **In person** at the Parking Services office, located at 505 Beamer Way [2]\n\nWhen purchasing, students must present their **Hokie Passport** and **vehicle registration** [1].",
+      "sources": [
+        {
+          "id": 1,
+          "title": "Student Parking  | Parking Services | Virginia Tech",
+          "url": "https://parking.vt.edu/parking/students.html"
+        },
+        {
+          "id": 2,
+          "title": "22Ts008 Parking Operation Manual 0106",
+          "url": "https://parking.vt.edu/content/dam/parking_vt_edu/manuals/22TS008%20Parking%20Operation%20Manual%200106.pdf"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true
+      },
+      "seconds": 6.43
+    }
+  ],
+  "readiness": {
+    "status": "ready"
+  },
+  "stream": {
+    "seconds": 10.716,
+    "event_types": [
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "answer",
+      "sources",
+      "done"
+    ],
+    "answer": "The undergraduate Computer Science major (BS) requires **123 credit hours** to graduate, according to the 2026-2027 catalog edition [1].\n\nNote that this total is specific to that catalog edition. If you're on an earlier catalog year, your required total could differ \u2014 you can confirm your requirements via your checksheet or a DARS audit in HokieSpa [8].",
+    "sources": [
+      {
+        "id": 1,
+        "title": "Computer Science Major",
+        "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/"
+      },
+      {
+        "id": 8,
+        "title": "Academic Advising Frequently Asked Questions  | College of Science | Virginia Tech",
+        "url": "https://science.vt.edu/academics/advising/faq.html"
+      }
+    ],
+    "checks": {
+      "authoritative_answer": true,
+      "done_last": true,
+      "no_error": true
+    }
+  }
+}

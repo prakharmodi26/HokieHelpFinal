@@ -14,3 +14,5 @@ discovery_progress.log
 .DS_Store
 TEMP_LOGOS/
 .worktrees/
+.memory/
+node_modules/

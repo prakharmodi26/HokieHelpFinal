@@ -1,0 +1,333 @@
+{
+  "fixture_version": "1.0",
+  "description": "Synthetic fixtures for the ARC endpoint model benchmark (benchmark_arc.py). Conversations are synthetic (no real user logs); names, courses, programs, facts, and .invalid URLs are supplied test data and are NOT authoritative VT CS data. No real user logs and no production VT CS content are sent to any endpoint.",
+  "planner_contract": {
+    "output_schema": {
+      "intent": "search | clarify | conversation",
+      "queries": "list[str] - self-contained search query strings",
+      "clarification": "str | null - one specific question to ask the user, required when intent=clarify"
+    },
+    "rules": [
+      "intent=search: ONE self-contained query by default, even for comparisons or multi-part messages a single query can cover; 2-3 queries ONLY for genuinely multi-part or comparison messages whose aspects cannot fit one query (one query per distinct aspect); never more than 3",
+      "intent=clarify: on-topic but too ambiguous to search; queries must be empty; clarification must be a non-empty question",
+      "intent=conversation: greetings, thanks, small talk, or out-of-scope requests; queries must be empty; clarification must be null",
+      "every query must be self-contained: resolve pronouns/references from history, preserve all constraints (course codes, dates, modality, audience, program names), and never inject history entities the current message does not refer to"
+    ]
+  },
+  "planner_cases": [
+    {
+      "id": "greeting_basic",
+      "category": "conversation",
+      "user_message": "Hey! How's it going?",
+      "history": [],
+      "expected": {
+        "intent": "conversation",
+        "query_count_min": 0,
+        "query_count_max": 0,
+        "must_include_any": [],
+        "must_not_include": [],
+        "clarification_required": false
+      },
+      "notes": "Pure greeting routes to conversation, no search queries."
+    },
+    {
+      "id": "gratitude_close",
+      "category": "conversation",
+      "user_message": "Thanks, that was really helpful!",
+      "history": [
+        {"role": "user", "content": "Where can I find the CS course catalog?"},
+        {"role": "assistant", "content": "You can browse the synthetic CS course catalog on the department website."}
+      ],
+      "expected": {
+        "intent": "conversation",
+        "query_count_min": 0,
+        "query_count_max": 0,
+        "must_include_any": [],
+        "must_not_include": ["catalog"],
+        "clarification_required": false
+      },
+      "notes": "Thanks/closing turn must not trigger a new search."
+    },
+    {
+      "id": "out_of_scope_code_request",
+      "category": "conversation",
+      "user_message": "Can you write me a Python function that reverses a string?",
+      "history": [],
+      "expected": {
+        "intent": "conversation",
+        "query_count_min": 0,
+        "query_count_max": 0,
+        "must_include_any": [],
+        "must_not_include": [],
+        "clarification_required": false
+      },
+      "notes": "Out-of-scope general coding request routes to conversation, not knowledge-base search."
+    },
+    {
+      "id": "greeting_plus_substantive_question",
+      "category": "routing",
+      "user_message": "Hi! Quick question - what's the CS department's mailing address?",
+      "history": [],
+      "expected": {
+        "intent": "search",
+        "query_count_min": 1,
+        "query_count_max": 1,
+        "must_include_any": [["address"], ["cs department", "computer science"]],
+        "must_not_include": [],
+        "clarification_required": false
+      },
+      "notes": "A greeting attached to a substantive question must still be planned as a search."
+    },
+    {
+      "id": "standalone_deadline",
+      "category": "standalone",
+      "user_message": "What is the deadline to apply to the CS major?",
+      "history": [],
+      "expected": {
+        "intent": "search",
+        "query_count_min": 1,
+        "query_count_max": 1,
+        "must_include_any": [["deadline", "due date"], ["apply", "application"], ["cs major", "computer science major"]],
+        "must_not_include": [],
+        "clarification_required": false
+      },
+      "notes": "Single-topic factual question: exactly one self-contained query."
+    },
+    {
+      "id": "standalone_faculty_course",
+      "category": "standalone",
+      "user_message": "Does Dr. Quasar Lin teach computer graphics this fall?",
+      "history": [],
+      "expected": {
+        "intent": "search",
+        "query_count_min": 1,
+        "query_count_max": 1,
+        "must_include_any": [["quasar lin"], ["computer graphics", "graphics"], ["fall"]],
+        "must_not_include": [],
+        "clarification_required": false
+      },
+      "notes": "Entity (synthetic faculty name) and topic plus the 'this fall' constraint must survive into the query."
+    },
+    {
+      "id": "constraint_dense_single",
+      "category": "standalone",
+      "user_message": "Are there online sections of CS 1014 offered in summer 2027 for non-majors?",
+      "history": [],
+      "expected": {
+        "intent": "search",
+        "query_count_min": 1,
+        "query_count_max": 1,
+        "must_include_any": [["cs 1014"], ["online"], ["summer"], ["2027"], ["non-major", "non major", "nonmajor", "non majors", "non-majors"]],
+        "must_not_include": [],
+        "clarification_required": false
+      },
+      "notes": "Four stacked constraints (course code, modality, term, audience) must all be preserved in a single query."
+    },
+    {
+      "id": "single_entity_two_facets",
+      "category": "standalone",
+      "user_message": "Where is the CS advising office and when is it open?",
+      "history": [],
+      "expected": {
+        "intent": "search",
+        "query_count_min": 1,
+        "query_count_max": 1,
+        "must_include_any": [["advising"]],
+        "must_not_include": [],
+        "clarification_required": false
+      },
+      "notes": "Adversarial: looks multi-part but is one entity (advising office) with two facets; bounded spec expects a single query."
+    },
+    {
+      "id": "comparison_two_tracks",
+      "category": "multipart",
+      "user_message": "What's the difference between the software engineering track and the data-centric computing track in the CS undergrad program?",
+      "history": [],
+      "expected": {
+        "intent": "search",
+        "query_count_min": 1,
+        "query_count_max": 3,
+        "must_include_any": [["software engineering"], ["data-centric", "data centric"]],
+        "must_not_include": [],
+        "clarification_required": false
+      },
+      "notes": "True comparison: a compact single query covering both tracks is valid; up to 3 allowed (one per aspect). Both track names must appear."
+    },
+    {
+      "id": "multipart_three_parts",
+      "category": "multipart",
+      "user_message": "How do I declare a CS minor, which courses does it require, and who is the advisor for CS minors?",
+      "history": [],
+      "expected": {
+        "intent": "search",
+        "query_count_min": 1,
+        "query_count_max": 3,
+        "must_include_any": [["declare", "declaration"], ["course", "requirement", "curriculum"], ["advisor", "advise"]],
+        "must_not_include": [],
+        "clarification_required": false
+      },
+      "notes": "Explicitly three-part question: up to one query per distinct aspect (declaration, course requirements, advisor), max 3; a compact single query is also acceptable."
+    },
+    {
+      "id": "history_pronoun_resolution",
+      "category": "history",
+      "user_message": "What are her office hours?",
+      "history": [
+        {"role": "user", "content": "Who teaches CS 3114?"},
+        {"role": "assistant", "content": "Dr. Priya Raman teaches CS 3114 (Data Structures and Algorithms)."}
+      ],
+      "expected": {
+        "intent": "search",
+        "query_count_min": 1,
+        "query_count_max": 1,
+        "must_include_any": [["priya raman"], ["office hours"]],
+        "must_not_include": [],
+        "clarification_required": false
+      },
+      "notes": "Pronoun 'her' must be resolved to the history entity Dr. Priya Raman, producing a standalone query."
+    },
+    {
+      "id": "history_topic_shift_no_injection",
+      "category": "history",
+      "user_message": "Who is the head of the CS department?",
+      "history": [
+        {"role": "user", "content": "Tell me about the accelerated master's program in CS."},
+        {"role": "assistant", "content": "The accelerated MS lets strong VT CS undergrads start graduate coursework early and finish both degrees in five years."}
+      ],
+      "expected": {
+        "intent": "search",
+        "query_count_min": 1,
+        "query_count_max": 1,
+        "must_include_any": [["head", "chair", "chairperson", "department head"]],
+        "must_not_include": ["ms", "masters", "master's", "accelerated"],
+        "clarification_required": false
+      },
+      "notes": "New standalone topic: history entities (accelerated MS) must NOT leak into the query."
+    },
+    {
+      "id": "history_constraint_swap",
+      "category": "history",
+      "user_message": "What about for master's students?",
+      "history": [
+        {"role": "user", "content": "What funding is available for PhD students in CS?"},
+        {"role": "assistant", "content": "PhD students can receive teaching assistantships, research assistantships, and synthetic fellowships."}
+      ],
+      "expected": {
+        "intent": "search",
+        "query_count_min": 1,
+        "query_count_max": 1,
+        "must_include_any": [["master"], ["funding", "assistantship", "fellowship", "aid", "stipend", "scholarship"]],
+        "must_not_include": ["phd", "ph.d", "doctoral"],
+        "clarification_required": false
+      },
+      "notes": "Follow-up swaps the audience constraint from PhD to master's while keeping the funding topic; the stale 'phd' term must be dropped."
+    },
+    {
+      "id": "ambiguous_missing_target",
+      "category": "clarify",
+      "user_message": "When is the deadline?",
+      "history": [],
+      "expected": {
+        "intent": "clarify",
+        "query_count_min": 0,
+        "query_count_max": 0,
+        "must_include_any": [],
+        "must_not_include": [],
+        "clarification_required": true
+      },
+      "notes": "On-topic but missing which program/application; planner must ask one clarifying question instead of searching."
+    },
+    {
+      "id": "ambiguous_unresolvable_reference",
+      "category": "clarify",
+      "user_message": "How do I apply for it?",
+      "history": [],
+      "expected": {
+        "intent": "clarify",
+        "query_count_min": 0,
+        "query_count_max": 0,
+        "must_include_any": [],
+        "must_not_include": [],
+        "clarification_required": true
+      },
+      "notes": "Reference 'it' with no history to resolve it: must clarify rather than guess an entity."
+    }
+  ],
+  "answer_probes": [
+    {
+      "id": "grounded_office_hours",
+      "question": "What are Dr. Quasar Lin's office hours?",
+      "context_chunks": [
+        {
+          "title": "Faculty profile - Dr. Quasar Lin (synthetic)",
+          "url": "https://synthetic.invalid/faculty/quasar-lin",
+          "text": "Dr. Quasar Lin is a teaching assistant professor in the (synthetic) VT CS department. Office hours: Tuesdays and Thursdays, 1:30-3:30 PM, McBryde Hall room 660. Students can also email qstar@synthetic.invalid to schedule an appointment."
+        }
+      ],
+      "expect": "grounded",
+      "must_include_any": [["tuesday", "tuesdays"], ["1:30"]],
+      "must_not_include_any": []
+    },
+    {
+      "id": "grounded_minor_credits",
+      "question": "How many credits is the Computational Basket Weaving minor?",
+      "context_chunks": [
+        {
+          "title": "Computational Basket Weaving minor (synthetic)",
+          "url": "https://synthetic.invalid/minors/cbw",
+          "text": "The Computational Basket Weaving (CBW) minor is a synthetic 18-credit program. Required courses: CBW 2014 (Introduction to Woven Structures) and CBW 3124 (Algorithmic Patterns), plus 9 credits of electives. Students declare the minor through the synthetic minors portal."
+        }
+      ],
+      "expect": "grounded",
+      "must_include_any": [["18", "eighteen"]],
+      "must_not_include_any": []
+    },
+    {
+      "id": "missing_detail_refusal",
+      "question": "What is Dr. Quasar Lin's phone number?",
+      "context_chunks": [
+        {
+          "title": "Faculty profile - Dr. Quasar Lin (synthetic)",
+          "url": "https://synthetic.invalid/faculty/quasar-lin",
+          "text": "Dr. Quasar Lin is a teaching assistant professor in the (synthetic) VT CS department. Office hours: Tuesdays and Thursdays, 1:30-3:30 PM, McBryde Hall room 660. The profile page does not list a phone number."
+        }
+      ],
+      "expect": "fallback",
+      "must_include_any": [],
+      "must_not_include_any": []
+    },
+    {
+      "id": "person_not_found_refusal",
+      "question": "Who is Dr. Bogo Sort and what courses do they teach?",
+      "context_chunks": [
+        {
+          "title": "Faculty profile - Dr. Ada Cache (synthetic)",
+          "url": "https://synthetic.invalid/faculty/ada-cache",
+          "text": "Dr. Ada Cache is an associate professor in the (synthetic) VT CS department. She teaches SYN 2234 (Memory Hierarchy) and SYN 4414 (Latency Tolerant Systems). Her office is in Whittemore Hall room 311."
+        }
+      ],
+      "expect": "fallback",
+      "must_include_any": [],
+      "must_not_include_any": ["ada cache", "memory hierarchy", "latency"]
+    },
+    {
+      "id": "citation_multi_source",
+      "question": "When do applications open for the MS in Quantum Programming, and what is the application fee?",
+      "context_chunks": [
+        {
+          "title": "MS in Quantum Programming admissions (synthetic)",
+          "url": "https://synthetic.invalid/grad/quantum-ms",
+          "text": "The MS in Quantum Programming is a synthetic degree. Applications for fall entry open on March 1 each year and close on June 15."
+        },
+        {
+          "title": "Graduate application fees (synthetic)",
+          "url": "https://synthetic.invalid/grad/fees",
+          "text": "The application fee for the synthetic MS in Quantum Programming is $75. Fee waivers are available for synthetic bridge program participants."
+        }
+      ],
+      "expect": "grounded",
+      "must_include_any": [["march 1"], ["75", "$75"]],
+      "must_not_include_any": []
+    }
+  ]
+}

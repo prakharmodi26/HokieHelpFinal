@@ -1,0 +1,18 @@
+# Apply only after canary + repaired-collection acceptance in context endeavour, namespace test.
+# kubectl --context endeavour -n test patch deployment chatbot --type strategic --patch-file k8s/quality/chatbot-rollout-patch.yaml
+spec:
+  template:
+    spec:
+      terminationGracePeriodSeconds: 120
+      containers:
+        - name: chatbot
+          image: ghcr.io/prakharmodi26/hokiehelp-chatbot@sha256:c544157c1fda379cc26a1a787cf77564c7ca628cf9075fd5f8b747c7632d57d3
+          envFrom:
+            - configMapRef:
+                name: chatbot-quality-20260922
+          env:
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-arc-quality
+                  key: llm-api-key

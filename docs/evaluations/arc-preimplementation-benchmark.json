@@ -1,0 +1,399 @@
+{
+  "benchmark": "arc-model-benchmark",
+  "generated_utc": "2026-09-20T06:01:03+00:00",
+  "endpoint": "https://llm-api.arc.vt.edu/api/v1",
+  "credential_source": "pi-config /home/prakharmodi/.pi/agent/models.json (provider 'vt-arc', key via shell helper)",
+  "settings": {
+    "timeout_s": 30.0,
+    "max_tokens": 2048,
+    "planner_temperature": 0.0,
+    "answer_temperature": 0.0,
+    "planner_response_format": "json_object (with single no-format fallback)",
+    "fixtures": "/home/prakharmodi/projects/HokieHelpFinal/services/chatbot/tests/fixtures/query_planning_cases.json",
+    "planner_case_ids": [
+      "constraint_dense_single",
+      "comparison_two_tracks"
+    ],
+    "answer_probe_ids": [
+      "grounded_office_hours"
+    ]
+  },
+  "provider_capability": {
+    "ok": true,
+    "status": 200,
+    "latency_ms": 883.6,
+    "model_count": 12,
+    "model_ids": [
+      "DeepSeek-V4.1-Flash",
+      "DeepSeek-V4.1-Flash-thinking-low",
+      "DeepSeek-V4.1-Flash-thinking-max",
+      "DeepSeek-V4.1-Flash-thinking-max-legacy-tool-calling",
+      "GLM-5.3",
+      "GLM-5.3-thinking-high",
+      "glm-53-thinking-high-legacy-tool-calling",
+      "gpt-oss-120b",
+      "gpt-oss-120b-thinking-high",
+      "gpt-oss-120b-thinking-high-legacy-tool-calling",
+      "gpt-oss-120b-thinking-low",
+      "vt-arc-llm"
+    ],
+    "embedding_models": [],
+    "lists_embeddings": false
+  },
+  "models": {
+    "GLM-5.3": {
+      "planner_cases": [
+        {
+          "case_id": "constraint_dense_single",
+          "category": "standalone",
+          "expected": {
+            "intent": "search",
+            "query_count_min": 1,
+            "query_count_max": 1,
+            "must_include_any": [
+              [
+                "cs 1014"
+              ],
+              [
+                "online"
+              ],
+              [
+                "summer"
+              ],
+              [
+                "2027"
+              ],
+              [
+                "non-major",
+                "non major",
+                "nonmajor",
+                "non majors",
+                "non-majors"
+              ]
+            ],
+            "must_not_include": [],
+            "clarification_required": false
+          },
+          "structured_output": {
+            "requested": true,
+            "supported": true
+          },
+          "response": {
+            "status": 200,
+            "finish_reason": "stop",
+            "latency_ms": 4168.6,
+            "content_chars": 106,
+            "reasoning_content_chars": 0,
+            "usage": {
+              "prompt_tokens": 462,
+              "completion_tokens": 115,
+              "total_tokens": 577
+            },
+            "content": "{\"intent\": \"search\", \"queries\": [\"CS 1014 online sections summer 2027 non-majors\"], \"clarification\": null}"
+          },
+          "score": {
+            "passed": true,
+            "checks": {
+              "json_valid": true,
+              "intent_ok": true,
+              "query_count_ok": true,
+              "constraints_preserved": true,
+              "no_forbidden_terms": true
+            },
+            "got": {
+              "intent": "search",
+              "query_count": 1,
+              "queries": [
+                "CS 1014 online sections summer 2027 non-majors"
+              ],
+              "clarification": null
+            }
+          },
+          "passed": true
+        },
+        {
+          "case_id": "comparison_two_tracks",
+          "category": "multipart",
+          "expected": {
+            "intent": "search",
+            "query_count_min": 1,
+            "query_count_max": 3,
+            "must_include_any": [
+              [
+                "software engineering"
+              ],
+              [
+                "data-centric",
+                "data centric"
+              ]
+            ],
+            "must_not_include": [],
+            "clarification_required": false
+          },
+          "structured_output": {
+            "requested": true,
+            "supported": true
+          },
+          "response": {
+            "status": 200,
+            "finish_reason": "stop",
+            "latency_ms": 12040.6,
+            "content_chars": 167,
+            "reasoning_content_chars": 0,
+            "usage": {
+              "prompt_tokens": 462,
+              "completion_tokens": 408,
+              "total_tokens": 870
+            },
+            "content": "{\"intent\": \"search\", \"queries\": [\"CS undergraduate program software engineering track vs data-centric computing track requirements curriculum\"], \"clarification\": null}"
+          },
+          "score": {
+            "passed": true,
+            "checks": {
+              "json_valid": true,
+              "intent_ok": true,
+              "query_count_ok": true,
+              "constraints_preserved": true,
+              "no_forbidden_terms": true
+            },
+            "got": {
+              "intent": "search",
+              "query_count": 1,
+              "queries": [
+                "CS undergraduate program software engineering track vs data-centric computing track requirements curriculum"
+              ],
+              "clarification": null
+            }
+          },
+          "passed": true
+        }
+      ],
+      "answer_probes": [
+        {
+          "probe_id": "grounded_office_hours",
+          "expect": "grounded",
+          "question": "What are Dr. Quasar Lin's office hours?",
+          "response": {
+            "status": 200,
+            "finish_reason": "stop",
+            "latency_ms": 2848.9,
+            "content_chars": 173,
+            "reasoning_content_chars": 0,
+            "usage": {
+              "prompt_tokens": 252,
+              "completion_tokens": 89,
+              "total_tokens": 341
+            },
+            "content": "Dr. Quasar Lin's office hours are Tuesdays and Thursdays, 1:30–3:30 PM, in McBryde Hall room 660. Students can also email qstar@synthetic.invalid to schedule an appointment."
+          },
+          "score": {
+            "passed": true,
+            "checks": {
+              "non_empty": true,
+              "required_terms_present": true,
+              "no_forbidden_terms": true,
+              "no_premature_fallback": true
+            }
+          },
+          "passed": true
+        }
+      ],
+      "summary": {
+        "planner_pass": 2,
+        "planner_total": 2,
+        "planner_pass_rate": 1.0,
+        "answer_pass": 1,
+        "answer_total": 1,
+        "mean_latency_ms": 6352.7,
+        "max_latency_ms": 12040.6,
+        "json_object_requested": true,
+        "json_object_supported": true,
+        "structured_unresolved": 0,
+        "request_errors": 0
+      }
+    },
+    "DeepSeek-V4.1-Flash": {
+      "planner_cases": [
+        {
+          "case_id": "constraint_dense_single",
+          "category": "standalone",
+          "expected": {
+            "intent": "search",
+            "query_count_min": 1,
+            "query_count_max": 1,
+            "must_include_any": [
+              [
+                "cs 1014"
+              ],
+              [
+                "online"
+              ],
+              [
+                "summer"
+              ],
+              [
+                "2027"
+              ],
+              [
+                "non-major",
+                "non major",
+                "nonmajor",
+                "non majors",
+                "non-majors"
+              ]
+            ],
+            "must_not_include": [],
+            "clarification_required": false
+          },
+          "structured_output": {
+            "requested": true,
+            "supported": true
+          },
+          "response": {
+            "status": 200,
+            "finish_reason": "stop",
+            "latency_ms": 3615.0,
+            "content_chars": 101,
+            "reasoning_content_chars": 0,
+            "usage": {
+              "prompt_tokens": 492,
+              "completion_tokens": 157,
+              "total_tokens": 649
+            },
+            "content": "{\"intent\":\"search\",\"queries\":[\"CS 1014 online sections summer 2027 non-majors\"],\"clarification\":null}"
+          },
+          "score": {
+            "passed": true,
+            "checks": {
+              "json_valid": true,
+              "intent_ok": true,
+              "query_count_ok": true,
+              "constraints_preserved": true,
+              "no_forbidden_terms": true
+            },
+            "got": {
+              "intent": "search",
+              "query_count": 1,
+              "queries": [
+                "CS 1014 online sections summer 2027 non-majors"
+              ],
+              "clarification": null
+            }
+          },
+          "passed": true
+        },
+        {
+          "case_id": "comparison_two_tracks",
+          "category": "multipart",
+          "expected": {
+            "intent": "search",
+            "query_count_min": 1,
+            "query_count_max": 3,
+            "must_include_any": [
+              [
+                "software engineering"
+              ],
+              [
+                "data-centric",
+                "data centric"
+              ]
+            ],
+            "must_not_include": [],
+            "clarification_required": false
+          },
+          "structured_output": {
+            "requested": true,
+            "supported": true
+          },
+          "response": {
+            "status": 200,
+            "finish_reason": "stop",
+            "latency_ms": 1954.6,
+            "content_chars": 194,
+            "reasoning_content_chars": 0,
+            "usage": {
+              "prompt_tokens": 493,
+              "completion_tokens": 73,
+              "total_tokens": 566
+            },
+            "content": "{\"intent\": \"search\", \"queries\": [\"software engineering track requirements CS undergraduate program\", \"data-centric computing track requirements CS undergraduate program\"], \"clarification\": null}"
+          },
+          "score": {
+            "passed": true,
+            "checks": {
+              "json_valid": true,
+              "intent_ok": true,
+              "query_count_ok": true,
+              "constraints_preserved": true,
+              "no_forbidden_terms": true
+            },
+            "got": {
+              "intent": "search",
+              "query_count": 2,
+              "queries": [
+                "software engineering track requirements CS undergraduate program",
+                "data-centric computing track requirements CS undergraduate program"
+              ],
+              "clarification": null
+            }
+          },
+          "passed": true
+        }
+      ],
+      "answer_probes": [
+        {
+          "probe_id": "grounded_office_hours",
+          "expect": "grounded",
+          "question": "What are Dr. Quasar Lin's office hours?",
+          "response": {
+            "status": 200,
+            "finish_reason": "stop",
+            "latency_ms": 1528.6,
+            "content_chars": 60,
+            "reasoning_content_chars": 0,
+            "usage": {
+              "prompt_tokens": 271,
+              "completion_tokens": 72,
+              "total_tokens": 343
+            },
+            "content": "Tuesdays and Thursdays, 1:30-3:30 PM, McBryde Hall room 660."
+          },
+          "score": {
+            "passed": true,
+            "checks": {
+              "non_empty": true,
+              "required_terms_present": true,
+              "no_forbidden_terms": true,
+              "no_premature_fallback": true
+            }
+          },
+          "passed": true
+        }
+      ],
+      "summary": {
+        "planner_pass": 2,
+        "planner_total": 2,
+        "planner_pass_rate": 1.0,
+        "answer_pass": 1,
+        "answer_total": 1,
+        "mean_latency_ms": 2366.1,
+        "max_latency_ms": 3615.0,
+        "json_object_requested": true,
+        "json_object_supported": true,
+        "structured_unresolved": 0,
+        "request_errors": 0
+      }
+    }
+  },
+  "evaluation_note": "Heuristic string-matching evaluation on synthetic fixtures; NOT semantic gold. Small sample by default (2 planner cases + 1 grounded answer per model); run --all-cases for the full fixture set.",
+  "findings": [
+    "GET /models succeeded (12 models listed); embeddings listed: no",
+    "GLM-5.3: planner 2/2 passed, answer 1/1 passed, mean latency 6352.7 ms, response_format json_object supported: True",
+    "DeepSeek-V4.1-Flash: planner 2/2 passed, answer 1/1 passed, mean latency 2366.1 ms, response_format json_object supported: True"
+  ],
+  "recommendations": [
+    "DeepSeek-V4.1-Flash: planner pass rate 1.0, mean latency 2366.1 ms, answer probes 1/1",
+    "GLM-5.3: planner pass rate 1.0, mean latency 6352.7 ms, answer probes 1/1",
+    "This benchmark is heuristic (synthetic fixtures, string matching, small sample). It does NOT select a production default; run --all-cases and review failures before deciding."
+  ]
+}

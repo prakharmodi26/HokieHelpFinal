@@ -59,5 +59,5 @@ def check_prompt(text: str) -> None:
         if pattern.search(lowered):
             raise PromptRejected(
                 "Your question contains patterns that are not allowed. "
-                "Please ask a question about Virginia Tech's CS department."
+                "Please ask a question about Virginia Tech."
             )

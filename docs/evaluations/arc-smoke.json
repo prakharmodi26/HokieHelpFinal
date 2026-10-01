@@ -1,0 +1,31 @@
+{
+  "purpose": "Independent primary-agent API compatibility smoke test, not a quality benchmark",
+  "base_url": "https://llm-api.arc.vt.edu/api/v1",
+  "model_listing_http_status": 200,
+  "request": {
+    "question": "How many credits do I need to graduate BS in CS?",
+    "system": "You plan search queries for Virginia Tech. Return a JSON object with intent (search, clarify, conversation), queries (1 standalone query for search, otherwise empty), clarification (null unless clarification needed). Preserve explicit program and year. Do not answer the question.",
+    "temperature": 0,
+    "max_tokens": 512,
+    "response_format": {"type": "json_object"}
+  },
+  "results": [
+    {
+      "model": "GLM-5.3",
+      "seconds": 14.66,
+      "finish_reason": "stop",
+      "output": {"intent": "search", "queries": ["Virginia Tech BS Computer Science graduation credit requirements"], "clarification": null}
+    },
+    {
+      "model": "DeepSeek-V4.1-Flash",
+      "seconds": 7.15,
+      "finish_reason": "stop",
+      "output": {"intent": "search", "queries": ["Virginia Tech BS Computer Science graduation credits requirements"], "clarification": null}
+    }
+  ],
+  "limitations": [
+    "One synthetic question per model; no statistical latency estimate or semantic quality ranking.",
+    "Simplified compatibility prompt, not the final production planner prompt.",
+    "Calls ran concurrently; timings include endpoint load and network latency."
+  ]
+}

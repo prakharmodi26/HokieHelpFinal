@@ -1,0 +1,81 @@
+{
+  "source_ref": "origin/feat/vtedu-full-domain-ingestion@e0515fdfb3bf460f39d8520e5436ffc8ed98bbd3",
+  "source_file": "services/crawler/src/crawler/courseleaf.py",
+  "source_sha256": "6e466e9911b7d8542df3f8c5d8c4af5a6f8e0288052e21e3a1c54c8b4ad23a99",
+  "method": "Execute archived parser with unused browser imports removed; no crawl or production image execution.",
+  "synthetic_table_probe": {
+    "input_html": "<main><h1>Computer Science Major</h1><h2>Program Curriculum</h2><table><tr><td>MATH 2114</td><td>Introduction to Linear Algebra</td><td>3</td></tr><tr><td>Total Credits</td><td>123</td></tr></table><h2>Graduation Requirements</h2><ul><li>Complete 123 credit hours</li></ul></main>",
+    "output_contains_math_2114": false,
+    "output_contains_123": true,
+    "output_requirements": [
+      "Program Curriculum",
+      "Graduation Requirements",
+      "Complete 123 credit hours"
+    ]
+  },
+  "public_page": {
+    "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+    "status": 202,
+    "html_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "body_bytes": 0,
+    "usable_content": false,
+    "assessment": "Raw HTTP returned an empty 202 response; this is a fetch/access failure, not evidence that the curriculum is absent."
+  },
+  "full_html_probe": {
+    "record_count": 0,
+    "assessment": "Not a valid real-HTML parser test because the input response was empty.",
+    "limitation": "Archived parser result is not proof of the code in historical image :0705."
+  },
+  "independent_readable_fetch": {
+    "tool": "web_fetch",
+    "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+    "curriculum_total_credits": 123,
+    "observed_curriculum_rows": ["MATH 2114", "MATH 1225", "MATH 1226", "CS 1114"],
+    "limitation": "Readable web fetch succeeded separately; this does not establish that the historical crawler received identical HTML."
+  },
+  "blocklist_probe": {
+    "extra_path_patterns_source": "current live crawler ConfigMap; not established historical configuration",
+    "urls": [
+      {
+        "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+        "blocked": false
+      },
+      {
+        "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+        "blocked": false
+      },
+      {
+        "url": "https://cs.vt.edu/Undergraduate.html",
+        "blocked": false
+      },
+      {
+        "url": "https://registrar.vt.edu/graduation-multi-brief/checksheets.html",
+        "blocked": false
+      },
+      {
+        "url": "https://classes.vt.edu/",
+        "blocked": true
+      },
+      {
+        "url": "https://ext.vt.edu/",
+        "blocked": true
+      },
+      {
+        "url": "https://www.vt.edu/admissions/undergraduate/apply/deadlines.html",
+        "blocked": false
+      },
+      {
+        "url": "https://parking.vt.edu/",
+        "blocked": false
+      },
+      {
+        "url": "https://cs.vt.edu/content/example",
+        "blocked": true
+      },
+      {
+        "url": "https://cs.vt.edu/wp-content/uploads/checksheet.pdf",
+        "blocked": true
+      }
+    ]
+  }
+}

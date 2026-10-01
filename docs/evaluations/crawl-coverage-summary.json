@@ -1,0 +1,94 @@
+{
+  "run_id": "run-20260705-043927",
+  "started_at": "2026-07-05T04:39:27.798650+00:00",
+  "ended_at": "2026-07-06T08:21:21.237068+00:00",
+  "duration_seconds": 99713.44,
+  "status": "completed",
+  "frontier": {
+    "done": 17154,
+    "failed": 6298,
+    "skipped": 2852
+  },
+  "render": {
+    "pages_stored": 17154,
+    "pages_failed": 6298,
+    "needs_js": 1585,
+    "blocked": 181,
+    "documents": 14923,
+    "pages_skipped": 2852,
+    "wedged_batches": 4,
+    "requeued_leased": 0
+  },
+  "documents": {
+    "documents_processed": 13759,
+    "documents_failed": 1164
+  },
+  "source": {
+    "bucket": "logs",
+    "key": "crawl-summary-2026-07-06_08-21-21.json"
+  },
+  "by_host_sample": {
+    "admissions.vt.edu": {
+      "failed": 4
+    },
+    "catalog.vt.edu": {
+      "done": 39,
+      "skipped": 11
+    },
+    "cs.vt.edu": {
+      "done": 13,
+      "failed": 2,
+      "skipped": 25
+    },
+    "finaid.vt.edu": {
+      "done": 48,
+      "failed": 1,
+      "skipped": 1
+    },
+    "math.vt.edu": {
+      "done": 35,
+      "failed": 11,
+      "skipped": 4
+    },
+    "parking.vt.edu": {
+      "done": 14,
+      "failed": 26,
+      "skipped": 1
+    },
+    "registrar.vt.edu": {
+      "done": 37,
+      "failed": 6,
+      "skipped": 10
+    },
+    "students.cs.vt.edu": {
+      "done": 27,
+      "failed": 8,
+      "skipped": 3
+    },
+    "website.cs.vt.edu": {
+      "done": 284,
+      "failed": 29,
+      "skipped": 147
+    },
+    "www.registrar.vt.edu": {
+      "done": 29,
+      "failed": 14,
+      "skipped": 11
+    },
+    "vt.edu": {
+      "done": 92,
+      "failed": 39,
+      "skipped": 4
+    },
+    "www.vt.edu": {
+      "done": 656,
+      "failed": 12,
+      "skipped": 72
+    }
+  },
+  "limitations": [
+    "Aggregate counters do not identify the cause of individual URL failures or skips.",
+    "Special catalog cards and PDF ingestion are separate from normal frontier HTML counts.",
+    "Current ConfigMaps are not proof of historical job configuration."
+  ]
+}

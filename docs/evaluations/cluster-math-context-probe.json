@@ -1,0 +1,900 @@
+{
+  "collection": "hokiehelp-quality-20260922",
+  "model": "GLM-5.3",
+  "max_tokens_override": 4096,
+  "cases": [
+    {
+      "id": "math-followup",
+      "question": "What math courses does it require?",
+      "history": [
+        {
+          "role": "user",
+          "content": "how many credits do i need to complete bs in cs"
+        },
+        {
+          "role": "assistant",
+          "content": "You need to complete **123 credit hours** to graduate with a B.S. in Computer Science [1].\n\nThis is consistent across the available checksheets, which require at least 123 semester credit hours along with a minimum overall GPA of 2.00 and a minimum in-major GPA of 2.00 (calculated using all classes with a CS designator) [2][3][4]."
+        }
+      ],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "Virginia Tech undergraduate CS Computer Science BS degree checksheet required mathematics courses"
+        ],
+        "clarification": null
+      },
+      "evidence": [
+        {
+          "text": "Program: Computer Science Major\nDegree level: undergraduate\nCatalog edition: 2026-2027\nSection: Computer Science Major > Requirements > Electives\n[note 1] CS Non-Technical Course Requirement. B.S. in CS students must complete 30 credits of non-technical courses. All courses are approved as non-technical courses except those in the departments of Biological Sciences, Chemistry, Geosciences, Physics, Mathematics, and Statistics, and all departments in the College of Engineering, except for engineering courses satisfying Pathways 7. Also excluded are courses listed as CS technical electives. [note 2] Independent Study/Undergraduate Research. No more than a total of 6 credits of CS 4974 Independent Study and/or CS 4994 Undergraduate Research may be used to fulfill CS degree requirements. To take Independent Study ( CS 2974 Independent Study or CS 4974 Independent Study ), a minimum overall and in-major GPA of 2.5 is required. To take CS 4994 Undergraduate Research , a minimum overall GPA of 2.5 and an in-major GPA of 3.0 is required. CS 4974 Independent Study and CS 4994 Undergraduate Research also require completion of CS 3114 Data Structures and Algorithms with a grade of C or better. [note 3] Undergraduates Taking Graduate Courses . Students within 2 semesters of graduating and with a 3.0 or better GPA may enroll in 5000-level courses satisfying undergraduate degree requirements within their department if they have been accepted into the Accelerated Undergraduate/Graduate Program, or by permission of the course instructor and the Department. For students not accepted into the Accelerated Undergraduate/Graduate Program, these courses may not be used on the Plan of Study for a graduate degree. [note 4] Career Bridge Experiences help prepare students for post-graduation life and develop a professional identity. Internships, Co-ops, and Undergraduate Research are examples of possible Career Bridge Experiences. Students must participate in a Career Bridge Experience to complete the BSCS degree.",
+          "chunk_id": "d3556d267f8ac571#0010",
+          "document_id": "d3556d267f8ac571",
+          "chunk_index": 10,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Electives"
+          ],
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "title": "Computer Science Major",
+          "source_host": "catalog.vt.edu",
+          "subdomain": "catalog",
+          "page_type": "program",
+          "content_hash": "2185c94b4b252b4f97a9c59403a79b08f9fac4b6ed316026c4dd695709f8574b",
+          "crawl_timestamp": "",
+          "last_modified": "",
+          "is_external": false,
+          "embed_version": 2,
+          "program_name": "Computer Science Major",
+          "program_level": "undergraduate",
+          "catalog_edition": "2026-2027",
+          "key": "undergraduate-college-engineering-computer-science-computer-science-bs",
+          "fusion_score": 0.8333334,
+          "candidate_lane": "program",
+          "query_fusion_score": 0.01639344262295082,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 1
+            }
+          ],
+          "rerank_score": 0.9049869179725647,
+          "source_id": 1,
+          "context_truncated": false
+        },
+        {
+          "text": "|**Additional Requirements and notes**: <br>1. **CS Non-Technical Course Requirement**. B.S. in CS students must complete 30 credits of non-technical courses. All courses are<br>approved as non-technical courses except those in the departments of Biological Sciences, Chemistry, Geosciences, Physics,<br>Mathematics, and Statistics, and all departments in the College of Engineering, except for engineering courses satisfying<br>Pathways 7. Also excluded are courses listed as CS technical electives.<br>2. **Independent Study/Undergraduate Research**. No more than a total of 6 credits of CS Independent Study (4974) and/or CS<br>Undergraduate Research (4994) may be used to fulfill CS degree requirements. To take Independent Study (2974 or 4974), a<br>minimum overall and in-major GPA of 2.5 is required. To take Undergraduate Research (4994), a minimum overall GPA of 2.5 and<br>an in-major GPA of 3.0 is required. CS 4974 and 4994 also require completion of CS 3114 with a grade of**C** or better.<br>3. See checksheetpage 3 for definitions of each elective category and a list of approved courses for each.|**Additional Requirements and notes**: <br>1. **CS Non-Technical Course Requirement**. B.S. in CS students must complete 30 credits of non-technical courses. All courses are<br>approved as non-technical courses except those in the departments of Biological Sciences, Chemistry, Geosciences, Physics,<br>Mathematics, and Statistics, and all departments in the College of Engineering, except for engineering courses satisfying<br>Pathways 7. Also excluded are courses listed as CS technical electives.<br>2. **Independent Study/Undergraduate Research**. No more than a total of 6 credits of CS Independent Study (4974) and/or CS<br>Undergraduate Research (4994) may be used to fulfill CS degree requirements. To take Independent Study (2974 or 4974), a<br>minimum overall and in-major GPA of 2.5 is required. To take Undergraduate Research (4994), a minimum overall GPA of 2.5 and<br>an in-major GPA of 3.0 is required.",
+          "chunk_id": "44624e66a3c9b30f#0006",
+          "document_id": "44624e66a3c9b30f",
+          "chunk_index": 6,
+          "headings_path": [],
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Computer Science Major Checksheet 2022 2023",
+          "source_host": "students.cs.vt.edu",
+          "subdomain": "",
+          "page_type": "general",
+          "content_hash": "089797ceb87f8c02c84b19fafd7c41a49521e454c73f6f4b1a3403a79ed0da1b",
+          "crawl_timestamp": "2026-07-06T06:34:51.742814+00:00",
+          "last_modified": "",
+          "is_external": false,
+          "crawl_depth": 0,
+          "doc_family": "students.cs.vt.edu/content dam website cs vt edu s cs major",
+          "edition_raw": "2022-2023",
+          "edition_rank": 2023.0,
+          "edition_is_latest": false,
+          "embed_version": 2,
+          "fusion_score": 0.5,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.014925373134328358,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 7
+            }
+          ],
+          "rerank_score": 0.9261703491210938,
+          "source_id": 2,
+          "context_truncated": false
+        },
+        {
+          "text": "CS 4974 and 4994 also require completion of CS 3114 with a grade of**C** or better.<br>3. See checksheetpage 3 for definitions of each elective category and a list of approved courses for each.|**Additional Requirements and notes**: <br>1. **CS Non-Technical Course Requirement**. B.S. in CS students must complete 30 credits of non-technical courses. All courses are<br>approved as non-technical courses except those in the departments of Biological Sciences, Chemistry, Geosciences, Physics,<br>Mathematics, and Statistics, and all departments in the College of Engineering, except for engineering courses satisfying<br>Pathways 7. Also excluded are courses listed as CS technical electives.<br>2. **Independent Study/Undergraduate Research**. No more than a total of 6 credits of CS Independent Study (4974) and/or CS<br>Undergraduate Research (4994) may be used to fulfill CS degree requirements. To take Independent Study (2974 or 4974), a<br>minimum overall and in-major GPA of 2.5 is required. To take Undergraduate Research (4994), a minimum overall GPA of 2.5 and<br>an in-major GPA of 3.0 is required. CS 4974 and 4994 also require completion of CS 3114 with a grade of**C** or better.<br>3. See checksheetpage 3 for definitions of each elective category and a list of approved courses for each.|**Additional Requirements and notes**: <br>1. **CS Non-Technical Course Requirement**. B.S. in CS students must complete 30 credits of non-technical courses. All courses are<br>approved as non-technical courses except those in the departments of Biological Sciences, Chemistry, Geosciences, Physics,<br>Mathematics, and Statistics, and all departments in the College of Engineering, except for engineering courses satisfying<br>Pathways 7. Also excluded are courses listed as CS technical electives.<br>2. **Independent Study/Undergraduate Research**. No more than a total of 6 credits of CS Independent Study (4974) and/or CS<br>Undergraduate Research (4994) may be used to fulfill CS degree requirements.",
+          "chunk_id": "44624e66a3c9b30f#0007",
+          "document_id": "44624e66a3c9b30f",
+          "chunk_index": 7,
+          "headings_path": [],
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Computer Science Major Checksheet 2022 2023",
+          "source_host": "students.cs.vt.edu",
+          "subdomain": "",
+          "page_type": "general",
+          "content_hash": "089797ceb87f8c02c84b19fafd7c41a49521e454c73f6f4b1a3403a79ed0da1b",
+          "crawl_timestamp": "2026-07-06T06:34:51.742814+00:00",
+          "last_modified": "",
+          "is_external": false,
+          "crawl_depth": 0,
+          "doc_family": "students.cs.vt.edu/content dam website cs vt edu s cs major",
+          "edition_raw": "2022-2023",
+          "edition_rank": 2023.0,
+          "edition_is_latest": false,
+          "embed_version": 2,
+          "fusion_score": 0.09090909,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.011494252873563218,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 27
+            }
+          ],
+          "rerank_score": 0.9105454087257385,
+          "source_id": 2,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: Computer Science > Interest Areas and Related Degrees/Minors\n### Interest Areas and Related Degrees/Minors\nThe undergraduate CS program provides courses and experiences related to the following areas within computer science: **computational biology and bioinformatics; digital education; human-computer interaction; knowledge, information, and data; scientific computing; security; software engineering; systems and networking**. A short description of each area and related degrees and minors are provided below to enhance your major exploration experience.\n**Computational Biology and Bioinformatics** Encompasses the study of problems inspired by biology through computational means. _Related Engineering Degrees:_ [Biological Systems Engineering](http://www.bse.vt.edu) | [Biomedical Engineering](https://beam.vt.edu/undergraduate.html) _Related Degrees:_[Biochemistry](http://www.biochem.vt.edu/) | [Biological Sciences](http://www.biol.vt.edu/) | [Environmental Data Science](https://cnre.vt.edu/academics/degrees-majors/environmental-data-science.html) | [Mathematics](http://www.math.vt.edu/) | [Multimedia Journalism](http://www.comm.vt.edu/) | [Statistics](http://www.stat.vt.edu/) _Related Minors:_[Biological Sciences](http://www.biol.vt.edu) | [Biomedical Engineering](https://beam.vt.edu/undergraduate/biomedical/minor.html) | [Physics](https://www.phys.vt.edu/Undergraduate/UndergraduateProgram.html)\n**Digital Education** Understand and create new processes for improving computer science education, online courses, and deploying technology in the classroom.",
+          "chunk_id": "723b904e04aa5df3#0001",
+          "document_id": "723b904e04aa5df3",
+          "chunk_index": 1,
+          "headings_path": [
+            "Computer Science",
+            "Interest Areas and Related Degrees/Minors"
+          ],
+          "url": "https://eng.vt.edu/undergraduate/explore-engineering/computer-science.html",
+          "title": "Computer Science  | Engineering | Virginia Tech",
+          "source_host": "eng.vt.edu",
+          "subdomain": "eng",
+          "page_type": "general",
+          "content_hash": "2a4f653d8459eb3eee6e3f17d2d53dc7aac5367d0694e25c5e723f261142a6f2",
+          "crawl_timestamp": "2026-07-05T09:41:43.060869+00:00",
+          "last_modified": "Fri, 03 Jul 2026 13:53:41 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.10795455,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.012048192771084338,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 23
+            }
+          ],
+          "rerank_score": 0.8984104990959167,
+          "source_id": 3,
+          "context_truncated": false
+        },
+        {
+          "text": "To take Independent Study (2974 or 4974), a<br>minimum overall and in-major GPA of 2.5 is required. To take Undergraduate Research (4994), a minimum overall GPA of 2.5 and<br>an in-major GPA of 3.0 is required. CS 4974 and 4994 also require completion of CS 3114 with a grade of**C** or better.<br>3. See checksheetpage 3 for definitions of each elective category and a list of approved courses for each.|**Additional Requirements and notes**: <br>1. **CS Non-Technical Course Requirement**. B.S. in CS students must complete 30 credits of non-technical courses. All courses are<br>approved as non-technical courses except those in the departments of Biological Sciences, Chemistry, Geosciences, Physics,<br>Mathematics, and Statistics, and all departments in the College of Engineering, except for engineering courses satisfying<br>Pathways 7. Also excluded are courses listed as CS technical electives.<br>2. **Independent Study/Undergraduate Research**. No more than a total of 6 credits of CS Independent Study (4974) and/or CS<br>Undergraduate Research (4994) may be used to fulfill CS degree requirements. To take Independent Study (2974 or 4974), a<br>minimum overall and in-major GPA of 2.5 is required. To take Undergraduate Research (4994), a minimum overall GPA of 2.5 and<br>an in-major GPA of 3.0 is required. CS 4974 and 4994 also require completion of CS 3114 with a grade of**C** or better.<br>3. See checksheetpage 3 for definitions of each elective category and a list of approved courses for each.|\n||||||",
+          "chunk_id": "44624e66a3c9b30f#0008",
+          "document_id": "44624e66a3c9b30f",
+          "chunk_index": 8,
+          "headings_path": [],
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf",
+          "title": "Computer Science Major Checksheet 2022 2023",
+          "source_host": "students.cs.vt.edu",
+          "subdomain": "",
+          "page_type": "general",
+          "content_hash": "089797ceb87f8c02c84b19fafd7c41a49521e454c73f6f4b1a3403a79ed0da1b",
+          "crawl_timestamp": "2026-07-06T06:34:51.742814+00:00",
+          "last_modified": "",
+          "is_external": false,
+          "crawl_depth": 0,
+          "doc_family": "students.cs.vt.edu/content dam website cs vt edu s cs major",
+          "edition_raw": "2022-2023",
+          "edition_rank": 2023.0,
+          "edition_is_latest": false,
+          "embed_version": 2,
+          "fusion_score": 0.33333334,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.014492753623188406,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 9
+            }
+          ],
+          "rerank_score": 0.8661325573921204,
+          "source_id": 2,
+          "context_truncated": false
+        },
+        {
+          "text": "# Accreditation\n## Overview\nIn a contemporary world where every educated person must have some knowledge of computing, the Department of Computer Science offers degree programs and courses to meet a variety of needs. The department offers a bachelor of science degree to prepare specialists in the area of computer science itself, a minor in computer science, minors in specialized areas such as cybersecurity and human-computer interaction, and individual courses directed to the needs of non-majors who will be using computers as tools in their chosen careers. The department also offers the M.S., M.Eng., and Ph.D. in computer science ([see Graduate Catalog](https://catalog.vt.edu/graduate/degree-programs/computer-science-applications/)).\nComputer science involves far more than just writing computer programs. It is a technically rigorous field that requires a strong background in mathematics. Computer scientists must be good at problem solving. Their work requires the ability to think abstractly and to represent real-world objects and interactions in ways that can be manipulated by a computer. The field of computer science is characterized by rapid change and entrepreneurship, with new opportunities emerging every year to improve life in diverse areas such as education, communication, science, commerce and entertainment.\n## Accreditation\nThe Bachelor of Science in Computer Science (BSCS) degree program is accredited by the Computing Accreditation Commission of [ABET](https://website.cs.vt.edu/About/abet.org), under the commission\u2019s General Criteria and the Program Criteria for Computer Science and Similarly Named Engineering Programs.",
+          "chunk_id": "fa19289c091169ea#0000",
+          "document_id": "fa19289c091169ea",
+          "chunk_index": 0,
+          "headings_path": [],
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "source_host": "website.cs.vt.edu",
+          "subdomain": "website.cs",
+          "page_type": "about",
+          "content_hash": "10f9332265340724121d4344d82bb6b488cc73c1c76de2c239ddbdb340527da0",
+          "crawl_timestamp": "2026-07-05T08:12:53.144157+00:00",
+          "last_modified": "Wed, 01 Jul 2026 18:11:02 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.1,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.011764705882352941,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 25
+            }
+          ],
+          "rerank_score": 0.8409132957458496,
+          "source_id": 4,
+          "context_truncated": false
+        },
+        {
+          "text": "Computer Science | Engineering | Virginia Tech\n# Computer Science\n### Overview\nComputer scientists study the design, implementation, performance, and usability of computer systems. The program emphasizes software\u2014the aspect of computation that makes computing the powerful and transforming technology it is. \nStudents in the Computer Science (CS) degree program acquire a strong foundation in algorithms, problem-solving, and software development. A diverse set of elective courses provides experience with emerging technologies in areas such as artificial intelligence, bioinformatics, data analytics, graphics, human-computer interaction, Internet programming, networking, cybersecurity, parallel computing, and software engineering. A CS degree prepares students for a wide range of employment options. The degree also serves as good preparation for graduate study in computer science or other information technology fields, as well as business and law.\n### Curriculum\nThe Department of Computer Science offers a Bachelor of Science in Computer Science (BS CS). Courses are focused on software design and development, algorithms, data structures, and computer organization. Review the [University Catalog](https://catalog.vt.edu/undergraduate/college-engineering/computer-science/#programstext) to see the required coursework. \nThe BS CS degree is accredited by the Computing Accreditation Commission (CAC) of [ABET](http://www.abet.org/).",
+          "chunk_id": "723b904e04aa5df3#0000",
+          "document_id": "723b904e04aa5df3",
+          "chunk_index": 0,
+          "headings_path": [],
+          "url": "https://eng.vt.edu/undergraduate/explore-engineering/computer-science.html",
+          "title": "Computer Science  | Engineering | Virginia Tech",
+          "source_host": "eng.vt.edu",
+          "subdomain": "eng",
+          "page_type": "general",
+          "content_hash": "2a4f653d8459eb3eee6e3f17d2d53dc7aac5367d0694e25c5e723f261142a6f2",
+          "crawl_timestamp": "2026-07-05T09:41:43.060869+00:00",
+          "last_modified": "Fri, 03 Jul 2026 13:53:41 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.1,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.011627906976744186,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 26
+            }
+          ],
+          "rerank_score": 0.8296300768852234,
+          "source_id": 3,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: Undergraduate Cybersecurity Education Programs > Cybersecurity Minor \u2013 College of Engineering > Requirements\n### Requirements\nOne of the following networks courses:\n  * ECE 4564: Network Application Design\n  * CS 4254: Computer Network Arch and Programming\n  * CS 4244 Internet Software Development\n  * ECE 4614: Telecommunication Networks\n\n\nOne of the following computer systems courses:\n  * CS 3214: Computer Systems\n  * CS/ECE 4504: Computer Organization\n  * ECE 3574: Applied Software Engineering\n\n\nTwo core security courses:\n  * ECE 4560: Network Security Fundamentals\n  * CS 4264: Principles of Computer Security\n\n\nOne of the following interdisciplinary course:\n  * ACIS 4684: Information Systems Security and Assurance\n  * FIN 4014: Internet, Electronic, and Online Law\n  * MATH 4175: Cryptography I\n  * MATH 4176: Cryptography II\n\n\nOne elective courses from either the networks, computer systems, or interdisciplinary list\nOne credit seminar course\n### Contacts\nCybersecurity Minor Program Director: Dr. Joe Tront\n[ECE Student Services](https://ece.vt.edu/undergrad/advising.html)\n[CS Student Services](https://students.cs.vt.edu/undergraduate-programs.html)\n## Majors\n##  B.S. in Computer Science - Major in Secure Computing \n##  B.S. in Computer Engineering \u2013 Major in Networking and Cybersecurity \nVirginia Tech's Department of Electrical and Computer Engineering has launched a major in networks and cybersecurity as a primary concentration within its computer engineering degree program. In this program students will draw on hardware and software skills to ensure the efficient and safe transmission of data and energy through networks.\n##  B.S. in Business - Cybersecurity Management and Analytics (BIT-Cyber) option - Blacksburg, VA",
+          "chunk_id": "c609743d4a69bd62#0002",
+          "document_id": "c609743d4a69bd62",
+          "chunk_index": 2,
+          "headings_path": [
+            "Undergraduate Cybersecurity Education Programs",
+            "Cybersecurity Minor \u2013 College of Engineering",
+            "Requirements"
+          ],
+          "url": "https://cyber.vt.edu/education/undergraduate-programs.html",
+          "title": "Undergraduate Cybersecurity Education Programs  | Cybersecurity | Virginia Tech",
+          "source_host": "cyber.vt.edu",
+          "subdomain": "cyber",
+          "page_type": "general",
+          "content_hash": "145fb7f81880c1fb27731a6f3f2f204194e3770544260ea25f0ddda9183eb75e",
+          "crawl_timestamp": "2026-07-05T11:44:38.445675+00:00",
+          "last_modified": "Mon, 27 Apr 2026 13:41:35 GMT",
+          "is_external": false,
+          "crawl_depth": 4,
+          "embed_version": 2,
+          "fusion_score": 0.125,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.0125,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 20
+            }
+          ],
+          "rerank_score": 0.7346909642219543,
+          "source_id": 5,
+          "context_truncated": false
+        },
+        {
+          "text": "# Course information\n## Course Information\n**The information provided below does not supercede the approved degree check sheets, roadmaps, catalog descriptions and/or learning outcomes for any course. This information is offered to better help Computer Science students understand their degree requirements, how courses are offered, what they will learn, what to expect, and other information that will greatly assist them in making informed decisions about their educational journey.**\n**Please confer with your assigned academic advisors as needed and required to extrapolate the information in personal academic planning.**\n### Course Offerings\nThe Computer Science Department offers undergraduate courses in four terms throughout the year: Fall, Spring, Winter and Summer. Offerings are subject to change and advanced notice will be provided when possible. \n##  Summer 2026 \n1000 Level\n  * CS 1064: Introduction to Programming in Python\n  * CS 1114: Introduction to Software Design\n  * CS 1944: Computer Science First Year Seminar\n\n\n3000 Level \n  * CS 3114: Data Structures and Algorithms\n  * CS 3304: Comparative Languages\n  * CS 3604: Professionalism in Computing\n  * CS 3654: Introduction to Data Analytics & Visualization\n  * CS 3714: Mobile Software Design\n  * CS 3724: Introduction to Human Computer Interaction\n  * CS 3744: Introduction to GUI Programming & Graphics\n\n\n2000 Level \n  * CS 2064: Intermediate Programming in Python\n  * CS 2104: Introduction to Problem Solving in Computer Science\n  * CS 2114: Software Design and Data Structures\n  * CS 2505: Computer Organization I\n  * CS 2506: Computer Organization II\n\n\n4000 Level\n  * CS 4094: Computer Science Capstone\n  * CS 4104: Data and Algorithm Analysis\n  * CS 4604: Introduction to Database Management Systems",
+          "chunk_id": "b9568e65ff25a1c0#0000",
+          "document_id": "b9568e65ff25a1c0",
+          "chunk_index": 0,
+          "headings_path": [],
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "title": "Course information  | students.cs | Virginia Tech",
+          "source_host": "students.cs.vt.edu",
+          "subdomain": "students.cs",
+          "page_type": "course",
+          "content_hash": "6c36db06f446c01bc64d3de43b87bdb18946a2fe47c6ea029a6146eb5d582e61",
+          "crawl_timestamp": "2026-07-05T08:20:58.759421+00:00",
+          "last_modified": "Wed, 01 Jul 2026 17:09:59 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.10666667,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.011904761904761904,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 24
+            }
+          ],
+          "rerank_score": 0.7196792364120483,
+          "source_id": 6,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: **Undergraduate Handbook for Mathematics Majors** > **INTRODUCTION**\nhave the Interdisciplinary Application of Mathematics and associated required courses already\ndetermined -- computer science courses for ADM and teaching-focused courses for Math Ed.\nMore details and specific requirements can be found in the Program Requirements listed in the\nAcademic Catalog and in the Degree Options section below.\n\nThough each of the degree options has different graduation requirements, and each is intended to\nsupport various post-graduation goals, all four degree options yield the same degree -- a B.S. in\nMathematics. The first two years of coursework are nearly identical among the degree options,\nmaking it easy to change degree options early in your undergraduate mathematical career. It is\ncritical that you discuss your mathematical interests and post-graduation goals with your advisor\nearly and often in order to determine the degree option that will be best suited for you. If you are\ninterested in graduate study, seek advice early and often about the degree option, coursework,\nand research experience(s) that provide the best preparation for graduate work in your\n\nmathematical area of interest.",
+          "chunk_id": "56b4d0ee3ba6980c#0005",
+          "document_id": "56b4d0ee3ba6980c",
+          "chunk_index": 5,
+          "headings_path": [
+            "**Undergraduate Handbook for Mathematics Majors**",
+            "**INTRODUCTION**"
+          ],
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "title": "Mathmajorhandbook",
+          "source_host": "math.vt.edu",
+          "subdomain": "",
+          "page_type": "general",
+          "content_hash": "a5279d57c678bd4b0f2022f37ff0c51db08863afb7b90b7a2f3f77fd1828a84e",
+          "crawl_timestamp": "2026-07-05T21:49:39.809917+00:00",
+          "last_modified": "",
+          "is_external": false,
+          "crawl_depth": 0,
+          "embed_version": 2,
+          "fusion_score": 0.33333334,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.016129032258064516,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 2
+            }
+          ],
+          "rerank_score": 0.5650587677955627,
+          "source_id": 7,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: Course information > Major and Minor Restricted Courses\n##  Major and Minor Restricted Courses \nComputer Science courses are taken by students across Virginia Tech to fulfill core degree requirements, as electives, and to complete minors. Not all courses, however, can be taken by all students and those would be considered major or minor restricted courses. Major and minor restricted courses are courses that can only be taken by students when they have officially declared the program to which the program is restricted. There is no waiving of the major or minor requirement to enroll. Students will still have to meet all prerequisites in addition to being officially declared in the program to enroll in the course. \nThe following courses are restricted to students in the Computer Science, Data Centric Computing and Secure Computing majors:\n  * CS 1944: First Year Seminar in Computer Science\n  * CS 2104: Introduction to Problem Solving in Computer Science\n  * CS 2164: Foundations of Security Environments\n  * CS 2506: Introduction to Computer Organization II\n  * CS 3304: Comparative Languages\n  * CS 3314: Programming Languages Theory and Practice\n  * CS 3604: Professionalism in Computer Science\n  * CS 4944: Senior Seminar in Computer Science\n  * All courses with the Capstone designation\n\n\nThe following courses are restricted to students in the Computer Science, Data Centric Computing and Secure Computing majors and the minors in Computer Science and Human Computer Interaction:\n  * CS 2505: Introduction to Computer Organization I\n  * CS 3114: Data Structures anf Algorithms\n  * CS 3214: Computer Systems\n  * All 3000 level electives\n  * All 4000 level electives\n\n\nThe following courses cannot be taken by students in the Computer Science, Data Centric Computing and Secure Computing majors:\n  * CS 1014: Intro to Computational Thinking\n  * CS 1054: Introduction to Programming in Java\n  * CS 1064: Introduction to Programming in Python\n  * CS 2064: Intermediate Programming in Python\n  * CS 3634: Computer Science Foundations for Computational Modeling & Data Analytics",
+          "chunk_id": "b9568e65ff25a1c0#0020",
+          "document_id": "b9568e65ff25a1c0",
+          "chunk_index": 20,
+          "headings_path": [
+            "Course information",
+            "Major and Minor Restricted Courses"
+          ],
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "title": "Course information  | students.cs | Virginia Tech",
+          "source_host": "students.cs.vt.edu",
+          "subdomain": "students.cs",
+          "page_type": "course",
+          "content_hash": "6c36db06f446c01bc64d3de43b87bdb18946a2fe47c6ea029a6146eb5d582e61",
+          "crawl_timestamp": "2026-07-05T08:20:58.759421+00:00",
+          "last_modified": "Wed, 01 Jul 2026 17:09:59 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.16666667,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.013333333333333334,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 15
+            }
+          ],
+          "rerank_score": 0.5506073832511902,
+          "source_id": 6,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: Accreditation > Degree requirements\n##  Degree requirements \nStudents pursuing the Bachelor of Science degree in computer science choose one of three majors. The **computer science major** is designed to provide a broad computer science background that will prepare a student for a wide variety of professional careers or to continue study at the graduate level. The **secure computing major** offers a more specialized path for students who are especially interested in secure computing and cybersecurity topics. The **data-centric computing major** offers a focus on topics in data science, data analytics, and computational aspects of big data computing. All majors include a set of foundational courses in software design and development, algorithms, and computer organization at the freshmen and sophomore level. Students at the junior and senior level select one theoretical course, several elective courses and a capstone course according to their individual interests.",
+          "chunk_id": "fa19289c091169ea#0002",
+          "document_id": "fa19289c091169ea",
+          "chunk_index": 2,
+          "headings_path": [
+            "Accreditation",
+            "Degree requirements"
+          ],
+          "url": "https://website.cs.vt.edu/About/accreditation.html",
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "source_host": "website.cs.vt.edu",
+          "subdomain": "website.cs",
+          "page_type": "about",
+          "content_hash": "10f9332265340724121d4344d82bb6b488cc73c1c76de2c239ddbdb340527da0",
+          "crawl_timestamp": "2026-07-05T08:12:53.144157+00:00",
+          "last_modified": "Wed, 01 Jul 2026 18:11:02 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.2,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.013513513513513514,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 14
+            }
+          ],
+          "rerank_score": 0.5505771636962891,
+          "source_id": 4,
+          "context_truncated": false
+        }
+      ],
+      "seconds": 30.846,
+      "http_status": 200,
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 5494,
+        "total_tokens": 6493,
+        "completion_tokens": 999,
+        "prompt_tokens_details": {
+          "cached_tokens": 5376
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 856
+        }
+      },
+      "content": "The evidence I have doesn't list the specific math courses required for the B.S. in Computer Science, so I can't give you the exact math sequence.\n\nWhat the evidence does say about math in the program:\n\n- Computer science is \"a technically rigorous field that requires a strong background in mathematics\" [4]\n- Courses from the Mathematics and Statistics departments are treated as technical coursework \u2014 they're excluded from the 30-credit non-technical course requirement for the B.S. in CS [1][2]\n\nTo find the specific required math courses, the evidence points to reviewing the University Catalog for the required coursework [3] or the full checksheet, which lists approved courses by category [2].",
+      "reasoning_chars": 0,
+      "answer": "The evidence I have doesn't list the specific math courses required for the B.S. in Computer Science, so I can't give you the exact math sequence.\n\nWhat the evidence does say about math in the program:\n\n- Computer science is \"a technically rigorous field that requires a strong background in mathematics\" [4]\n- Courses from the Mathematics and Statistics departments are treated as technical coursework \u2014 they're excluded from the 30-credit non-technical course requirement for the B.S. in CS [1][2]\n\nTo find the specific required math courses, the evidence points to reviewing the University Catalog for the required coursework [3] or the full checksheet, which lists approved courses by category [2].",
+      "sources": [
+        {
+          "id": 4,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html"
+        },
+        {
+          "id": 1,
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/"
+        },
+        {
+          "id": 2,
+          "title": "Computer Science Major Checksheet 2022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf"
+        },
+        {
+          "id": 3,
+          "title": "Computer Science  | Engineering | Virginia Tech",
+          "url": "https://eng.vt.edu/undergraduate/explore-engineering/computer-science.html"
+        }
+      ]
+    },
+    {
+      "id": "math-catalog-2026",
+      "question": "For the 2026-2027 Computer Science major catalog, which mathematics courses are required, including allowed alternatives?",
+      "history": [],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "Virginia Tech 2026-2027 Computer Science major catalog required mathematics courses and allowed alternatives"
+        ],
+        "clarification": null
+      },
+      "evidence": [
+        {
+          "text": "Program: Computer Science Major\nDegree level: undergraduate\nCatalog edition: 2026-2027\nSection: Computer Science Major > Requirements > Electives\n| Code | Title | Credits |\n| --- | --- | --- |\n| BIT 4614 | Cybersecurity Management II | 3 |\n| CMDA 4654 | Intermediate Data Analytics and Machine Learning | 3 |\n| ECE 4424 | Machine Learning | 3 |\n| ECE 4504 | Computer Organization | 3 |\n| MATH 4414 | Issues in Scientific Computing | 3 |\n| PSCI 4164 | Future of Security: Integrative Solutions for Complex Security Systems | 3 |\n| STAT 4654 | Intermediate Data Analytics and Machine Learning | 3 |\n| STS 4014 | Algorithms & Society | 3 |\n\nCourse List\n\n| Code | Title | Credits |\n| --- | --- | --- |\n| CS 4774 | Human-Computer Interaction Design Experience | 3 |\n| CS 5040 | Intermediate Data Structures and Algorithm Analysis | 3 |\n| CS 5044 | Object-Oriented Programming with Java | 3 |\n| CS 5045 | Computation for the Data Sciences | 3 |\n| CS 5046 | Computation for the Data Sciences | 3 |\n| CS 5644 | Machine Learning with Big Data | 3 |\n| CS 5664 | Social Media Analytics | 3 |\n| CS 5904 | Project and Report | 1-19 |\n| CS 5944 | Graduate Seminar | 1 |\n| CS 5974 | Independent Study | 1-19 |\n| CS 5994 | Research and Thesis | 1-19 |\n\n- CS Theory Elective. Students must take one of the following:\n\nCourse List\n\n| Code | Title | Credits |\n| --- | --- | --- |\n| CS 4104 | Data and Algorithm Analysis | 3 |\n| CS 4114 | Introduction to Formal Languages and Automata Theory | 3 |\n| CS 4124 | Theory of Computation | 3 |\n| CS 4134 | Quantum Computation and Information Processing | 3 |\n| CS 5104 | Computability and Formal Languages | 3 |\n| CS 5114 | Theory of Algorithms | 3 |\n\n- Capstone Requirement. Students must complete one 4000-level CS capstone course. Students may choose from the courses listed here, or other 4/5000-level CS courses that have received prior approval as fulfilling the capstone requirement.\n\nCourse List",
+          "chunk_id": "d3556d267f8ac571#0007",
+          "document_id": "d3556d267f8ac571",
+          "chunk_index": 7,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Electives"
+          ],
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "title": "Computer Science Major",
+          "source_host": "catalog.vt.edu",
+          "subdomain": "catalog",
+          "page_type": "program",
+          "content_hash": "2185c94b4b252b4f97a9c59403a79b08f9fac4b6ed316026c4dd695709f8574b",
+          "crawl_timestamp": "",
+          "last_modified": "",
+          "is_external": false,
+          "embed_version": 2,
+          "program_name": "Computer Science Major",
+          "program_level": "undergraduate",
+          "catalog_edition": "2026-2027",
+          "key": "undergraduate-college-engineering-computer-science-computer-science-bs",
+          "fusion_score": 0.125,
+          "candidate_lane": "program",
+          "query_fusion_score": 0.015151515151515152,
+          "query_ranks": [
+            {
+              "query_index": 1,
+              "rank": 6
+            }
+          ],
+          "rerank_score": 0.5964919328689575,
+          "source_id": 1,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: **_View the links below to learn how to register for classes_**\n**3. EXPLORE** courses required for your major to get an idea of what you may already have credit for and classes you would need to complete in the future. \n_The official requirements will be available early June_. Once the **2026-2027 Course Catalog** is official, the program requirements can be viewed by visiting [**catalog.vt.edu**](http://catalog.vt.edu) > click **Programs** > checkmark **Undergraduate in the Academic Level/Program Type** box > search for your major.\n**4. SCHEDULE YOUR VIRTUAL ACADEMIC ADVISING & COURSE REGISTRATION APPOINTMENT **with your academic advisor\n**5. VISIT** the website of the department your major is in to complete their required steps and to prepare for your academic advising appointment. _(If your department is not hyperlinked at this time, please check back later)_  \n| Department/Unit  | Major  |  \n| --- | --- |  \n|  Department/UnitAcademy of Data Science  |  MajorComputational Modeling & Data Analytics  |  \n|  Department/UnitAcademy of Integrated Science  |  MajorNanomedicine Nanoscience   |  \n|  Department/UnitBiological Sciences  |  MajorBiological Sciences Microbiology  |  \n|  Department/UnitChemistry  |  MajorChemistry Medicinal Chemistry Polymer Chemistry  |  \n|  Department/Unit  |  MajorEconomics  |  \n|  Department/UnitGeosciences  |  MajorGeosciences  |  \n|  Department/Unit[Mathematics](https://math.vt.edu/summeradvising)  |  MajorMathematics  |  \n|  Department/Unit  |  MajorPhysics  |  \n|  Department/Unit[Psychology](https://psyc.vt.edu/undergrad-program/orientation.html)  |  MajorPsychology  |  \n|  Department/UnitSchool of Neuroscience  |  MajorClinical Neuroscience Cognitive & Behavioral Neuroscience Computational & Systems Neuroscience Neuroscience   |  \n|  Department/UnitStatistics  |  MajorStatistics (Statistical Data Science) Statistics (Statistical Methods & Theory)  |",
+          "chunk_id": "8923846564f11252#0009",
+          "document_id": "8923846564f11252",
+          "chunk_index": 9,
+          "headings_path": [
+            "**_View the links below to learn how to register for classes_**"
+          ],
+          "url": "https://www.science.vt.edu/resources/orientation.html",
+          "title": "Summer Virtual Academic Advising & Course Registration  | College of Science | Virginia Tech",
+          "source_host": "www.science.vt.edu",
+          "subdomain": "www.science",
+          "page_type": "general",
+          "content_hash": "2dfec451850bb127990aa337cdc0a55f0013f6ccb4ea02f3756e48a574d6ccd6",
+          "crawl_timestamp": "2026-07-05T09:07:20.443075+00:00",
+          "last_modified": "Mon, 22 Jun 2026 18:53:38 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.07692308,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.011494252873563218,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 27
+            }
+          ],
+          "rerank_score": 0.8696039319038391,
+          "source_id": 2,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: Course information > Updates to Course Substitutions for CS 1114\n##  Updates to Course Substitutions for CS 1114 \nBeginning Fall 2025, there are changes to course substitutions to meet the prerequisites for CS 2114: Software Design and Data Structures and/or MATH 2534- Discrete Math:\nThe following courses **_will be accepted_** as meeting the course prerequisite: \n  * CS 1064: Introduction to Programming in Python + CS 2064: Intermediate Programming in Python (grade of C or higher)\n  * CS 1114: Introduction to Software Design (grade of C or higher)\n\n\nThe following courses taken at Virginia Tech and/or transferred into Virginia Tech **_will not be accepted_** as meeting the CS 2114: Software Design and Data Structures and/or MATH 2534: Discrete Math course prerequisite.\n  * CS 1054: Introduction to Programming in Java\n  * ECE 2514: Introduction to Computational Engineering",
+          "chunk_id": "b9568e65ff25a1c0#0025",
+          "document_id": "b9568e65ff25a1c0",
+          "chunk_index": 25,
+          "headings_path": [
+            "Course information",
+            "Updates to Course Substitutions for CS 1114"
+          ],
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "title": "Course information  | students.cs | Virginia Tech",
+          "source_host": "students.cs.vt.edu",
+          "subdomain": "students.cs",
+          "page_type": "course",
+          "content_hash": "6c36db06f446c01bc64d3de43b87bdb18946a2fe47c6ea029a6146eb5d582e61",
+          "crawl_timestamp": "2026-07-05T08:20:58.759421+00:00",
+          "last_modified": "Wed, 01 Jul 2026 17:09:59 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.125,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.01282051282051282,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 18
+            }
+          ],
+          "rerank_score": 0.7676898241043091,
+          "source_id": 3,
+          "context_truncated": false
+        },
+        {
+          "text": "[ View Undergraduate Section ](https://catalog.vt.edu/undergraduate) [ View Graduate Section ](https://catalog.vt.edu/graduate)\n## Explore Programs\n[Explore programs to find a fit for you. ](https://catalog.vt.edu/program-explorer/)\n## Search Courses\n[Explore courses by subject and keyword. ](https://catalog.vt.edu/course-search/)\n## Previous Publications\n[Navigate to previous publications. ](https://catalog.vt.edu/previous-publications/)\n## Welcome to the Undergraduate Academic Catalog\nThe Undergraduate Academic Catalog is your guide to programs, courses, and academic policies at Virginia Tech. Use it to explore majors, review degree requirements, and find the information you need to plan your path to graduation.\n### Explore the Catalog\nStudents, advisors, and families can use the catalog to:\n  * Explore undergraduate majors and programs\n  * Review degree requirements and curriculum plans\n  * Search course descriptions and prerequisites\n  * Understand academic policies and procedures\n\n\n### Understanding Your Catalog Year\nYour **catalog year** determines the graduation requirements you follow. Students pursuing requirements for the **2026\u20132027 academic year** should use this catalog edition. Students following requirements from a [different academic year should refer to the catalog for that year](https://catalog.vt.edu/previous-publications/).\n#### Catalog Terms to Know\n**Catalog Year** The catalog year determines the curriculum and graduation requirements a student must complete. Students may request to move to a newer catalog year with advisor guidance and approval from the academic dean and the Office of the University Registrar, in accordance with university policy.\n**Catalog Rights** Students generally retain the right to complete the curriculum associated with the catalog year in which they first enroll at Virginia Tech or a later catalog year as permitted by policy. Students who defer their attendance forfeit their initial catalog rights.\nClose Menu to access content",
+          "chunk_id": "5ebae1cb28c210c2#0000",
+          "document_id": "5ebae1cb28c210c2",
+          "chunk_index": 0,
+          "headings_path": [],
+          "url": "https://catalog.vt.edu/undergraduate/",
+          "title": "Undergraduate Academic Catalog | Virginia Tech Academic Catalog",
+          "source_host": "catalog.vt.edu",
+          "subdomain": "catalog",
+          "page_type": "general",
+          "content_hash": "cb0298c1756df1cc33eea850dee3b71a7f5818cc985204a3ca736b16b1d47d51",
+          "crawl_timestamp": "2026-07-05T07:49:56.353127+00:00",
+          "last_modified": "Mon, 29 Jun 2026 13:52:48 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.1,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.012345679012345678,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 21
+            }
+          ],
+          "rerank_score": 0.7661187648773193,
+          "source_id": 4,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: Major Programs and Plans of study > Bachelor of Science in Computer Science\n**Data-Centric Computing Major**\n  * [Roadmap: Data Centric Computing Majors entering under UG Catalog 2024-2025](https://catalog.vt.edu/undergraduate/college-engineering/computer-science/data-centric-computing-bs/#roadmaptext)\n  * [Checksheet: Data Centric Computing Majors entering under UG Catalog 2023-2024](https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf)\n  * [Checksheet: Data-Centric Computing Majors entering under UG Catalog 2022-2023](https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf)\n  * [Checksheet: Data-Centric Computing Majors entering under UG Catalog 2021-2022](https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf)\n  * [Checksheet: Data-Centric Computing Majors graduating in 2022 and students entering under UG Catalog 2020-2021](https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2022.pdf)\n  * [Checksheet: Data-Centric Computing Majors graduating in 2021](https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021.pdf)",
+          "chunk_id": "0eef43d855c02271#0003",
+          "document_id": "0eef43d855c02271",
+          "chunk_index": 3,
+          "headings_path": [
+            "Major Programs and Plans of study",
+            "Bachelor of Science in Computer Science"
+          ],
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "title": "Major Programs and Plans of study  | students.cs | Virginia Tech",
+          "source_host": "students.cs.vt.edu",
+          "subdomain": "students.cs",
+          "page_type": "general",
+          "content_hash": "8b795a671d8349213f7c0a582b7f3d497269ddd5b8e8f46ae8edf8571a378a4e",
+          "crawl_timestamp": "2026-07-05T12:07:17.454902+00:00",
+          "last_modified": "Wed, 01 Jul 2026 17:45:15 GMT",
+          "is_external": false,
+          "crawl_depth": 4,
+          "embed_version": 2,
+          "fusion_score": 0.16666667,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.013333333333333334,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 15
+            }
+          ],
+          "rerank_score": 0.6494675278663635,
+          "source_id": 5,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: Course information > Updates to Course Substitutions for CS 1114\n#### How Will This Impact Registration?\n**Current Students:** If your major is already officially declared in one of our degree programs in Computer Science, Data Centric Computing, Secure Computing, or our Minor in Computer Science, this change will not impact you. If a passing grade was achieved in CS 1054 or ECE 2514 before your major was officially declared (or your minor was added), your previous coursework will be honored. To be enrolled, you will have to request a force/add to be added to CS 2114 and/or MATH 2534, if needed.\n**Future Students- Internal Changes of Major Already at Virginia Tech:** If you intend to major in one of our degree programs in Computer Science, Data Centric Computing, or Secure Computing, or our Minor in Computer Science, and your major is officially changed as of Summer 2025 or later, you will be required to take one of other approved prerequisite courses or take the Credit by Exam (CBE) in CS 1114 and/or CS 2114). \n**Future Students- External Transfers to Virginia Tech:** Students transferring from certain VCCS institutions may take an updated version of CS 1054 as part of their coursework prior to transferring to Virginia Tech. When transferring that credit to Virginia Tech, the new version of the course should equate as commensurate to CS 1114 and meet the prerequisite for CS 2114 and/or MATH 2534.\n**Next Steps:** Current Virginia Tech Students planning to take any of these courses outside of Virginia Tech are encouraged to confirm approved substitutions and approved credits before enrolling to ensure that you receive the credits and meet prerequisites as intended.",
+          "chunk_id": "b9568e65ff25a1c0#0026",
+          "document_id": "b9568e65ff25a1c0",
+          "chunk_index": 26,
+          "headings_path": [
+            "Course information",
+            "Updates to Course Substitutions for CS 1114"
+          ],
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "title": "Course information  | students.cs | Virginia Tech",
+          "source_host": "students.cs.vt.edu",
+          "subdomain": "students.cs",
+          "page_type": "course",
+          "content_hash": "6c36db06f446c01bc64d3de43b87bdb18946a2fe47c6ea029a6146eb5d582e61",
+          "crawl_timestamp": "2026-07-05T08:20:58.759421+00:00",
+          "last_modified": "Wed, 01 Jul 2026 17:09:59 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.1,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.012195121951219513,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 22
+            }
+          ],
+          "rerank_score": 0.6132944226264954,
+          "source_id": 3,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: Course information > Major and Minor Restricted Courses\n##  Major and Minor Restricted Courses \nComputer Science courses are taken by students across Virginia Tech to fulfill core degree requirements, as electives, and to complete minors. Not all courses, however, can be taken by all students and those would be considered major or minor restricted courses. Major and minor restricted courses are courses that can only be taken by students when they have officially declared the program to which the program is restricted. There is no waiving of the major or minor requirement to enroll. Students will still have to meet all prerequisites in addition to being officially declared in the program to enroll in the course. \nThe following courses are restricted to students in the Computer Science, Data Centric Computing and Secure Computing majors:\n  * CS 1944: First Year Seminar in Computer Science\n  * CS 2104: Introduction to Problem Solving in Computer Science\n  * CS 2164: Foundations of Security Environments\n  * CS 2506: Introduction to Computer Organization II\n  * CS 3304: Comparative Languages\n  * CS 3314: Programming Languages Theory and Practice\n  * CS 3604: Professionalism in Computer Science\n  * CS 4944: Senior Seminar in Computer Science\n  * All courses with the Capstone designation\n\n\nThe following courses are restricted to students in the Computer Science, Data Centric Computing and Secure Computing majors and the minors in Computer Science and Human Computer Interaction:\n  * CS 2505: Introduction to Computer Organization I\n  * CS 3114: Data Structures anf Algorithms\n  * CS 3214: Computer Systems\n  * All 3000 level electives\n  * All 4000 level electives\n\n\nThe following courses cannot be taken by students in the Computer Science, Data Centric Computing and Secure Computing majors:\n  * CS 1014: Intro to Computational Thinking\n  * CS 1054: Introduction to Programming in Java\n  * CS 1064: Introduction to Programming in Python\n  * CS 2064: Intermediate Programming in Python\n  * CS 3634: Computer Science Foundations for Computational Modeling & Data Analytics",
+          "chunk_id": "b9568e65ff25a1c0#0020",
+          "document_id": "b9568e65ff25a1c0",
+          "chunk_index": 20,
+          "headings_path": [
+            "Course information",
+            "Major and Minor Restricted Courses"
+          ],
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/course-information-and-course-offerings.html",
+          "title": "Course information  | students.cs | Virginia Tech",
+          "source_host": "students.cs.vt.edu",
+          "subdomain": "students.cs",
+          "page_type": "course",
+          "content_hash": "6c36db06f446c01bc64d3de43b87bdb18946a2fe47c6ea029a6146eb5d582e61",
+          "crawl_timestamp": "2026-07-05T08:20:58.759421+00:00",
+          "last_modified": "Wed, 01 Jul 2026 17:09:59 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.5,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.015151515151515152,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 6
+            }
+          ],
+          "rerank_score": 0.6085359454154968,
+          "source_id": 3,
+          "context_truncated": false
+        },
+        {
+          "text": "Section: Major Programs and Plans of study > Bachelor of Science in Computer Science\n**Secure Computing Major**\n  * [Roadmap: Secure Computing Majors entering under UG Catalog 2024-2025](https://catalog.vt.edu/undergraduate/college-engineering/computer-science/secure-computing-bs/#roadmaptext)\n  * [Checksheet: Secure Computing Majors entering under UG Catalog 2023-2024](https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Secure-Computing-Major-2023-24.pdf)\n  * [Checksheet: Secure Computing Majors entering under UG Catalog 2022-2023](https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Secure%20Computing%20Major%20Checksheet%202022-2023.pdf)\n  * [Checksheet: Secure Computing Majors entering under UG Catalog 2021-2022](https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021-22-DRAFT.pdf)\n  * [Checksheet: Secure Computing Majors graduating in 2022 and students entering under UG Catalog 2020-2021](https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2022.pdf)\n  * [Checksheet: Secure Computing Majors graduating in 2021](https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021.pdf)",
+          "chunk_id": "0eef43d855c02271#0002",
+          "document_id": "0eef43d855c02271",
+          "chunk_index": 2,
+          "headings_path": [
+            "Major Programs and Plans of study",
+            "Bachelor of Science in Computer Science"
+          ],
+          "url": "https://students.cs.vt.edu/undergraduate-programs/current-students/cs-dcc-sc-major-checksheets-and-roadmaps.html",
+          "title": "Major Programs and Plans of study  | students.cs | Virginia Tech",
+          "source_host": "students.cs.vt.edu",
+          "subdomain": "students.cs",
+          "page_type": "general",
+          "content_hash": "8b795a671d8349213f7c0a582b7f3d497269ddd5b8e8f46ae8edf8571a378a4e",
+          "crawl_timestamp": "2026-07-05T12:07:17.454902+00:00",
+          "last_modified": "Wed, 01 Jul 2026 17:45:15 GMT",
+          "is_external": false,
+          "crawl_depth": 4,
+          "embed_version": 2,
+          "fusion_score": 0.14285715,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.013157894736842105,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 16
+            }
+          ],
+          "rerank_score": 0.5842711925506592,
+          "source_id": 5,
+          "context_truncated": false
+        },
+        {
+          "text": "Program: Computer Science Major\nDegree level: undergraduate\nCatalog edition: 2026-2027\nSection: Computer Science Major > Requirements > Electives\n[note 1] CS Non-Technical Course Requirement. B.S. in CS students must complete 30 credits of non-technical courses. All courses are approved as non-technical courses except those in the departments of Biological Sciences, Chemistry, Geosciences, Physics, Mathematics, and Statistics, and all departments in the College of Engineering, except for engineering courses satisfying Pathways 7. Also excluded are courses listed as CS technical electives. [note 2] Independent Study/Undergraduate Research. No more than a total of 6 credits of CS 4974 Independent Study and/or CS 4994 Undergraduate Research may be used to fulfill CS degree requirements. To take Independent Study ( CS 2974 Independent Study or CS 4974 Independent Study ), a minimum overall and in-major GPA of 2.5 is required. To take CS 4994 Undergraduate Research , a minimum overall GPA of 2.5 and an in-major GPA of 3.0 is required. CS 4974 Independent Study and CS 4994 Undergraduate Research also require completion of CS 3114 Data Structures and Algorithms with a grade of C or better. [note 3] Undergraduates Taking Graduate Courses . Students within 2 semesters of graduating and with a 3.0 or better GPA may enroll in 5000-level courses satisfying undergraduate degree requirements within their department if they have been accepted into the Accelerated Undergraduate/Graduate Program, or by permission of the course instructor and the Department. For students not accepted into the Accelerated Undergraduate/Graduate Program, these courses may not be used on the Plan of Study for a graduate degree. [note 4] Career Bridge Experiences help prepare students for post-graduation life and develop a professional identity. Internships, Co-ops, and Undergraduate Research are examples of possible Career Bridge Experiences. Students must participate in a Career Bridge Experience to complete the BSCS degree.",
+          "chunk_id": "d3556d267f8ac571#0010",
+          "document_id": "d3556d267f8ac571",
+          "chunk_index": 10,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Electives"
+          ],
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "title": "Computer Science Major",
+          "source_host": "catalog.vt.edu",
+          "subdomain": "catalog",
+          "page_type": "program",
+          "content_hash": "2185c94b4b252b4f97a9c59403a79b08f9fac4b6ed316026c4dd695709f8574b",
+          "crawl_timestamp": "",
+          "last_modified": "",
+          "is_external": false,
+          "embed_version": 2,
+          "program_name": "Computer Science Major",
+          "program_level": "undergraduate",
+          "catalog_edition": "2026-2027",
+          "key": "undergraduate-college-engineering-computer-science-computer-science-bs",
+          "fusion_score": 0.071428575,
+          "candidate_lane": "program",
+          "query_fusion_score": 0.015384615384615385,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 5
+            }
+          ],
+          "rerank_score": 0.5709893107414246,
+          "source_id": 1,
+          "context_truncated": false
+        },
+        {
+          "text": "# CMDA Students\n## Be In the Know \n  * [Virginia Tech Global Distinction](https://www.vt.edu/global-distinction.html) Date:  06/22/2026\n  * [impact](https://data.science.vt.edu/content/news_vt_edu/en/categories/impact.html) Date:  05/28/2026\n  * [academics](https://data.science.vt.edu/content/news_vt_edu/en/categories/academics.html) Date:  05/21/2026\n\n\n## CMDA Major Requirements\nChecksheets list the requirements a student must fulfill in order to obtain a degree in their intended major and degree program. On these you will find required courses, GPA requirements, and more. Below are the CMDA checksheets without an option. To view checksheets for a specific CMDA option, please visit the [Registrar\u2019s Checksheet page](https://registrar.vt.edu/graduation-multi-brief/checksheets.html).\nBeginning with students entering in the 2020-2021 academic year, checksheets will switch from being based on a student\u2019s graduation year to being based on when a student started at Virginia Tech. As such, the checksheets below reflect the year students entered. To support the university transition for Undergraduate students from Date of Graduation (DOG) to Date of Entry (DOE) graduation requirements, any student who has not graduated by 2022 will be transitioned to the 2021-2022 catalog program graduation requirements. For example, students who entered during the academic year 2019-2020 will follow the 2021-2022 undergraduate catalog checksheet requirements under the Date of Entry (DOE) requirements.\n## Advising Flowcharts\nFlowcharts of coursework are a more visually appealing way to visualize your coursework during your time at Virginia Tech in CMDA. Below are flowcharts for each of our CMDA options. \n## Need an advisor?\nSchedule an advising appointment.\n## Fall 2026 Force Add\nThe CMDA force add form will open on August 3, 2026, at 8 a.m. and will close on August 19, 2026, at 11 p.m. \n[CMDA Force Add Request Form Fall 2026 \u2013 Fill out form](https://forms.cloud.microsoft/r/V0JiaqGNQc \"CMDA Force Add Request Form\")",
+          "chunk_id": "4affe6e97422aa88#0000",
+          "document_id": "4affe6e97422aa88",
+          "chunk_index": 0,
+          "headings_path": [],
+          "url": "https://data.science.vt.edu/programs/cmda/current-students.html",
+          "title": "CMDA Students  | Data Science | Virginia Tech",
+          "source_host": "data.science.vt.edu",
+          "subdomain": "data.science",
+          "page_type": "general",
+          "content_hash": "8fb1b6603e699e828cfe105ca1923d7adb8750d379b8af9199b9d331e2750c1b",
+          "crawl_timestamp": "2026-07-05T08:16:25.452269+00:00",
+          "last_modified": "Fri, 26 Jun 2026 21:31:07 GMT",
+          "is_external": false,
+          "crawl_depth": 3,
+          "embed_version": 2,
+          "fusion_score": 0.071428575,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.011111111111111112,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 30
+            }
+          ],
+          "rerank_score": 0.5610945224761963,
+          "source_id": 6,
+          "context_truncated": false
+        },
+        {
+          "text": "## Academic Advisor & Student Expectations\nAcademic advising at Virginia Tech is a collaborative process between the student and advisor, leading to the exchange of information that encourages the individual student to make responsible academic and career decisions. For academic advising to be effective, it is a shared responsibility for both parties with specific expectations.\n##  _Quick_ **Find**\n##  _campus_ **Resources & Advising Tools**\nMajor and minor curriculum requirements for students on the **2026-2027 catalog year**\nMajor and minor curriculum requirements for students on the **2025-2026** and **2024-2025** **catalog year**\nMajor and minor curriculum requirements for students on the **2021-2022 and 2022-2023 catalog year**\n##  _Academic_ **deadlines**\nThe academic year starts in August and continues through July of the following calendar year. The Office of the Registrar maintains all important dates and deadlines.\n##  _tasks_ **by year**\nThe timeline identifies opportunities students should discuss and consider throughout their educational journey. While this timeline establishes the typical situation, we understand students move at different paces through their academic careers.",
+          "chunk_id": "edc7095396cd6b6c#0000",
+          "document_id": "edc7095396cd6b6c",
+          "chunk_index": 0,
+          "headings_path": [],
+          "url": "https://www.science.vt.edu/academics/advising.html",
+          "title": "Advising  | College of Science | Virginia Tech",
+          "source_host": "www.science.vt.edu",
+          "subdomain": "www.science",
+          "page_type": "general",
+          "content_hash": "322b31a05aee5836eb9979599bbbceb9bb7df5bfa90b3adb648c6f463d3b95b7",
+          "crawl_timestamp": "2026-07-05T07:22:10.651157+00:00",
+          "last_modified": "Mon, 22 Jun 2026 22:00:36 GMT",
+          "is_external": false,
+          "crawl_depth": 2,
+          "embed_version": 2,
+          "fusion_score": 0.083333336,
+          "candidate_lane": "general",
+          "query_fusion_score": 0.011627906976744186,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 26
+            }
+          ],
+          "rerank_score": 0.5470709204673767,
+          "source_id": 7,
+          "context_truncated": false
+        },
+        {
+          "text": "Program: Computer Science Major\nDegree level: undergraduate\nCatalog edition: 2026-2027\nSection: Computer Science Major > Requirements > Program Curriculum\n| Select three hours in Pathway 1a (use Communications Elective, Professional Writing Elective, or Free Elective) |  |  |\n| Pathways Concept 2 - Critical Thinking in the Humanities |  |  |\n| Select six hours in Pathway 2 |  | 6 |\n| Pathways Concept 3 - Reasoning in the Social Sciences |  |  |\n| Select six hours in Pathway 3 |  | 6 |\n| Pathways Concept 4 - Reasoning in the Natural Sciences |  |  |\n| Natural Science Elective |  | 4 |\n| Natural Science Elective |  | 4 |\n| Pathways Concept 5 - Quantitative and Computational Thinking |  |  |\n| MATH 1225 | Calculus of a Single Variable (5F ; C-) | 4 |\n| MATH 1226 | Calculus of a Single Variable (5F) | 4 |\n| CS 3114 | Data Structures and Algorithms (5A ; C) | 3 |\n| Pathways Concept 6 - Critique and Practice in Design and the Arts |  |  |\n| Select three credits in Pathway 6a |  | 3 |\n| ENGE 1215 & ENGE 1216 | Foundations of Engineering and Foundations of Engineering (6D) | 4 |\n| or ENGE 1414 | Foundations of Engineering Practice |  |\n| Pathways Concept 7 - Critical Analysis of Identity and Equity in the United States |  |  |\n| Pathways Concept 7 is currently suspended effective Fall 2025. Please refer to the Pathways Page for more information. |  |  |\n| Pathways Concept 7 can be double-counted with another core concept. In this case, additional free elective credits must be taken to maintain a minimum of 123 credits |  | 3 |\n| Subtotal |  | 47 |\n| Total Credits |  | 123 |",
+          "chunk_id": "d3556d267f8ac571#0003",
+          "document_id": "d3556d267f8ac571",
+          "chunk_index": 3,
+          "headings_path": [
+            "Computer Science Major",
+            "Requirements",
+            "Program Curriculum"
+          ],
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+          "title": "Computer Science Major",
+          "source_host": "catalog.vt.edu",
+          "subdomain": "catalog",
+          "page_type": "program",
+          "content_hash": "2185c94b4b252b4f97a9c59403a79b08f9fac4b6ed316026c4dd695709f8574b",
+          "crawl_timestamp": "",
+          "last_modified": "",
+          "is_external": false,
+          "embed_version": 2,
+          "program_name": "Computer Science Major",
+          "program_level": "undergraduate",
+          "catalog_edition": "2026-2027",
+          "key": "undergraduate-college-engineering-computer-science-computer-science-bs",
+          "fusion_score": 0.08703704,
+          "candidate_lane": "program",
+          "query_fusion_score": 0.015625,
+          "query_ranks": [
+            {
+              "query_index": 0,
+              "rank": 4
+            }
+          ],
+          "rerank_score": 0.4970856010913849,
+          "source_id": 1,
+          "context_truncated": false
+        }
+      ],
+      "seconds": 67.833,
+      "http_status": 200,
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 5722,
+        "total_tokens": 6986,
+        "completion_tokens": 1264,
+        "prompt_tokens_details": {
+          "cached_tokens": 5632
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1076
+        }
+      },
+      "content": "For the Computer Science B.S. in the **2026-2027 catalog edition**, the mathematics courses shown in the program curriculum are:\n\n- **MATH 1225 \u2013 Calculus of a Single Variable** (4 credits; Pathways 5F; minimum grade of C-) [1]\n- **MATH 1226 \u2013 Calculus of a Single Variable** (4 credits; Pathways 5F) [1]\n\nBoth are listed under Pathways Concept 5 \u2013 Quantitative and Computational Thinking [1].\n\n**Regarding alternatives:** The supplied catalog excerpt does not list any substitutions or alternatives for these math courses. Note also that the excerpt provided covers the Pathways/core curriculum portion of the requirements; it does not show whether additional mathematics courses (e.g., discrete mathematics or linear algebra) are required elsewhere in the full 123-credit program, so I can't confirm those from this evidence [1].",
+      "reasoning_chars": 0,
+      "answer": "For the Computer Science B.S. in the **2026-2027 catalog edition**, the mathematics courses shown in the program curriculum are:\n\n- **MATH 1225 \u2013 Calculus of a Single Variable** (4 credits; Pathways 5F; minimum grade of C-) [1]\n- **MATH 1226 \u2013 Calculus of a Single Variable** (4 credits; Pathways 5F) [1]\n\nBoth are listed under Pathways Concept 5 \u2013 Quantitative and Computational Thinking [1].\n\n**Regarding alternatives:** The supplied catalog excerpt does not list any substitutions or alternatives for these math courses. Note also that the excerpt provided covers the Pathways/core curriculum portion of the requirements; it does not show whether additional mathematics courses (e.g., discrete mathematics or linear algebra) are required elsewhere in the full 123-credit program, so I can't confirm those from this evidence [1].",
+      "sources": [
+        {
+          "id": 1,
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/"
+        }
+      ]
+    }
+  ]
+}

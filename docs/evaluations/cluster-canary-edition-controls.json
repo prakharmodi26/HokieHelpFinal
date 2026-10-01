@@ -1,0 +1,71 @@
+{
+  "generated_utc": "2026-09-24T04:01:15.406442+00:00",
+  "url": "http://127.0.0.1:8000",
+  "method": "Actual deployed /chat and /chat/stream; no mocked planner, retrieval, evidence or model",
+  "limitations": [
+    "Heuristic checks do not prove semantic entailment.",
+    "Single sequential pass, not a load test."
+  ],
+  "cases": [
+    {
+      "id": "cs-2023",
+      "question": "How many credits does the 2023-24 CS major checksheet require?",
+      "history": [],
+      "http_status": 200,
+      "answer": "The supplied excerpts from the 2023-24 CS major checksheet do **not** state the overall total number of credits required for the degree, so I can't give you that figure from this evidence.\n\nWhat the excerpts do specify are component requirements for the B.S. in CS (2023-24 checksheet):\n\n- **30 credits** of non-technical courses [1]\n- **Minimum 12 hours** of natural science (8 of which must be a sequence) [1]\n- **No more than 6 credits** total of CS Independent Study (4974) and/or Undergraduate Research (4994) may count toward degree requirements [1]\n\nThe advising FAQ confirms that the total credit hours for degree completion vary among curricula and are listed on each major's checksheet [2]. To find the exact total, you would need the full checksheet document (the excerpts here reference additional details on checksheet page 3) [1], and students should use the checksheet for the catalog year they began at Virginia Tech [2].",
+      "sources": [
+        {
+          "id": 1,
+          "title": "Cs Major 2023 24",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf"
+        },
+        {
+          "id": 2,
+          "title": "Academic Advising Frequently Asked Questions  | College of Science | Virginia Tech",
+          "url": "https://science.vt.edu/academics/advising/faq.html"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "mentions_123": false,
+        "no_wrong_program_url": true,
+        "has_cited_sources": true
+      },
+      "seconds": 26.471
+    },
+    {
+      "id": "data-centric",
+      "question": "How many credits for the Data-Centric Computing major?",
+      "history": [],
+      "http_status": 200,
+      "answer": "The supplied checksheet excerpts for the Data-Centric Computing major (2021-22 draft, 2022-23, and 2023-24 editions) do **not** state the total number of credits required for the major, so I can't give you that figure from this evidence.\n\nWhat the excerpts do specify about credits:\n\n- **30 credits of non-technical courses** are required for B.S. in CS students [1][2][3]\n- A **3-credit CS technical elective** requirement for Data-Centric Computing majors [1]\n- No more than **6 credits** of CS Independent Study (4974) and/or CS Undergraduate Research (4994) may count toward CS degree requirements [1][2][3]\n- One 4000-level CS capstone course in the data-centric computing area [1]\n\nIf you can share your catalog year/cohort, I can check whether the total is available for that specific edition \u2014 but based on the passages provided here, the overall program credit total isn't included.",
+      "sources": [
+        {
+          "id": 1,
+          "title": "Data Centric Computing Major Checksheet 2022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf"
+        },
+        {
+          "id": 2,
+          "title": "Data Centric Computing Major 2023 24",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric-Computing-Major-2023-24.pdf"
+        },
+        {
+          "id": 3,
+          "title": "Dcc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true
+      },
+      "seconds": 26.254
+    }
+  ],
+  "readiness": {
+    "status": "ready"
+  },
+  "heuristic_pass": false
+}

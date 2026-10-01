@@ -1,0 +1,552 @@
+{
+  "generated_utc": "2026-09-21T18:59:21.758483+00:00",
+  "collection": "hokiehelp-test",
+  "bucket": "test-crawled-pages-0705",
+  "limitations": [
+    "Exact URL variants only; not all redirects or corpus copies.",
+    "Presence checks do not verify semantic support or currentness.",
+    "No public-web comparison or retrieval ranking is performed here."
+  ],
+  "sources": [
+    {
+      "id": "cs-catalog-major",
+      "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+      "object_key": "catalog.vt.edu/programs/undergraduate-college-engineering-computer-science-computer-science-bs.md",
+      "index": {
+        "complete": true,
+        "chunk_count": 7,
+        "body_markers": {
+          "credit_total_123": true,
+          "math_1225": false,
+          "math_1226": false,
+          "math_2114": false,
+          "cs_1114": false
+        },
+        "chunks": [
+          {
+            "chunk_id": "d3556d267f8ac571#0000",
+            "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+            "title": "Computer Science Major",
+            "program_name": "Computer Science Major",
+            "program_level": "undergraduate",
+            "catalog_edition": "2026-2027",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 53,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "d3556d267f8ac571#0001",
+            "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+            "title": "Computer Science Major",
+            "program_name": "Computer Science Major",
+            "program_level": "undergraduate",
+            "catalog_edition": "2026-2027",
+            "headings_path": [
+              "Computer Science Major",
+              "Requirements"
+            ],
+            "embed_version": 2,
+            "chars": 1242,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "d3556d267f8ac571#0002",
+            "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+            "title": "Computer Science Major",
+            "program_name": "Computer Science Major",
+            "program_level": "undergraduate",
+            "catalog_edition": "2026-2027",
+            "headings_path": [
+              "Computer Science Major",
+              "Requirements"
+            ],
+            "embed_version": 2,
+            "chars": 1548,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "d3556d267f8ac571#0003",
+            "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+            "title": "Computer Science Major",
+            "program_name": "Computer Science Major",
+            "program_level": "undergraduate",
+            "catalog_edition": "2026-2027",
+            "headings_path": [
+              "Computer Science Major",
+              "Requirements"
+            ],
+            "embed_version": 2,
+            "chars": 2016,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "d3556d267f8ac571#0004",
+            "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+            "title": "Computer Science Major",
+            "program_name": "Computer Science Major",
+            "program_level": "undergraduate",
+            "catalog_edition": "2026-2027",
+            "headings_path": [
+              "Computer Science Major",
+              "Requirements"
+            ],
+            "embed_version": 2,
+            "chars": 1098,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "d3556d267f8ac571#0005",
+            "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+            "title": "Computer Science Major",
+            "program_name": "Computer Science Major",
+            "program_level": "undergraduate",
+            "catalog_edition": "2026-2027",
+            "headings_path": [
+              "Computer Science Major",
+              "Requirements"
+            ],
+            "embed_version": 2,
+            "chars": 1595,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "d3556d267f8ac571#0006",
+            "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/",
+            "title": "Computer Science Major",
+            "program_name": "Computer Science Major",
+            "program_level": "undergraduate",
+            "catalog_edition": "2026-2027",
+            "headings_path": [
+              "Computer Science Major",
+              "Requirements"
+            ],
+            "embed_version": 2,
+            "chars": 188,
+            "body_markers": {
+              "credit_total_123": true,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": [
+              "quirements under (6) above.\n- Graduation Requirements\n- Complete 123 credit hours\n- Foreign Language Requirement\n"
+            ]
+          }
+        ]
+      },
+      "stored": {
+        "present": true,
+        "bytes": 16083,
+        "sha256": "28ef55c125a2733b5f0557d22137c5e6ae004a79a9e747b59eaeed9c4c8792d9",
+        "body_chars": 7738,
+        "body_markers": {
+          "credit_total_123": true,
+          "math_1225": false,
+          "math_1226": false,
+          "math_2114": false,
+          "cs_1114": false
+        }
+      }
+    },
+    {
+      "id": "cs-checksheet-2023-24",
+      "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+      "object_key": "students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf.md",
+      "index": {
+        "complete": true,
+        "chunk_count": 20,
+        "body_markers": {
+          "credit_total_123": true,
+          "math_1225": true,
+          "math_1226": true,
+          "math_2114": true,
+          "cs_1114": true
+        },
+        "chunks": [
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0000",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 301,
+            "body_markers": {
+              "credit_total_123": true,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": [
+              "DER UG C ATALOG 2023-2024\n\n\nC REDITS R EQUIRED FOR G RADUATION : 123\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+            ]
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0001",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 2045,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": true,
+              "math_1226": true,
+              "math_2114": true,
+              "cs_1114": true
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0002",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 1309,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": true,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0003",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 2006,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0004",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 1589,
+            "body_markers": {
+              "credit_total_123": true,
+              "math_1225": true,
+              "math_1226": true,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": [
+              " free elective credits must be taken to<br>maintain a minimum of 123 credits.|Pathways Concept 7 can be double-counted with another c",
+              " free elective credits must be taken to<br>maintain a minimum of 123 credits.|Pathways Concept 7 can be double-counted with another c"
+            ]
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0005",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 2026,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0006",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 2009,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0007",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 1524,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0008",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 1669,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0009",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 1992,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0010",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 1997,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0011",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 1318,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0012",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 2043,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0013",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 159,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0014",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 918,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": true
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0015",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 2002,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0016",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 2003,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": true,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0017",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 1969,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0018",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 1893,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": true
+            },
+            "credit_excerpts": []
+          },
+          {
+            "chunk_id": "21d8ef4e32ef41d9#0019",
+            "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+            "title": "Cs Major 2023 24",
+            "headings_path": [],
+            "embed_version": 2,
+            "chars": 1154,
+            "body_markers": {
+              "credit_total_123": false,
+              "math_1225": false,
+              "math_1226": false,
+              "math_2114": false,
+              "cs_1114": false
+            },
+            "credit_excerpts": []
+          }
+        ]
+      },
+      "stored": {
+        "present": true,
+        "bytes": 32401,
+        "sha256": "dfd9992722c00c0be726533a814225f7b1be7a7760744c1ca965df476234c5b3",
+        "body_chars": 31924,
+        "body_markers": {
+          "credit_total_123": true,
+          "math_1225": true,
+          "math_1226": true,
+          "math_2114": true,
+          "cs_1114": true
+        }
+      }
+    }
+  ]
+}

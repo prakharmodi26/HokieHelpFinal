@@ -1,50 +1,72 @@
-"""Chatbot service configuration loaded from environment variables."""
+"""Environment configuration; secrets are supplied by the runtime, not pi files."""
 from __future__ import annotations
 
+import math
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
 class ChatbotConfig:
-    """Immutable configuration for the chatbot service."""
+    llm_api_key: str = field(repr=False)
+    llm_base_url: str = "https://llm-api.arc.vt.edu/api/v1"
+    llm_model: str = "GLM-5.3"
+    rewriter_model: str = "DeepSeek-V4.1-Flash"
+    qdrant_host: str = "qdrant"
+    qdrant_port: int = 6333
+    qdrant_collection: str = "hokiehelp-test"
+    embedding_model: str = "BAAI/bge-m3"
+    embeddings_url: str = "http://embeddings-service"
+    top_k: int = 12
+    candidate_k: int = 30
+    min_score: float = 0.3  # existing cross-encoder score floor, NOT cosine
+    max_history_messages: int = 20
+    max_history_chars: int = 12000
+    max_context_chars: int = 24000
+    max_chunk_chars: int = 4000
+    hybrid_enabled: bool = True
+    program_candidates_enabled: bool = True
+    rate_limit_requests: int = 100
+    rate_limit_window_seconds: int = 3600
+    llm_timeout: float = 60.0
+    rewrite_timeout: float = 20.0
+    dependency_timeout: float = 20.0
+    llm_max_tokens: int = 2048
+    rewrite_max_tokens: int = 1024
 
-    llm_api_key: str
-    llm_base_url: str
-    llm_model: str
-    rewriter_model: str
-    qdrant_host: str
-    qdrant_port: int
-    qdrant_collection: str
-    embedding_model: str
-    top_k: int
-    min_score: float
-    max_history_messages: int
-    hybrid_enabled: bool
-    keyword_search_limit: int
-    rrf_k: int
-    min_rrf_score: float
-    rate_limit_requests: int
-    rate_limit_window_seconds: int
+    def __post_init__(self):
+        positive = ("qdrant_port", "top_k", "candidate_k", "max_history_messages",
+                    "max_history_chars", "max_context_chars", "max_chunk_chars",
+                    "rate_limit_requests", "rate_limit_window_seconds", "llm_timeout",
+                    "rewrite_timeout", "dependency_timeout", "llm_max_tokens", "rewrite_max_tokens")
+        for name in positive:
+            if not math.isfinite(getattr(self, name)) or getattr(self, name) <= 0:
+                raise ValueError(f"{name} must be positive and finite")
+        if not 0 <= self.min_score <= 1:
+            raise ValueError("min_score must be in [0, 1]")
+        if self.top_k > self.candidate_k:
+            raise ValueError("top_k must not exceed candidate_k")
+        if not self.llm_api_key.strip():
+            raise ValueError("LLM_API_KEY is required")
+        if self.embedding_model != "BAAI/bge-m3":
+            raise ValueError("This retriever targets the existing BGE-M3 index; model changes require a compatible index")
 
     @classmethod
     def from_env(cls) -> ChatbotConfig:
-        return cls(
-            llm_api_key=os.environ["LLM_API_KEY"],
-            llm_base_url=os.environ.get("LLM_BASE_URL", "http://ollama-cluster-ip:11434/v1"),
-            llm_model=os.environ.get("LLM_MODEL", "qwen2.5:14b"),
-            rewriter_model=os.environ.get("REWRITER_MODEL", os.environ.get("LLM_MODEL", "qwen2.5:14b")),
-            qdrant_host=os.environ.get("QDRANT_HOST", "qdrant"),
-            qdrant_port=int(os.environ.get("QDRANT_PORT", "6333")),
-            qdrant_collection=os.environ.get("QDRANT_COLLECTION", "hokiehelp_chunks"),
-            embedding_model=os.environ.get("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5"),
-            top_k=int(os.environ.get("TOP_K", "5")),
-            min_score=float(os.environ.get("MIN_SCORE", "0.53")),
-            max_history_messages=int(os.environ.get("MAX_HISTORY_MESSAGES", "20")),
-            hybrid_enabled=os.environ.get("HYBRID_ENABLED", "true").lower() == "true",
-            keyword_search_limit=int(os.environ.get("KEYWORD_SEARCH_LIMIT", "10")),
-            rrf_k=int(os.environ.get("RRF_K", "60")),
-            min_rrf_score=float(os.environ.get("MIN_RRF_SCORE", "0.0")),
-            rate_limit_requests=int(os.environ.get("RATE_LIMIT_REQUESTS", "100")),
-            rate_limit_window_seconds=int(os.environ.get("RATE_LIMIT_WINDOW_SECONDS", "3600")),
-        )
+        values = {"llm_api_key": os.environ["LLM_API_KEY"]}
+        for name, definition in cls.__dataclass_fields__.items():
+            if name == "llm_api_key" or name.upper() not in os.environ:
+                continue
+            raw = os.environ[name.upper()]
+            default = definition.default
+            if isinstance(default, bool):
+                if raw.lower() not in {"true", "false"}:
+                    raise ValueError(f"{name.upper()} must be true or false")
+                values[name] = raw.lower() == "true"
+            elif isinstance(default, int):
+                values[name] = int(raw)
+            elif isinstance(default, float):
+                values[name] = float(raw)
+            else:
+                values[name] = raw
+        return cls(**values)

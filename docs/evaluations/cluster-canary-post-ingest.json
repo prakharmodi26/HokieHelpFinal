@@ -1,0 +1,270 @@
+{
+  "generated_utc": "2026-09-24T04:11:16.445007+00:00",
+  "url": "http://127.0.0.1:8000",
+  "method": "Actual deployed /chat and /chat/stream; no mocked planner, retrieval, evidence or model",
+  "limitations": [
+    "Heuristic checks do not prove semantic entailment.",
+    "Single sequential pass, not a load test."
+  ],
+  "cases": [
+    {
+      "id": "greeting",
+      "question": "Hi!",
+      "history": [],
+      "http_status": 200,
+      "answer": "Hi! I can help with questions about Virginia Tech. What would you like to know?",
+      "sources": [],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "no_sources": true
+      },
+      "seconds": 0.663
+    },
+    {
+      "id": "credits-complete",
+      "question": "how many credits do i need to complete bs in cs",
+      "history": [],
+      "http_status": 200,
+      "answer": "You need to complete **123 credit hours** to graduate with a B.S. in Computer Science [1].\n\nThis is consistent across the available checksheets, which require at least 123 semester credit hours along with a minimum overall GPA of 2.00 and a minimum in-major GPA of 2.00 (calculated using all classes with a CS designator) [2][3][4].",
+      "sources": [
+        {
+          "id": 1,
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/"
+        },
+        {
+          "id": 2,
+          "title": "coe_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf"
+        },
+        {
+          "id": 3,
+          "title": "coe_cs_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf"
+        },
+        {
+          "id": 4,
+          "title": "coe_cs_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "mentions_123": true,
+        "no_wrong_program_url": true,
+        "has_cited_sources": true
+      },
+      "seconds": 18.672
+    },
+    {
+      "id": "credits-graduate",
+      "question": "how many credits do i need to graduate BS in CS",
+      "history": [],
+      "http_status": 200,
+      "answer": "You need to complete **at least 123 semester credit hours** to earn a B.S. in Computer Science, per the CS major checksheets (2021, 2022, and 2022\u20132023 editions) [3][4][5].\n\nAlong with the credit total, those checksheets also require:\n- A minimum overall GPA of 2.00 and a minimum in-major GPA of 2.00 (in-major GPA uses all classes with a CS designator) [3][4][5]\n- A grade of \"C\" (2.0) or better in CS 1114, CS 2104, CS 2114, CS 2505, CS 2506, and CS 3114 [3][4][5]\n\nOne caveat: the 2026\u20132027 catalog excerpt I have doesn't state a total credit number, so if you're under a newer catalog edition than the checksheets above, let me know your catalog year and I can help clarify.",
+      "sources": [
+        {
+          "id": 3,
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf"
+        },
+        {
+          "id": 4,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf"
+        },
+        {
+          "id": 5,
+          "title": "Computer Science Major Checksheet 2022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Computer%20Science%20Major%20Checksheet%202022-2023.pdf"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "mentions_123": true,
+        "no_wrong_program_url": true,
+        "has_cited_sources": true
+      },
+      "seconds": 24.463
+    },
+    {
+      "id": "credits-undergraduate",
+      "question": "How many credits do i need to complete undergraduate in cs",
+      "history": [],
+      "http_status": 200,
+      "answer": "You need **123 credit hours** to graduate with the B.S. in Computer Science, according to the 2026\u20132027 undergraduate catalog edition for the Computer Science major [1].\n\nA couple of notes:\n- This total is from the 2026\u20132027 catalog edition; if you entered under a different catalog year, your requirement could differ, so it's worth confirming your specific cohort's checksheet [1].\n- Earlier CS checksheets (2021\u20132023) also reference maintaining a minimum of 123 credits, so the total has been consistent across those years [2][3][4].\n\nIf you tell me your catalog year or entry term, I can point you to the exact requirements for your cohort.",
+      "sources": [
+        {
+          "id": 1,
+          "title": "Computer Science Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/"
+        },
+        {
+          "id": 2,
+          "title": "coe_cs_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf"
+        },
+        {
+          "id": 3,
+          "title": "coe_cs_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf"
+        },
+        {
+          "id": 4,
+          "title": "coe_cs_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "mentions_123": true,
+        "no_wrong_program_url": true,
+        "has_cited_sources": true
+      },
+      "seconds": 14.413
+    },
+    {
+      "id": "math-followup",
+      "question": "What math courses does it require?",
+      "history": [
+        {
+          "role": "user",
+          "content": "how many credits do i need to complete bs in cs"
+        },
+        {
+          "role": "assistant",
+          "content": "You need to complete **123 credit hours** to graduate with a B.S. in Computer Science [1].\n\nThis is consistent across the available checksheets, which require at least 123 semester credit hours along with a minimum overall GPA of 2.00 and a minimum in-major GPA of 2.00 (calculated using all classes with a CS designator) [2][3][4]."
+        }
+      ],
+      "http_status": 200,
+      "answer": "The specific math course requirements for the B.S. in Computer Science aren't included in the evidence I have available. The passages only note generally that computer science is \"a technically rigorous field that requires a strong background in mathematics\" [4], without listing the required math courses.\n\nIf you can share the full requirements section of the catalog page or checksheet, I'd be happy to identify the math courses for you.",
+      "sources": [
+        {
+          "id": 4,
+          "title": "Accreditation  | Computer Science | Virginia Tech",
+          "url": "https://website.cs.vt.edu/About/accreditation.html"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true,
+        "contains_three_expected_math_codes": false,
+        "no_math_major_checksheet": true
+      },
+      "seconds": 20.647
+    },
+    {
+      "id": "math-major-switch",
+      "question": "What about the Mathematics major instead?",
+      "history": [
+        {
+          "role": "user",
+          "content": "how many credits do i need to complete bs in cs"
+        },
+        {
+          "role": "assistant",
+          "content": "You need to complete **123 credit hours** to graduate with a B.S. in Computer Science [1].\n\nThis is consistent across the available checksheets, which require at least 123 semester credit hours along with a minimum overall GPA of 2.00 and a minimum in-major GPA of 2.00 (calculated using all classes with a CS designator) [2][3][4]."
+        }
+      ],
+      "http_status": 200,
+      "answer": "The **B.S. in Mathematics requires 120 credit hours** to graduate.\n\n- The 2026-2027 catalog edition for the Mathematics major lists the minimum credits required for graduation as 120 [1].\n- The Undergraduate Handbook for Mathematics Majors confirms the same total, with this breakdown: Pathways General Education (47 credits), Math Major Requirements (58\u201363 credits, depending on degree option), and Free Electives (22\u201326 credits) [3].\n\nGraduation also requires a 2.0 overall GPA and a 2.0 in-major GPA [1].",
+      "sources": [
+        {
+          "id": 1,
+          "title": "Mathematics Major",
+          "url": "https://catalog.vt.edu/undergraduate/college-science/mathematics/mathematics-bs/"
+        },
+        {
+          "id": 3,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf"
+        }
+      ],
+      "checks": {
+        "nonempty": true,
+        "source_ids_match_citations": true
+      },
+      "seconds": 11.411
+    },
+    {
+      "id": "math-catalog-2026",
+      "question": "For the 2026-2027 Computer Science major catalog, which mathematics courses are required, including allowed alternatives?",
+      "history": [],
+      "http_status": 502,
+      "error_type": "HTTPStatusError",
+      "seconds": 52.68
+    }
+  ],
+  "readiness": {
+    "status": "ready"
+  },
+  "stopped_on_error": "math-catalog-2026",
+  "stream": {
+    "seconds": 12.522,
+    "event_types": [
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "answer",
+      "sources",
+      "done"
+    ],
+    "answer": "The undergraduate Computer Science major (B.S.) requires **123 credit hours** to graduate, according to the 2026-2027 catalog edition [1]. The same source's graduation requirements confirm students must complete 123 credit hours and earn a minimum overall and in-major GPA of 2.00 [1].\n\nNote that this total comes from the 2026-2027 catalog edition; if you're following a different catalog year or checksheet, the total could differ, so let me know your cohort if you'd like me to check against a specific year.",
+    "sources": [
+      {
+        "id": 1,
+        "title": "Computer Science Major",
+        "url": "https://catalog.vt.edu/undergraduate/college-engineering/computer-science/computer-science-bs/"
+      }
+    ],
+    "checks": {
+      "authoritative_answer": true,
+      "done_last": true,
+      "no_error": true
+    }
+  },
+  "heuristic_pass": false
+}

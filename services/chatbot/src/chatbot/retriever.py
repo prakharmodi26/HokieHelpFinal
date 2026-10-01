@@ -1,349 +1,252 @@
-"""Embed user queries and search Qdrant for relevant chunks."""
+"""Read-only retrieval against the existing BGE-M3 dense/sparse corpus.
+
+Embedding and cross-encoder models stay on the existing embedding service. No
+index writes, local model loads, or neighboring-chunk expansion occur here.
+"""
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
-from typing import List
+import math
+import re
+from urllib.parse import parse_qsl, unquote, urlencode, urlsplit
 
-import torch
-from sentence_transformers import SentenceTransformer
+import httpx
 from qdrant_client import QdrantClient, models
+
+from chatbot.program_metadata import program_filter_names, program_matches, program_scope, source_conflicts, source_identity_matches
 
 logger = logging.getLogger(__name__)
 
-BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
+
+def canonical_url(url: str) -> str:
+    try:
+        parts = urlsplit(url.strip())
+        host = (parts.hostname or "").lower().removeprefix("www.")
+        port = parts.port
+        if port and port not in {80, 443}:
+            host += f":{port}"
+        path = parts.path.rstrip("/") or "/"
+        for suffix in ("/index.html", "/index.htm", "/index.php"):
+            if path.endswith(suffix):
+                path = path[:-len(suffix)] or "/"
+                break
+        query = urlencode(sorted((k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True)
+                                 if not k.lower().startswith("utm_") and k.lower() not in {"gclid", "fbclid", "mc_cid", "mc_eid"}))
+        return host + path + ("?" + query if query else "")
+    except (ValueError, AttributeError):
+        return str(url)
 
 
-def _payload_to_result(payload: dict, score: float) -> dict:
-    """Convert a Qdrant payload to a result dict."""
-    return {
-        "score": score,
-        "chunk_id": payload.get("chunk_id"),
-        "text": payload.get("text", ""),
-        "url": payload.get("url", ""),
-        "title": payload.get("title", ""),
-        "headings_path": payload.get("headings_path", []),
-        "page_type": payload.get("page_type", ""),
-    }
+def chunk_key(chunk: dict) -> str:
+    # Content-key dedup also collapses separately indexed www/http URL variants.
+    body = (chunk.get("text") or "").strip()
+    return canonical_url(chunk.get("url") or "") + "|" + hashlib.sha256(body.encode()).hexdigest()
 
 
-def rrf_fuse(
-    vector_results: List[dict],
-    keyword_results: List[dict],
-    k: int = 60,
-    top_k: int = 5,
-    min_rrf_score: float = 0.0,
-) -> List[dict]:
-    """Reciprocal Rank Fusion: merge two ranked lists by chunk_id.
-
-    RRF score = sum(1 / (k + rank)) across lists where the chunk appears.
-    Chunks with RRF score below min_rrf_score are dropped.
-    """
-    scores: dict[str, float] = {}
-    items: dict[str, dict] = {}
-
-    for rank, r in enumerate(vector_results, 1):
-        cid = r["chunk_id"]
-        scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank)
-        items[cid] = r
-
-    for rank, r in enumerate(keyword_results, 1):
-        cid = r["chunk_id"]
-        scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank)
-        if cid not in items:
-            items[cid] = r
-
-    ranked = sorted(scores.keys(), key=lambda cid: scores[cid], reverse=True)
-    fused = []
-    dropped = 0
-    for cid in ranked[:top_k]:
-        rrf_score = scores[cid]
-        if rrf_score < min_rrf_score:
-            dropped += 1
-            logger.info(
-                "RETRIEVER rrf_drop chunk_id=%s  rrf_score=%.5f  min_rrf_score=%.5f  title=%s",
-                cid, rrf_score, min_rrf_score, (items[cid].get("title") or "")[:60],
-            )
-            continue
-        result = items[cid]
-        result["score"] = rrf_score
-        fused.append(result)
-
-    if dropped:
-        logger.info("RETRIEVER rrf_fuse dropped %d chunks below min_rrf_score=%.5f", dropped, min_rrf_score)
-
-    return fused
+def compose_passage(chunk: dict) -> str:
+    """Match identity-composed reranker input used by the existing live stack."""
+    def norm(text: str) -> str:
+        decoded = unquote(text)
+        if "\ufffd" in decoded and "\ufffd" not in text:
+            decoded = text
+        decoded = re.sub(r"^\s*#{1,6}\s+", "", decoded)
+        return re.sub(r"\s+", " ", re.sub(r"[*_`]+", " ", decoded)).strip()
+    title = norm(chunk.get("title") or "")[:300]
+    headings = [norm(h) for h in chunk.get("headings_path", []) if isinstance(h, str)]
+    headings = [h for h in headings if h and h.lower() != title.lower()]
+    prefix = "\n".join(p for p in (title, " > ".join(headings)) if p)
+    return (prefix + "\n\n" if prefix else "") + (chunk.get("text") or "")
 
 
 class Retriever:
-    """Embeds queries with BGE prefix and searches Qdrant."""
-
-    def __init__(
-        self,
-        embedding_model: str,
-        qdrant_host: str,
-        qdrant_port: int,
-        collection: str,
-        top_k: int,
-        min_score: float = 0.53,
-        hybrid_enabled: bool = True,
-        keyword_search_limit: int = 10,
-        rrf_k: int = 60,
-        min_rrf_score: float = 0.0,
-    ) -> None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model_kwargs = {}
-        if device == "cuda":
-            model_kwargs["torch_dtype"] = "float16"
-        self._model = SentenceTransformer(
-            embedding_model,
-            device=device,
-            model_kwargs=model_kwargs if model_kwargs else None,
-        )
-        self._client = QdrantClient(host=qdrant_host, port=qdrant_port)
+    def __init__(self, embedding_model: str, qdrant_host: str, qdrant_port: int,
+                 collection: str, top_k: int = 12, min_score: float = .3,
+                 hybrid_enabled: bool = True, candidate_k: int = 30,
+                 embeddings_url: str = "http://embeddings-service", timeout: float = 20,
+                 program_candidates_enabled: bool = True) -> None:
+        if embedding_model != "BAAI/bge-m3":
+            raise ValueError("The live dense/sparse index requires BAAI/bge-m3")
+        if top_k <= 0 or candidate_k < top_k:
+            raise ValueError("Require 0 < top_k <= candidate_k")
+        self._client = QdrantClient(host=qdrant_host, port=qdrant_port, timeout=timeout)
+        self._embedding_client = httpx.Client(base_url=embeddings_url.rstrip("/") + "/", timeout=timeout)
         self._collection = collection
         self._top_k = top_k
+        self._candidate_k = candidate_k
         self._min_score = min_score
         self._hybrid_enabled = hybrid_enabled
-        self._keyword_limit = keyword_search_limit
-        self._rrf_k = rrf_k
-        self._min_rrf_score = min_rrf_score
-        logger.info(
-            "Retriever ready — model=%s  device=%s  collection=%s  top_k=%d  min_score=%.2f  hybrid=%s  min_rrf_score=%.5f",
-            embedding_model, device, collection, top_k, min_score, hybrid_enabled, min_rrf_score,
-        )
-        if hybrid_enabled:
-            self._ensure_text_index()
-
-    def _ensure_text_index(self) -> None:
-        """Create a full-text index on the 'text' payload field if not present."""
+        self._program_candidates_enabled = program_candidates_enabled
+        # Reject the old unnamed layout. Dimensions alone cannot verify embedding
+        # model identity; that service/index contract is checked by the live probe.
         try:
-            self._client.create_payload_index(
-                collection_name=self._collection,
-                field_name="text",
-                field_schema=models.TextIndexParams(
-                    type=models.TextIndexType.TEXT,
-                    tokenizer=models.TokenizerType.WORD,
-                    min_token_len=2,
-                    max_token_len=20,
-                    lowercase=True,
-                ),
-            )
-            logger.info("Created full-text index on 'text' field")
-        except Exception as exc:
-            # Index may already exist — that's fine
-            if "already exists" in str(exc).lower():
-                logger.info("Full-text index on 'text' field already exists")
+            info = self._client.get_collection(collection)
+            vectors = info.config.params.vectors
+            sparse = info.config.params.sparse_vectors or {}
+            if not isinstance(vectors, dict) or "dense" not in vectors or vectors["dense"].size != 1024:
+                raise ValueError("Expected the existing named 1024-dimensional dense vector index")
+            if hybrid_enabled and "sparse" not in sparse:
+                raise ValueError("Expected the existing named sparse vector index")
+        except Exception:
+            self.close()
+            raise
+
+    def close(self) -> None:
+        self._client.close()
+        self._embedding_client.close()
+
+    def _candidates(self, query: str) -> list[dict]:
+        response = self._embedding_client.post("embed", json={"texts": [query]})
+        response.raise_for_status()
+        embeddings = response.json()
+        dense = embeddings["dense"][0]
+        if len(dense) != 1024 or not all(isinstance(v, (int, float)) and math.isfinite(v) for v in dense):
+            raise ValueError("Invalid BGE-M3 dense embedding")
+        sparse = embeddings.get("sparse", [{}])[0]
+        hybrid = self._hybrid_enabled and bool(sparse.get("indices"))
+        score_name = "fusion_score" if hybrid else "vector_score"
+
+        def lookup(query_filter=None, lane="general"):
+            if hybrid:
+                hits = self._client.query_points(
+                    collection_name=self._collection,
+                    prefetch=[models.Prefetch(query=dense, using="dense", limit=self._candidate_k, filter=query_filter),
+                              models.Prefetch(query=models.SparseVector(**sparse), using="sparse",
+                                              limit=self._candidate_k, filter=query_filter)],
+                    query=models.FusionQuery(fusion=models.Fusion.RRF),
+                    limit=self._candidate_k, with_payload=True,
+                ).points
             else:
-                logger.warning("Could not create text index: %s", exc)
-
-    def _vector_search(self, query: str) -> List[dict]:
-        """Embed query and return ranked chunks via vector similarity."""
-        text = BGE_QUERY_PREFIX + query
-        logger.info("RETRIEVER vector query=%r  prefixed=%r", query, text[:120])
-        vector = self._model.encode(text, show_progress_bar=False).tolist()
-
-        try:
-            response = self._client.query_points(
-                collection_name=self._collection,
-                query=vector,
-                limit=self._top_k,
-                with_payload=True,
-            )
-        except Exception as exc:
-            logger.error("Qdrant vector search failed: %s", exc)
-            return []
-
-        results = []
-        for rank, hit in enumerate(response.points, 1):
-            result = _payload_to_result(hit.payload, hit.score)
-            results.append(result)
-            text_preview = (result["text"] or "[EMPTY]")[:200].replace("\n", " ")
-            logger.debug(
-                "RETRIEVER vector rank=%d  score=%.4f  chunk_id=%s  title=%s  preview=%s",
-                rank, hit.score, result["chunk_id"], result["title"][:60] if result["title"] else "",
-                text_preview,
-            )
-        return results
-
-    # Common English stop words that match almost every document — exclude from keyword search
-    _STOP_WORDS = frozenset({
-        "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
-        "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
-        "being", "have", "has", "had", "do", "does", "did", "will", "would",
-        "could", "should", "may", "might", "shall", "can", "need", "dare",
-        "what", "who", "whom", "which", "where", "when", "why", "how",
-        "this", "that", "these", "those", "it", "its", "they", "them", "their",
-        "he", "she", "we", "you", "i", "me", "my", "your", "our", "his", "her",
-        "not", "no", "nor", "so", "yet", "both", "either", "neither",
-        "there", "here", "about", "into", "through", "during", "each",
-        "more", "most", "other", "some", "any", "such", "than", "too",
-        "very", "just", "also", "as", "if", "while", "after", "before",
-        "between", "out", "up", "down", "then", "than", "only", "same",
-        "now", "like", "over", "all",
-    })
-
-    def _keyword_search(self, query: str) -> List[dict]:
-        """Search Qdrant using full-text match on the 'text' payload field.
-
-        Splits query into individual tokens and uses OR (should) matching
-        so that any single matching token surfaces relevant results.
-        This is critical for typo tolerance: "Kirk Camron" → "Kirk" matches
-        even though "Camron" doesn't.
-
-        Stop words are excluded — they match nearly every document and corrupt
-        RRF ranking by making generic hub pages rank first.
-        """
-        # Split into meaningful tokens (2+ chars, matching the index min_token_len)
-        # Strip trailing punctuation before stop-word check
-        raw_tokens = [t.rstrip("?.,;:!") for t in query.split() if len(t) >= 2]
-        tokens = [t for t in raw_tokens if t.lower() not in self._STOP_WORDS and len(t) >= 2]
-        logger.info("RETRIEVER keyword tokens after stop-word filter: %s", tokens)
-        if not tokens:
-            return []
-
-        results = []
-        try:
-            # Use 'should' (OR) so any matching token brings results
-            conditions = [
-                models.FieldCondition(
-                    key="text",
-                    match=models.MatchText(text=token),
-                )
-                for token in tokens
-            ]
-            points, _ = self._client.scroll(
-                collection_name=self._collection,
-                scroll_filter=models.Filter(should=conditions),
-                limit=self._keyword_limit,
-                with_payload=True,
-            )
-            # Score each result by how many query tokens appear in its text.
-            # Scroll returns results in insertion order (not relevance order),
-            # so we must score manually to give RRF meaningful rank signals.
-            lower_tokens = [t.lower() for t in tokens]
-            scored = []
-            for point in points:
-                result = _payload_to_result(point.payload, 0.0)
-                text_lower = (result.get("text") or "").lower()
-                result["_kw_matches"] = sum(1 for t in lower_tokens if t in text_lower)
-                scored.append(result)
-            # Sort by match count descending — more specific chunks rank higher
-            scored.sort(key=lambda r: r["_kw_matches"], reverse=True)
-            for rank, result in enumerate(scored, 1):
-                logger.info(
-                    "RETRIEVER keyword rank=%d  matches=%d  chunk_id=%s  title=%s",
-                    rank, result["_kw_matches"], result["chunk_id"],
-                    (result["title"] or "")[:60],
-                )
-            results = scored
-        except Exception as exc:
-            logger.warning("Keyword search failed (falling back to vector only): %s", exc)
-        logger.info("RETRIEVER keyword results=%d  query=%r  tokens=%s", len(results), query, tokens)
-        return results
-
-    def _fetch_adjacent_chunks(self, chunks: List[dict]) -> List[dict]:
-        """For each retrieved chunk, fetch the immediately adjacent chunks (±1) from the same page.
-
-        Chunk IDs have the format `{page_hash}_{seq:04d}`. Adjacent chunks from the same
-        page often contain complementary info — e.g. contact details in chunk _0000 when
-        the bio was retrieved in chunk _0001.
-
-        Adjacent chunks are tagged from_vector=True (same page as a vector result) so they
-        appear in LLM context. They are deduped by URL in sources so they don't add noise.
-        """
-        seen_ids = {c["chunk_id"] for c in chunks}
-        to_fetch: List[str] = []
-
-        for chunk in chunks:
-            if not chunk.get("from_vector", True):
-                continue  # only expand vector results
-            cid = chunk["chunk_id"]
-            parts = cid.rsplit("_", 1)
-            if len(parts) != 2:
-                continue
-            page_hash, seq_str = parts
-            try:
-                seq = int(seq_str)
-            except ValueError:
-                continue
-            for adj_seq in range(max(0, seq - 2), seq + 3):  # ±2 window
-                if adj_seq == seq:
+                hits = self._client.query_points(collection_name=self._collection, query=dense,
+                                                 using="dense", query_filter=query_filter,
+                                                 limit=self._candidate_k, with_payload=True).points
+            unique: dict[str, dict] = {}
+            for hit in hits:
+                payload = hit.payload or {}
+                if not isinstance(payload.get("text"), str) or not payload["text"].strip():
                     continue
-                adj_id = f"{page_hash}_{adj_seq:04d}"
-                if adj_id not in seen_ids:
-                    to_fetch.append(adj_id)
-                    seen_ids.add(adj_id)
+                result = {**payload, "chunk_id": payload.get("chunk_id") or str(hit.id),
+                          score_name: hit.score, "candidate_lane": lane}
+                unique.setdefault(chunk_key(result), result)
+            return list(unique.values())
 
-        if not to_fetch:
-            return chunks
+        general = lookup()
+        reserved = []
+        scope = program_scope(query) if self._program_candidates_enabled else None
+        if scope is not None:
+            conditions = [models.FieldCondition(key="page_type", match=models.MatchValue(value="program"))]
+            if scope["level"]:
+                conditions.append(models.FieldCondition(key="program_level", match=models.MatchValue(value=scope["level"])))
+            exact_names = program_filter_names(query)
+            if exact_names:
+                name_match = (models.MatchValue(value=exact_names[0]) if len(exact_names) == 1
+                              else models.MatchAny(any=exact_names))
+                conditions.append(models.FieldCondition(key="program_name", match=name_match))
+            scoped = lookup(models.Filter(must=conditions), "program_exact" if exact_names else "program")
+            # Reuse the SAME embedding; this lane is a bounded metadata view, not
+            # another generated query or neighbor fetch. Only explicitly named
+            # program/level/edition matches can displace general candidates.
+            per_page: dict[str, list[dict]] = {}
+            for chunk in scoped:
+                if program_matches(query, chunk):
+                    page = canonical_url(chunk.get("url") or "")
+                    per_page.setdefault(page, []).append(chunk)
+            reserve_limit = min(self._candidate_k // 2, self._top_k) if exact_names else min(6, max(1, self._candidate_k // 3))
+            # Round-robin pages for comparisons, without prematurely limiting a
+            # single program to two chunks before the cross-encoder sees them.
+            reserved = [items[i] for i in range(reserve_limit)
+                        for items in per_page.values() if i < len(items)][:reserve_limit]
+        unique = {}
+        for chunk in reserved + general:
+            unique.setdefault(chunk_key(chunk), chunk)
+        selected = list(unique.values())[:self._candidate_k]
+        logger.info("RETRIEVAL general=%d program_reserved=%d unique=%d mode=%s",
+                    len(general), len(reserved), len(selected), score_name)
+        return selected
 
-        try:
-            points, _ = self._client.scroll(
-                collection_name=self._collection,
-                scroll_filter=models.Filter(must=[
-                    models.FieldCondition(
-                        key="chunk_id",
-                        match=models.MatchAny(any=to_fetch),
-                    )
-                ]),
-                limit=len(to_fetch) + 5,
-                with_payload=True,
-            )
-            adjacent = []
-            for point in points:
-                result = _payload_to_result(point.payload, 0.0)
-                result["from_vector"] = True  # same page as a vector result
-                result["score"] = 0.0  # adjacent, not ranked
-                adjacent.append(result)
-                logger.info(
-                    "RETRIEVER adjacent chunk_id=%s  title=%s  url=%s",
-                    result["chunk_id"], (result.get("title") or "")[:60],
-                    (result.get("url") or "")[:80],
-                )
-            logger.info("RETRIEVER expanded with %d adjacent chunks", len(adjacent))
-            return chunks + adjacent
-        except Exception as exc:
-            logger.warning("Adjacent chunk fetch failed: %s", exc)
-            return chunks
+    def _rank(self, query: str, candidates: list[dict]) -> list[dict]:
+        if not candidates:
+            return []
+        response = self._embedding_client.post("rerank", json={
+            "query": query, "documents": [compose_passage(c) for c in candidates], "top_n": len(candidates),
+        })
+        response.raise_for_status()
+        ranks = response.json()["results"]
+        ranked = []
+        seen: set[int] = set()
+        for row in ranks:
+            index, score = row["index"], float(row["score"])
+            if not isinstance(index, int) or isinstance(index, bool) or not 0 <= index < len(candidates):
+                raise ValueError("Invalid reranker index")
+            if index in seen or not math.isfinite(score):
+                raise ValueError("Invalid reranker result")
+            seen.add(index)
+            # Floor has one meaning in BOTH hybrid and dense-only modes:
+            # existing cross-encoder relevance, never RRF or cosine.
+            if score >= self._min_score:
+                ranked.append({**candidates[index], "rerank_score": score})
+        if len(seen) != len(candidates):
+            raise ValueError("Incomplete reranker results")
+        ranked.sort(key=lambda c: c["rerank_score"], reverse=True)
+        logger.info("RETRIEVAL reranked=%d above_floor=%d floor=%.3f", len(ranks), len(ranked), self._min_score)
+        return ranked
 
-    def search(self, query: str) -> List[dict]:
-        """Search Qdrant using vector similarity, optionally fused with keyword search.
+    def _select_ranked(self, query: str, ranked: list[dict]) -> list[dict]:
+        anchored = any(source_identity_matches(query, chunk) for chunk in ranked)
+        eligible = [chunk for chunk in ranked
+                    if not source_conflicts(query, chunk, identity_anchored=anchored)]
+        logger.info("RETRIEVAL source_filter input=%d kept=%d anchored=%s", len(ranked), len(eligible), anchored)
+        if not self._program_candidates_enabled:
+            return eligible[:self._top_k]
+        # Scores alone strongly favor verbose/wrong-program PDFs in live probes.
+        # Reserve a small number of slots for explicit catalog identity matches,
+        # but only AFTER the same reranker floor. One slot per canonical page.
+        reserved = []
+        pages = set()
+        for chunk in eligible:
+            page = canonical_url(chunk.get("url") or "")
+            if (page not in pages and chunk.get("rerank_score", -1) >= self._min_score
+                    and program_matches(query, chunk)):
+                reserved.append(chunk)
+                pages.add(page)
+            if len(reserved) >= min(3, max(1, self._top_k // 4)):
+                break
+        keys = {chunk_key(c) for c in reserved}
+        return (reserved + [c for c in eligible if chunk_key(c) not in keys])[:self._top_k]
 
-        Each returned chunk has a `from_vector` bool indicating it appeared in the
-        semantic vector results. Callers can use this to filter sources shown to the
-        user — keyword-only chunks boost LLM context but should not appear as sources.
-        """
-        vector_results = self._vector_search(query)
-        vector_chunk_ids = {r["chunk_id"] for r in vector_results}
+    def search(self, query: str) -> list[dict]:
+        return self.search_many([query])
 
-        if self._hybrid_enabled:
-            keyword_results = self._keyword_search(query)
-            if keyword_results:
-                fused = rrf_fuse(
-                    vector_results, keyword_results,
-                    k=self._rrf_k, top_k=self._top_k,
-                    min_rrf_score=self._min_rrf_score,
-                )
-                for r in fused:
-                    r["from_vector"] = r["chunk_id"] in vector_chunk_ids
-                logger.info(
-                    "RETRIEVER hybrid fused: vector=%d + keyword=%d -> %d results (min_rrf_score=%.5f)",
-                    len(vector_results), len(keyword_results), len(fused), self._min_rrf_score,
-                )
-                for rank, r in enumerate(fused, 1):
-                    logger.info(
-                        "RETRIEVER fused rank=%d  rrf_score=%.5f  from_vector=%s  chunk_id=%s  title=%s  url=%s",
-                        rank, r["score"], r["from_vector"], r["chunk_id"],
-                        (r.get("title") or "")[:60], (r.get("url") or "")[:80],
-                    )
-                return self._fetch_adjacent_chunks(fused)
-
-        # Pure vector path (or keyword returned nothing)
-        results = [r for r in vector_results if r["score"] >= self._min_score]
-        for r in results:
-            r["from_vector"] = True
-        dropped = len(vector_results) - len(results)
-        if dropped:
-            logger.info("RETRIEVER dropped %d chunks below min_score=%.2f", dropped, self._min_score)
-        logger.info("RETRIEVER total_results=%d (kept=%d)  query=%r", len(vector_results), len(results), query)
-        return self._fetch_adjacent_chunks(results)
+    def search_many(self, queries: list[str], *, original_query: str | None = None) -> list[dict]:
+        if not 1 <= len(queries) <= 3 or any(not isinstance(q, str) or not q.strip() for q in queries):
+            raise ValueError("Retrieval requires one to three nonempty planned queries")
+        searches = list(dict.fromkeys(queries))
+        if original_query and original_query.strip().casefold() not in {q.strip().casefold() for q in searches}:
+            searches.append(original_query.strip())
+        # Preserve original-query recall, then rerank the merged pool ONCE against
+        # the resolved primary question. Raw pronoun queries must not set relevance.
+        merged: dict[str, dict] = {}
+        for query_index, query in enumerate(searches):
+            for rank, chunk in enumerate(self._candidates(query), 1):
+                key = chunk_key(chunk)
+                if key not in merged:
+                    merged[key] = {**chunk, "query_fusion_score": 0.0, "query_ranks": []}
+                item = merged[key]
+                item["query_fusion_score"] += 1 / (60 + rank)
+                item["query_ranks"].append({"query_index": query_index, "rank": rank})
+        pool = sorted(merged.values(), key=lambda c: c["query_fusion_score"], reverse=True)
+        results = self._select_ranked(queries[0], self._rank(queries[0], pool))
+        # One atomic diagnostic record per search, never returned as cited sources.
+        # Omit questions, history, and passage bodies; retain all candidate IDs/URLs.
+        logger.info("RETRIEVAL_TRACE %s", json.dumps({
+            "search_count": len(searches), "candidate_k": self._candidate_k,
+            "candidates": [{k: c[k] for k in ("chunk_id", "url", "candidate_lane", "vector_score", "fusion_score", "query_fusion_score", "query_ranks") if k in c} for c in pool],
+            "selected": [{"chunk_id": c["chunk_id"], "rerank_score": c["rerank_score"],
+                          "program_match": program_matches(queries[0], c)} for c in results],
+        }))
+        logger.info("RETRIEVAL queries=%d merged=%d selected=%d", len(searches), len(merged), len(results))
+        for rank, chunk in enumerate(results, 1):
+            logger.info("RETRIEVAL selected_rank=%d chunk_id=%s rerank=%.4f query_rrf=%.5f",
+                        rank, chunk["chunk_id"], chunk["rerank_score"], chunk["query_fusion_score"])
+        return results

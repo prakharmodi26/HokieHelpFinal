@@ -1,0 +1,583 @@
+{
+  "generated_utc": "2026-09-21T18:42:26.840303+00:00",
+  "implementation": "production LLMClient + Retriever.search_many + evidence selection/finalizer",
+  "review_status": "BLOCKED: planner calls failed open and answer calls failed; not a successful revised-pipeline acceptance run",
+  "post_run_diagnostic": {
+    "separate_chat_completion_probe_http_status": 403,
+    "retry_after_present": false,
+    "provider_failure_reason": "not established",
+    "note": "Per-case provider status was not captured in this run. The status above belongs to a separate subsequent probe."
+  },
+  "settings": {
+    "planner": "DeepSeek-V4.1-Flash",
+    "answer_models": [
+      "GLM-5.3",
+      "DeepSeek-V4.1-Flash"
+    ],
+    "collection": "hokiehelp-test",
+    "candidate_k": 30,
+    "top_k": 12,
+    "context_chars": 24000,
+    "rerank_floor": 0.3,
+    "neighbors": false
+  },
+  "limitations": [
+    "Constructed public questions, not real user logs.",
+    "No golden credit total: program/cohort/source correctness needs human review.",
+    "The branch does not include the newer stack's MCP/version-aware retrieval."
+  ],
+  "cases": [
+    {
+      "id": "credits-complete",
+      "question": "how many credits do i need to complete bs in cs",
+      "history": [],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "how many credits do i need to complete bs in cs"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 0.104,
+      "retrieval_seconds": 0.576,
+      "retrieved_count": 12,
+      "context_body_chars": 22232,
+      "evidence": [
+        {
+          "chunk_id": "5237bb1ccb3f98e3#0004",
+          "source_id": 1,
+          "title": "coe_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "rerank_score": 0.9845160245895386,
+          "query_fusion_score": 0.01639344262295082,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "7f611a4e5c2dd618#0021",
+          "source_id": 2,
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "rerank_score": 0.9785082340240479,
+          "query_fusion_score": 0.011764705882352941,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "61dde6ef62cc4161#0003",
+          "source_id": 3,
+          "title": "coe_cs_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "rerank_score": 0.9780097603797913,
+          "query_fusion_score": 0.013888888888888888,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "dd3514e0001255c3#0018",
+          "source_id": 4,
+          "title": "Secure Computing Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_supporting_docs.pdf",
+          "rerank_score": 0.9776712656021118,
+          "query_fusion_score": 0.014492753623188406,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "18d6e3efe93be998#0014",
+          "source_id": 5,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "rerank_score": 0.9765800833702087,
+          "query_fusion_score": 0.014084507042253521,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "cb7733c8e65fe86d#0014",
+          "source_id": 6,
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "rerank_score": 0.9754835963249207,
+          "query_fusion_score": 0.013157894736842105,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "295916376f0e9d68#0015",
+          "source_id": 7,
+          "title": "Secure Computing Major Checksheet 2022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Secure%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "rerank_score": 0.9749646186828613,
+          "query_fusion_score": 0.012195121951219513,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "1eeeb88a79f795f2#0018",
+          "source_id": 8,
+          "title": "Cs Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "rerank_score": 0.9740425944328308,
+          "query_fusion_score": 0.014705882352941176,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "25075a8f570c86a0#0015",
+          "source_id": 9,
+          "title": "Data Centric Computing Major Checksheet 2022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "rerank_score": 0.9728307723999023,
+          "query_fusion_score": 0.011363636363636364,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "1b28b9737f676c8e#0016",
+          "source_id": 10,
+          "title": "Sc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021-22-DRAFT.pdf",
+          "rerank_score": 0.9715099930763245,
+          "query_fusion_score": 0.011235955056179775,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "b5e4bfe6a619e1c4#0001",
+          "source_id": 11,
+          "title": "coe_cs_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "rerank_score": 0.9694401025772095,
+          "query_fusion_score": 0.013333333333333334,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "53c7bebf8f6f57d3#0016",
+          "source_id": 12,
+          "title": "Dcc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "rerank_score": 0.9693822264671326,
+          "query_fusion_score": 0.012987012987012988,
+          "context_truncated": true
+        }
+      ],
+      "answers": {},
+      "error_type": "RuntimeError"
+    },
+    {
+      "id": "credits-graduate",
+      "question": "how many credits do i need to graduate BS in CS",
+      "history": [],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "how many credits do i need to graduate BS in CS"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 0.02,
+      "retrieval_seconds": 0.535,
+      "retrieved_count": 12,
+      "context_body_chars": 22277,
+      "evidence": [
+        {
+          "chunk_id": "7f611a4e5c2dd618#0021",
+          "source_id": 1,
+          "title": "Data Centric Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/data_centric_supporting_docs.pdf",
+          "rerank_score": 0.9780097603797913,
+          "query_fusion_score": 0.01639344262295082,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "dd3514e0001255c3#0018",
+          "source_id": 2,
+          "title": "Secure Computing Supporting Docs",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/governance/2019-2020/11-11-19/secure_computing_supporting_docs.pdf",
+          "rerank_score": 0.9768466353416443,
+          "query_fusion_score": 0.0125,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "18d6e3efe93be998#0014",
+          "source_id": 3,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "rerank_score": 0.973087728023529,
+          "query_fusion_score": 0.014925373134328358,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "1eeeb88a79f795f2#0018",
+          "source_id": 4,
+          "title": "Cs Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "rerank_score": 0.9713473320007324,
+          "query_fusion_score": 0.015151515151515152,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "5d6052426f63d5fc#0014",
+          "source_id": 5,
+          "title": "Sc Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2022.pdf",
+          "rerank_score": 0.9712929129600525,
+          "query_fusion_score": 0.011494252873563218,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "cb7733c8e65fe86d#0014",
+          "source_id": 6,
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "rerank_score": 0.9706321954727173,
+          "query_fusion_score": 0.015384615384615385,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "1b28b9737f676c8e#0016",
+          "source_id": 7,
+          "title": "Sc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021-22-DRAFT.pdf",
+          "rerank_score": 0.9703524708747864,
+          "query_fusion_score": 0.01282051282051282,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "53c7bebf8f6f57d3#0016",
+          "source_id": 8,
+          "title": "Dcc Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2021-22-DRAFT.pdf",
+          "rerank_score": 0.9689738154411316,
+          "query_fusion_score": 0.015873015873015872,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "cee06de66e151a5c#0015",
+          "source_id": 9,
+          "title": "Sc Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/SC-Major-2021.pdf",
+          "rerank_score": 0.9689150452613831,
+          "query_fusion_score": 0.012987012987012988,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "08247ccd8db89b4b#0015",
+          "source_id": 10,
+          "title": "Dcc Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/DCC-Major-2022.pdf",
+          "rerank_score": 0.9675945043563843,
+          "query_fusion_score": 0.013513513513513514,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "25075a8f570c86a0#0015",
+          "source_id": 11,
+          "title": "Data Centric Computing Major Checksheet 2022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Data-Centric%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "rerank_score": 0.9658995866775513,
+          "query_fusion_score": 0.013888888888888888,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "295916376f0e9d68#0015",
+          "source_id": 12,
+          "title": "Secure Computing Major Checksheet 2022 2023",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/Secure%20Computing%20Major%20Checksheet%202022-2023.pdf",
+          "rerank_score": 0.9655764698982239,
+          "query_fusion_score": 0.012048192771084338,
+          "context_truncated": true
+        }
+      ],
+      "answers": {},
+      "error_type": "RuntimeError"
+    },
+    {
+      "id": "credits-undergraduate",
+      "question": "How many credits do i need to complete undergraduate in cs",
+      "history": [],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "How many credits do i need to complete undergraduate in cs"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 0.019,
+      "retrieval_seconds": 0.535,
+      "retrieved_count": 12,
+      "context_body_chars": 22018,
+      "evidence": [
+        {
+          "chunk_id": "f39b91efc69bf470#0002",
+          "source_id": 1,
+          "title": "coe_cs_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_cs_22_23.pdf",
+          "rerank_score": 0.9737446904182434,
+          "query_fusion_score": 0.014705882352941176,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "b5e4bfe6a619e1c4#0002",
+          "source_id": 2,
+          "title": "coe_cs_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_cs_21_22.pdf",
+          "rerank_score": 0.9733928442001343,
+          "query_fusion_score": 0.015873015873015872,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "61dde6ef62cc4161#0004",
+          "source_id": 3,
+          "title": "coe_cs_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/2022/coe_cs_22.pdf",
+          "rerank_score": 0.9705764651298523,
+          "query_fusion_score": 0.015151515151515152,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "18d6e3efe93be998#0007",
+          "source_id": 4,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "rerank_score": 0.9704086184501648,
+          "query_fusion_score": 0.013888888888888888,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "cb7733c8e65fe86d#0007",
+          "source_id": 5,
+          "title": "Cs Major 2021",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021.pdf",
+          "rerank_score": 0.9698996543884277,
+          "query_fusion_score": 0.011111111111111112,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "21d8ef4e32ef41d9#0007",
+          "source_id": 6,
+          "title": "Cs Major 2023 24",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2023-24.pdf",
+          "rerank_score": 0.9691494703292847,
+          "query_fusion_score": 0.011764705882352941,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "8079c39a28b1249c#0004",
+          "source_id": 7,
+          "title": "coe_sc_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/22-23/coe_sc_22_23.pdf",
+          "rerank_score": 0.9677167534828186,
+          "query_fusion_score": 0.012048192771084338,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "6a2cbb81748cbbfc#0004",
+          "source_id": 8,
+          "title": "coe_sc_21_22.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/21-22/coe_sc_21_22.pdf",
+          "rerank_score": 0.9674717783927917,
+          "query_fusion_score": 0.013513513513513514,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "1eeeb88a79f795f2#0011",
+          "source_id": 9,
+          "title": "Cs Major 2021 22 Draft",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2021-22-DRAFT.pdf",
+          "rerank_score": 0.9662197828292847,
+          "query_fusion_score": 0.01282051282051282,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "18d6e3efe93be998#0005",
+          "source_id": 4,
+          "title": "Cs Major 2022",
+          "url": "https://students.cs.vt.edu/content/dam/website_cs_vt_edu/checksheets/CS-Major-2022.pdf",
+          "rerank_score": 0.9567152261734009,
+          "query_fusion_score": 0.013333333333333334,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "5237bb1ccb3f98e3#0004",
+          "source_id": 10,
+          "title": "coe_cs_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_cs_23_24.pdf",
+          "rerank_score": 0.956063449382782,
+          "query_fusion_score": 0.01639344262295082,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "300cfa845e100bcd#0004",
+          "source_id": 11,
+          "title": "coe_sc_23_24.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/coe/23-24/coe_sc_23_24.pdf",
+          "rerank_score": 0.9458011984825134,
+          "query_fusion_score": 0.0125,
+          "context_truncated": false
+        }
+      ],
+      "answers": {},
+      "error_type": "RuntimeError"
+    },
+    {
+      "id": "math-followup",
+      "question": "What math courses does it require?",
+      "history": [
+        {
+          "role": "user",
+          "content": "Tell me about the Computer Science bachelor's major at Virginia Tech."
+        },
+        {
+          "role": "assistant",
+          "content": "Which part of the Computer Science major would you like to know about?"
+        }
+      ],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "What math courses does it require?"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 0.02,
+      "retrieval_seconds": 0.553,
+      "retrieved_count": 12,
+      "context_body_chars": 19852,
+      "evidence": [
+        {
+          "chunk_id": "56b4d0ee3ba6980c#0009",
+          "source_id": 1,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank_score": 0.9524857997894287,
+          "query_fusion_score": 0.01639344262295082,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "56b4d0ee3ba6980c#0011",
+          "source_id": 1,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank_score": 0.851706326007843,
+          "query_fusion_score": 0.014285714285714285,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "3dfab62f1c4519e6#0008",
+          "source_id": 2,
+          "title": "Grad Policies",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/grad-policies.pdf",
+          "rerank_score": 0.8432507514953613,
+          "query_fusion_score": 0.011363636363636364,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "56b4d0ee3ba6980c#0005",
+          "source_id": 1,
+          "title": "Mathmajorhandbook",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/MathMajorHandbook.pdf",
+          "rerank_score": 0.7942253947257996,
+          "query_fusion_score": 0.016129032258064516,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "a1b4a41b14eb36d7#0000",
+          "source_id": 3,
+          "title": "minor_math_22_23.pdf",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/22-23/minor_math_22_23.pdf",
+          "rerank_score": 0.7294234037399292,
+          "query_fusion_score": 0.012048192771084338,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "31ef2ed0a5a758f9#0019",
+          "source_id": 4,
+          "title": "Sbes Handbook 5.23.24 Final",
+          "url": "https://bme.vt.edu/content/dam/bme_vt_edu/graduate/sbes-handbooks/SBES%20Handbook%205.23.24%20FINAL.pdf",
+          "rerank_score": 0.6755505800247192,
+          "query_fusion_score": 0.013333333333333334,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "523a01711971a331#0020",
+          "source_id": 5,
+          "title": "Sbes Handbook 5.28.25 Final",
+          "url": "https://bme.vt.edu/content/dam/bme_vt_edu/graduate/SBES%20Handbook%205.28.25%20FINAL.pdf",
+          "rerank_score": 0.6717936396598816,
+          "query_fusion_score": 0.012987012987012988,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "a9d0ff084f0d789e#0000",
+          "source_id": 6,
+          "title": "Minor Math 21 22",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/minors/21-22/minor_math_21_22.pdf",
+          "rerank_score": 0.6008911728858948,
+          "query_fusion_score": 0.013513513513513514,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "26d9feb5a5a2241c#0000",
+          "source_id": 7,
+          "title": "Slides Math Course Placement",
+          "url": "https://math.vt.edu/content/dam/math_vt_edu/documents/Slides-Math-Course-Placement.pdf",
+          "rerank_score": 0.5508489608764648,
+          "query_fusion_score": 0.013157894736842105,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "a93dab1ced28031b#0000",
+          "source_id": 8,
+          "title": "Mathematics Roadmap",
+          "url": "https://vt.edu/content/dam/vt_edu/admissions/pr/Transfer-Roadmaps-2025%E2%80%932026/science/Mathematics%20Roadmap.pdf",
+          "rerank_score": 0.4732767939567566,
+          "query_fusion_score": 0.012345679012345678,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "aa239a8aa87ea76b#0000",
+          "source_id": 9,
+          "title": "Mathematics Roadmap",
+          "url": "https://vt.edu/content/dam/vt_edu/admissions/pr/2022/transfer-roadmaps/Mathematics%20Roadmap.pdf",
+          "rerank_score": 0.4716947376728058,
+          "query_fusion_score": 0.011904761904761904,
+          "context_truncated": false
+        },
+        {
+          "chunk_id": "f450fc4d0ccafac3#0001",
+          "source_id": 10,
+          "title": "Cos Stat Smth 23 24",
+          "url": "https://www.registrar.vt.edu/content/dam/registrar_vt_edu/documents/Updates/cos/23-24/cos_stat_smth_23_24.pdf",
+          "rerank_score": 0.42996785044670105,
+          "query_fusion_score": 0.015384615384615385,
+          "context_truncated": false
+        }
+      ],
+      "answers": {},
+      "error_type": "RuntimeError"
+    },
+    {
+      "id": "unknown-person",
+      "question": "What courses does Professor Quasar Noodlewick teach at Virginia Tech?",
+      "history": [],
+      "plan": {
+        "intent": "search",
+        "queries": [
+          "What courses does Professor Quasar Noodlewick teach at Virginia Tech?"
+        ],
+        "clarification": null
+      },
+      "plan_seconds": 0.018,
+      "retrieval_seconds": 0.544,
+      "retrieved_count": 0,
+      "context_body_chars": 0,
+      "evidence": [],
+      "answers": {
+        "GLM-5.3": {
+          "raw": "I couldn't find enough reliable information in the available Virginia Tech sources to answer that. Please clarify the program, topic, or year if relevant.",
+          "final": "I couldn't find enough reliable information in the available Virginia Tech sources to answer that. Please clarify the program, topic, or year if relevant.",
+          "sources": [],
+          "seconds": 0.0
+        },
+        "DeepSeek-V4.1-Flash": {
+          "raw": "I couldn't find enough reliable information in the available Virginia Tech sources to answer that. Please clarify the program, topic, or year if relevant.",
+          "final": "I couldn't find enough reliable information in the available Virginia Tech sources to answer that. Please clarify the program, topic, or year if relevant.",
+          "sources": [],
+          "seconds": 0.0
+        }
+      }
+    }
+  ]
+}
